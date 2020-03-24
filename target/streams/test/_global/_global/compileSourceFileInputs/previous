@@ -1,0 +1,1 @@
+["sbt.Task[scala.collection.immutable.Map[java.lang.String, scala.collection.Seq[scala.Tuple2[java.nio.file.Path, sbt.nio.FileStamp]]]]",{"2.13.1":{"hashes":[["/home/caeus/work/caeus/elodin/src/test/scala/com/github/caeus/elodin/AllSuites.scala","54440a940c20d92c4f43fe3c23dacca4f741276d"]],"lastModifiedTimes":[]}}]

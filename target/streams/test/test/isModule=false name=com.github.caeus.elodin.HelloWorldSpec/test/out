@@ -1,0 +1,6 @@
+[0m[[0m[0minfo[0m] [0m[0mHelloWorldSpec[0m
+[0m[[0m[0minfo[0m] [0m[0mHelloWorld[0m
+[0m[[0m[0minfo[0m] [0m[0m  [32m+[0m return 200[0m
+[0m[[0m[0minfo[0m] [0m[0mTotal for specification HelloWorldSpec[0m
+[0m[[0m[0minfo[0m] [0m[0m[36mFinished in 123 ms[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[36m[0m[36m1 example, 0 failure, 0 error[0m[0m

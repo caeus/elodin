@@ -1,0 +1,5 @@
+[0m[[0m[31merror[0m] [0m[0m/home/caeus/work/caeus/elodin/src/test/scala/com/github/caeus/elodin/AllSuites.scala:32:28: match may not be exhaustive.[0m
+[0m[[0m[31merror[0m] [0m[0mIt would fail on the following inputs: App(_), Arr(_), Dict(_), Integer(_), Real(_), Str(_)[0m
+[0m[[0m[31merror[0m] [0m[0m                  result = cond match {[0m
+[0m[[0m[31merror[0m] [0m[0m                           ^[0m
+[0m[[0m[31merror[0m] [0m[0mone error found[0m

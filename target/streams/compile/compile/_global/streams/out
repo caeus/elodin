@@ -1,0 +1,13 @@
+[0m[[0m[31merror[0m] [0m[0m/home/caeus/work/caeus/elodin/src/main/scala/com/github/caeus/elodin/runtime/ExprEngine.scala:97:16: value traverse_ is not a member of object zio.RIO[0m
+[0m[[0m[31merror[0m] [0m[0mpossible cause: maybe a semicolon is missing before `value traverse_`?[0m
+[0m[[0m[31merror[0m] [0m[0m              .traverse_(code.ops)(toEffect)[0m
+[0m[[0m[31merror[0m] [0m[0m               ^[0m
+[0m[[0m[31merror[0m] [0m[0m/home/caeus/work/caeus/elodin/src/main/scala/com/github/caeus/elodin/runtime/ExprEngine.scala:97:36: missing argument list for method toEffect in class DefaultExprEngine[0m
+[0m[[0m[31merror[0m] [0m[0mUnapplied methods are only converted to functions when a function type is expected.[0m
+[0m[[0m[31merror[0m] [0m[0mYou can make this conversion explicit by writing `toEffect _` or `toEffect(_)` instead of `toEffect`.[0m
+[0m[[0m[31merror[0m] [0m[0m              .traverse_(code.ops)(toEffect)[0m
+[0m[[0m[31merror[0m] [0m[0m                                   ^[0m
+[0m[[0m[31merror[0m] [0m[0m/home/caeus/work/caeus/elodin/src/main/scala/com/github/caeus/elodin/runtime/Stack.scala:10:10: value sequence is not a member of object zio.Task[0m
+[0m[[0m[31merror[0m] [0m[0m    Task.sequence(List.fill(take)(pop))[0m
+[0m[[0m[31merror[0m] [0m[0m         ^[0m
+[0m[[0m[31merror[0m] [0m[0mthree errors found[0m
