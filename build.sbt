@@ -12,11 +12,13 @@ lazy val root = (project in file("."))
     version := "0.0.1-SNAPSHOT",
     scalaVersion := "2.13.1",
     libraryDependencies ++= Seq(
-      //"com.github.caeus" % "plutus"          % "2a03167479",
-      "dev.zio"        %% "zio-test"       % "1.0.0-RC18-2" % Test,
-      "dev.zio"        %% "zio-test-sbt"   % "1.0.0-RC18-2" % Test,
-      "dev.zio"        %% "zio"            % "1.0.0-RC18-2",
-      "ch.qos.logback" % "logback-classic" % LogbackVersion
+      "dev.zio"                    %% "zio-test"       % "1.0.0-RC18-2" % Test,
+      "dev.zio"                    %% "zio-test-sbt"   % "1.0.0-RC18-2" % Test,
+      "dev.zio"                    %% "zio"            % "1.0.0-RC18-2",
+      "io.circe"                   %% "circe-core"     % "0.13.0",
+      "ch.qos.logback"             % "logback-classic" % LogbackVersion,
+      "org.scala-lang"             % "scala-compiler"  % "2.13.1",
+      "com.typesafe.scala-logging" %% "scala-logging"  % "3.9.2"
     ),
     testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework")),
     addCompilerPlugin("org.typelevel" %% "kind-projector"     % "0.10.3"),

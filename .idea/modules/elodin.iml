@@ -15,18 +15,27 @@
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="sbt: ch.qos.logback:logback-classic:1.2.3:jar" level="project" />
+    <orderEntry type="library" name="sbt: org.slf4j:slf4j-api:1.7.26:jar" level="project" />
+    <orderEntry type="library" name="sbt: com.typesafe.scala-logging:scala-logging_2.13:3.9.2:jar" level="project" />
+    <orderEntry type="library" name="sbt: org.scala-lang:scala-reflect:2.13.1:jar" level="project" />
     <orderEntry type="library" scope="TEST" name="sbt: dev.zio:zio-test-sbt_2.13:1.0.0-RC18-2:jar" level="project" />
     <orderEntry type="library" scope="TEST" name="sbt: org.portable-scala:portable-scala-reflect_2.13:1.0.0:jar" level="project" />
     <orderEntry type="library" scope="TEST" name="sbt: dev.zio:zio-test_2.13:1.0.0-RC18-2:jar" level="project" />
     <orderEntry type="library" scope="TEST" name="sbt: dev.zio:zio-streams_2.13:1.0.0-RC18-2:jar" level="project" />
     <orderEntry type="library" name="sbt: ch.qos.logback:logback-core:1.2.3:jar" level="project" />
     <orderEntry type="library" scope="TEST" name="sbt: org.scala-sbt:test-interface:1.0:jar" level="project" />
-    <orderEntry type="library" name="sbt: org.slf4j:slf4j-api:1.7.25:jar" level="project" />
     <orderEntry type="library" name="sbt: org.scala-lang:scala-library:2.13.1:jar" level="project" />
-    <orderEntry type="library" scope="TEST" name="sbt: org.scala-lang:scala-reflect:2.13.1:jar" level="project" />
     <orderEntry type="library" name="sbt: dev.zio:izumi-reflect-thirdparty-boopickle-shaded_2.13:0.12.0-M0:jar" level="project" />
     <orderEntry type="library" name="sbt: dev.zio:izumi-reflect_2.13:0.12.0-M0:jar" level="project" />
     <orderEntry type="library" name="sbt: dev.zio:zio-stacktracer_2.13:1.0.0-RC18-2:jar" level="project" />
     <orderEntry type="library" name="sbt: dev.zio:zio_2.13:1.0.0-RC18-2:jar" level="project" />
+    <orderEntry type="library" name="sbt: io.circe:circe-core_2.13:0.13.0:jar" level="project" />
+    <orderEntry type="library" name="sbt: io.circe:circe-numbers_2.13:0.13.0:jar" level="project" />
+    <orderEntry type="library" name="sbt: org.typelevel:cats-core_2.13:2.1.0:jar" level="project" />
+    <orderEntry type="library" name="sbt: org.typelevel:cats-kernel_2.13:2.1.0:jar" level="project" />
+    <orderEntry type="library" name="sbt: org.typelevel:cats-macros_2.13:2.1.0:jar" level="project" />
+    <orderEntry type="library" name="sbt: jline:jline:2.14.6:jar" level="project" />
+    <orderEntry type="library" name="sbt: org.fusesource.jansi:jansi:1.12:jar" level="project" />
+    <orderEntry type="library" name="sbt: org.scala-lang:scala-compiler:2.13.1:jar" level="project" />
   </component>
 </module>

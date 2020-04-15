@@ -1,4 +1,6 @@
-[0m[[0m[0mdebug[0m] [0m[0mRunning TaskDef(com.github.caeus.elodin.AllSuites, zio.test.sbt.RunnableSpecFingerprint$@1fc3e6f7, false, [SuiteSelector])[0m
+[0m[[0m[0mdebug[0m] [0m[0mRunning TaskDef(com.github.caeus.elodin.AllSuites, zio.test.sbt.RunnableSpecFingerprint$@3e6b3ebf, false, [SuiteSelector])[0m
+[0m[[0m[0mdebug[0m] [0m[0mRunning TaskDef(com.github.caeus.elodin.ParsingSuites, zio.test.sbt.RunnableSpecFingerprint$@3e6b3ebf, false, [SuiteSelector])[0m
 [0m[[0m[0minfo[0m] [0m[0mDone[0m
 [0m[[0m[0mdebug[0m] [0m[0mPassed tests:[0m
 [0m[[0m[0mdebug[0m] [0m[0m	com.github.caeus.elodin.AllSuites[0m
+[0m[[0m[0mdebug[0m] [0m[0m	com.github.caeus.elodin.ParsingSuites[0m

@@ -1,131 +1,148 @@
 package com.github.caeus.elodin.interpreter
 
-import com.github.caeus.elodin.interpreter.RefResolution.{IsNode, IsParam, Undefined}
-import com.github.caeus.elodin.interpreter.Scope.Root
-import com.github.caeus.elodin.interpreter.Val.App
-import com.github.caeus.elodin.lang.Node
-import com.github.caeus.elodin.lang.Node.{
-  AppNode,
-  ArrNode,
-  BoolNode,
-  DictNode,
-  IntNode,
-  LambdaNode,
-  LetNode,
-  RealNode,
-  RefNode,
-  ReqNode,
-  StrNode
+import com.github.caeus.elodin.interpreter.Val.Lazy
+import com.github.caeus.elodin.interpreter.printers.ForVal
+import com.github.caeus.elodin.interpreter.scope.Scope
+import com.github.caeus.elodin.interpreter.scope.Scope.{
+  WhenApply,
+  WhenArr,
+  WhenBool,
+  WhenDict,
+  WhenFloat,
+  WhenInt,
+  WhenLambda,
+  WhenLet,
+  WhenRef,
+  WhenReq,
+  WhenStr
 }
-import zio.{RIO, Task}
+import com.github.caeus.elodin.lang.Node
+import zio.Task
 
-sealed trait Val
+sealed trait Val {
+  override final def toString: String = ForVal.print(this)
+}
+
 object Val {
-  implicit class ValOps(private val value: Val) extends AnyVal {
-    def applyTo(args: Val*): Val = {
-      value match {
-        case App(code) => App(code.applyTo(args: _*))
-        case _ =>
-          throw new Exception(
-            s"Value of type ${value.getClass.getSimpleName} cannot be applied to anything")
-      }
-    }
+  case class Native(name: String, args: Seq[Val]) {
+    def applyTo(args: Seq[Val]) = Native(name, this.args.appendedAll(args))
   }
-  case class Str(value: String)            extends Val
-  case class Real(value: BigDecimal)       extends Val
-  case class Integer(value: BigInt)        extends Val
+
+  case class Text(value: String)           extends Val
+  case class Float(value: BigDecimal)      extends Val
+  case class Int(value: BigInt)            extends Val
   case class Bool(value: Boolean)          extends Val
   case class Arr(value: Seq[Val])          extends Val
   case class Dict(value: Map[String, Val]) extends Val
-  case class App(code: Impl)               extends Val
+  case class Lazy(impl: Either[Native, Scope[Node]]) extends Val {
+    def applyTo(args: Seq[Val]) = Lazy(impl.map(_.applyTo(args)).left.map(_.applyTo(args)))
+  }
+  case object Unit extends Val
 }
 
-trait ModuleLoader {
-  def get(name: String): Task[Val]
-  def nativeArity(name: String): Task[(Int, Seq[Val] => RIO[Interpreter, Val])]
-}
+case class WithRemnant(value: Val, remnant: Seq[Val])
+
 class Interpreter(moduleLoader: ModuleLoader) {
 
-  def walkDown: Scope => Task[Val] = {
-    case NodeOf(point, appNode: AppNode) =>
-      for {
-        points <- Task.effect(point.manyIndexes(appNode.args.size))
-        args   <- Task.collectAll(points.map(walkDown))
-        result <- Task.effect(args.head.applyTo(args.tail: _*))
-      } yield result
-    case NodeOf(scope, _: LetNode) =>
-      walkDown(scope.down)
-    case NodeOf(env, _: LambdaNode) =>
-      Task.succeed(App(Impl.Virtual(env)))
-    case NodeOf(env, refNode: RefNode) =>
-      env.resolveRef(refNode.to) match {
-        case IsParam(value) =>
-          Task.succeed(value)
-        case IsNode(refd) => Task.succeed(App(Impl.Virtual(refd)))
-        case Undefined    => Task.fail(new Exception("qwoieuqwoieu"))
-      }
-    case NodeOf(point, dictNode: DictNode) =>
+  def lazyApply(func: Val, args: Seq[Val]): Task[Val] =
+    if (args.nonEmpty) func match {
+      case Lazy(impl) =>
+        Task.succeed(Lazy(impl.map(_.applyTo(args)).left.map(_.applyTo(args))))
+      case _ => ???
+    } else Task.succeed(func)
+
+  def toVal: Scope[Node] => Task[Val] = {
+    case WhenLet(scope) => toVal(scope.body)
+    case WhenLambda(scope) =>
+      scope.body
+        .map(
+          toVal
+        )
+        .getOrElse(Task.succeed(Val.Lazy(Right(scope.widen))))
+    case WhenApply(scope) =>
       Task
-        .effect(point.manyKeys(dictNode.items.keySet).toSeq.map {
-          case (key, asd) => walkDown(asd).map(key -> _)
+        .collectAll(scope.argScopes.map(toVal))
+        .flatMap {
+          case func :: args => lazyApply(func, args)
+          case Nil          => Task.succeed(Val.Unit)
+        }
+    case WhenArr(scope) =>
+      Task.collectAll(scope.itemScopes.map(toVal)).map(Val.Arr.apply)
+    case WhenDict(scope) =>
+      Task
+        .collectAll(scope.itemScopes.toSeq.map {
+          case (key, kscope) =>
+            toVal(kscope).map(key -> _)
         })
-        .flatMap(Task.collectAll)
-        .map(_.toMap)
-        .map(Val.Dict)
-    case NodeOf(point, arrNode: ArrNode) =>
+        .map { vals =>
+          Val.Dict(vals.toMap)
+        }
+    case WhenRef(scope) =>
+      scope
+        .resolveRef(scope.node.to)
+        .map {
+          case Left(bindedScope) =>
+            Task.succeed(Val.Lazy(Right(bindedScope)))
+          case Right(value) =>
+            Task.succeed(value)
+        }
+        .getOrElse(Task.fail(new Exception(";alskd;alksd;laskd")))
+    case WhenReq(scope) =>
+      moduleLoader.get(scope.node.to)
+    case WhenStr(scope) =>
       Task
-        .effect(point.manyIndexes(arrNode.items.size).map(walkDown))
-        .flatMap(Task.collectAll)
-        .map(Val.Arr)
-    case NodeOf(_, strNode: StrNode)   => Task.succeed(Val.Str(strNode.value))
-    case NodeOf(_, intNode: IntNode)   => Task.succeed(Val.Integer(intNode.value))
-    case NodeOf(_, realNode: RealNode) => Task.succeed(Val.Real(realNode.value))
-    case NodeOf(_, boolNode: BoolNode) => Task.succeed(Val.Bool(boolNode.value))
-    case NodeOf(_, requireNode: ReqNode) =>
-      moduleLoader.get(requireNode.to)
-    case NodeOf(_, x) =>
-      println(x)
-      ???
+        .succeed(Val.Text(scope.node.value))
+    case WhenFloat(scope) =>
+      Task
+        .succeed(Val.Float(scope.node.value))
+    case WhenInt(scope) =>
+      Task.succeed(Val.Int(scope.node.value))
+    case WhenBool(scope) => Task.succeed(Val.Bool(scope.node.value))
   }
 
-  def run(module: String, node: Node): Task[Val] = walkDown(Root(module, node)).flatMap(reduce)
+  def run(module: String, node: Node): Task[Val] = toVal(Scope.root(node)).flatMap(reduce)
+
+  def reduce(scopeK: Scope[Node]): Task[WithRemnant] = {
+    val arityAndArgs: Scope[Node] => Task[(Int, Seq[Val])] = {
+      case WhenLambda(scope) => Task.succeed(scope.node.params.size -> scope.args.getOrElse(Nil))
+      case scope             => Task.succeed(0                      -> scope.args.getOrElse(Nil))
+    }
+    arityAndArgs(scopeK).flatMap {
+      case (arity, args) if args.size >= arity =>
+        toVal(scopeK)
+          .flatMap(reduce)
+          .map(WithRemnant(_, args.drop(arity)))
+      case (arity, args) if args.size < arity =>
+        Task.succeed(WithRemnant(Lazy(Right(scopeK)), Nil))
+    }
+  }
+  def reduce(native: Val.Native): Task[WithRemnant] = {
+    val args = native.args
+    moduleLoader.nativeImpl(native.name).flatMap {
+      case NativeImpl(arity, reducer) if args.size >= arity =>
+        reducer(args.take(arity))
+          .provide(this)
+          .flatMap(reduce)
+          .map(WithRemnant(_, args.drop(arity)))
+      case NativeImpl(arity, reducer) if args.size < arity =>
+        Task.succeed(WithRemnant(Lazy(Left(native)), Nil))
+    }
+  }
   def reduce(value: Val): Task[Val] = {
     value match {
-      case ArgsOf.Native(name, args) =>
-        moduleLoader.nativeArity(name).flatMap {
-          case (arity, reducer) if args.size == arity =>
-            reducer(args).provide(this).flatMap(reduce)
-          case (arity, _) if arity > args.size =>
-            Task.succeed(value)
-          case (arity, reducer) =>
-            reducer(args.take(arity))
-              .provide(this)
-              .flatMap { value =>
-                Task.effect(value.applyTo(args.drop(arity): _*))
-              }
-              .flatMap(reduce)
-        }
-      case ArgsOf.Virtual(scope, args: Seq[Val]) =>
-        scope.node match {
-          case LambdaNode(params, body) =>
-            val arity = params.size
-            if (arity > args.size) {
-              Task.succeed(value)
-            } else {
-              walkDown(scope.down)
-                .flatMap { value =>
-                  Task.effect(value.applyTo(args.drop(arity): _*))
-                }
+      case Val.Lazy(impl) =>
+        impl
+          .map(reduce)
+          .left
+          .map(reduce)
+          .fold(identity, identity)
+          .flatMap {
+            case WithRemnant(resultValue, Nil) =>
+              Task.succeed(resultValue)
+            case WithRemnant(resultValue, remnant) =>
+              lazyApply(resultValue, remnant)
                 .flatMap(reduce)
-            }
-          case _ =>
-            walkDown(scope)
-              .flatMap { value =>
-                Task.effect(value.applyTo(args: _*))
-              }
-              .flatMap(reduce)
-
-        }
+          }
       case _ => Task.succeed(value)
     }
   }
