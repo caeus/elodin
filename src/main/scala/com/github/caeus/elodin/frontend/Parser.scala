@@ -2,16 +2,7 @@ package com.github.caeus.elodin.frontend
 
 import com.github.caeus.elodin.frontend.ElodinToken._
 import com.github.caeus.elodin.lang.Node
-import com.github.caeus.elodin.lang.Node.{
-  ApplyNode,
-  ArrNode,
-  DictNode,
-  FnNode,
-  IntNode,
-  LetNode,
-  RefNode,
-  TextNode
-}
+import com.github.caeus.elodin.lang.Node._
 import com.github.caeus.plutus.PackerResult.{Done, Failed}
 import com.github.caeus.plutus.SyntaxSugar.VectorSyntaxSugar
 import com.github.caeus.plutus.syntax._
@@ -24,16 +15,64 @@ class Parser {
   private val syntax = new VectorSyntaxSugar[ElodinToken]
   import syntax._
 
-  lazy val numLiteral: Pckr[IntNode] = Packer.failed("Numbers not supported yet")
+  lazy val doStep: Pckr[(String, Node)] = {
+    ((refExpr ~ P(Colon) ~ expr).rep ~
+      refExpr ~ P(Yield) ~ expr).map {
+      case (bindings, stepBinding, step) =>
+        stepBinding.to -> (if (bindings.nonEmpty) {
+                             LetNode(bindings.map {
+                               case (ref, node) =>
+                                 ref.to -> node
+                             }.toMap, step)
+                           } else step)
+    }
+  }
 
-  lazy val expr: Pckr[Node] = (textExpr.named("textOutside") |
+  private def recDoNotation(revSteps: List[(String, Node)], result: ApplyNode): ApplyNode = {
+    revSteps match {
+      case Nil => result
+      case (param, step) :: rest =>
+        recDoNotation(rest, ApplyNode(Seq(ReqNode("Gen.chain"), step, FnNode(Seq(param), result))))
+    }
+  }
+  lazy val doNotation: Pckr[ApplyNode] = {
+    (P(Parenthesis.Open) ~ P(Do) ~ P(Bracket.Open) ~
+      doStep.rep(min = 1) ~ P(Bracket.Close) ~ expr ~ P(Parenthesis.Close)).map {
+      case (steps, result) =>
+        steps.reverse.toList match {
+          case (param, step) :: rest =>
+            recDoNotation(rest,
+                          ApplyNode(Seq(ReqNode("Gen.map"), step, FnNode(Seq(param), result))))
+          case Nil => ???
+        }
+    }
+  }
+
+  lazy val intLiteral: Pckr[IntNode] = P {
+    case IntNum(value) => IntNode(value)
+  }
+  lazy val floatLiteral: Pckr[FloatNode] = P {
+    case FloatNum(value) => FloatNode(value)
+  }
+  lazy val boolLiteral: Pckr[BoolNode] = P {
+    case Bool(value) => BoolNode(value)
+  }
+  lazy val textLiteral: Pckr[TextNode] = P {
+    case Text(value) => TextNode(value)
+  }
+
+  lazy val expr: Pckr[Node] = (doNotation |
+    textExpr.named("textOutside") |
     letExpr.named("letOutside") |
     refExpr.named("refOutside") |
     fnExpr.named("fnOutside") |
     arrExpr.named("arrOutside") |
     dictExpr.named("dictOutside") |
     applyExpr.named("applyOutside") |
-    numLiteral).named("expr")
+    intLiteral |
+    floatLiteral |
+    boolLiteral |
+    textLiteral).named("expr")
 
   lazy val textExpr: Pckr[TextNode] = Packer.failed("Text not supported yet")
 
@@ -42,7 +81,7 @@ class Parser {
   }
 
   lazy val applyExpr: Pckr[ApplyNode] =
-    P(Parenthesis.Open) ~ expr.logging("ARG").rep.map(ApplyNode.apply) ~ P(Parenthesis.Close)
+    P(Parenthesis.Open) ~ expr.rep.map(ApplyNode.apply) ~ P(Parenthesis.Close)
 
   lazy val dictExpr: Pckr[DictNode] =
     P(Curly.Open) ~ (refExpr ~ P(Colon) ~ expr).rep.map { items =>

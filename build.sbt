@@ -16,6 +16,7 @@ lazy val root = (project in file("."))
       "dev.zio"                    %% "zio-test-sbt"   % "1.0.0-RC18-2" % Test,
       "dev.zio"                    %% "zio"            % "1.0.0-RC18-2",
       "io.circe"                   %% "circe-core"     % "0.13.0",
+      "com.jsoniter"               % "jsoniter"        % "0.9.1",
       "ch.qos.logback"             % "logback-classic" % LogbackVersion,
       "org.scala-lang"             % "scala-compiler"  % "2.13.1",
       "com.typesafe.scala-logging" %% "scala-logging"  % "3.9.2"

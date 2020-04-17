@@ -1,9 +1,10 @@
 package com.github.caeus.elodin
 
 import com.github.caeus.elodin.frontend.{Lexer, Parser}
+import com.github.caeus.elodin.interpreter.printers.ForNode
 import com.github.caeus.plutus.Cursor
 import zio.test.Assertion._
-import zio.test.{assert, _}
+import zio.test._
 
 object ParsingSuites extends DefaultRunnableSpec {
 
@@ -14,26 +15,36 @@ object ParsingSuites extends DefaultRunnableSpec {
         val task  = lexer.lex("""
             |(fn [f]
             |  (let {
-            |    x : (f x)
+            |    x : (f 04234 0.13123e+3 true false "a\\sd")
             |  } x)
             |)
           """.stripMargin)
 
         assertM(for {
           tokens <- task
-          //_      <- zio.console.putStrLn(tokens.mkString("\n"))
+          _      <- zio.console.putStrLn(tokens.mkString("\n"))
         } yield tokens)(isNonEmpty)
       },
       testM("Parser") {
         val lexer  = new Lexer
         val parser = new Parser
         val source = """
-                       |(a b c d)
+                       |(fn [f]
+                       |  (let {
+                       |    x : (f 3.4 true false 3 "as\\d")
+                       |    y : {hola : "Hola" list : [1 2 3 4]}
+                       |    doN : (do [
+                       |        qwe <: (println "What's your name?")
+                       |        name <: readline
+                       |        qwe <: (println (concat ["Hello, " name "!"]))
+                       |    ] ())
+                       |  } x)
+                       |)
                      """.stripMargin
         val task = for {
           tokens <- lexer.lex(source)
           node   <- parser.parse(tokens)
-          _ = println(node)
+          _ = println(ForNode.print(0)(node))
         } yield node
 
         assertM(task)(anything)

@@ -1,4 +1,7 @@
-[debug] downloaded https://repo1.maven.org/maven2/com/typesafe/scala-logging/scala-logging_2.13/3.9.2/scala-logging_2.13-3.9.2.pom
-[debug] downloaded https://repo1.maven.org/maven2/com/typesafe/scala-logging/scala-logging_2.13/3.9.2/scala-logging_2.13-3.9.2.jar
-[debug] downloaded https://repo1.maven.org/maven2/com/typesafe/scala-logging/scala-logging_2.13/3.9.2/scala-logging_2.13-3.9.2-javadoc.jar
-[debug] downloaded https://repo1.maven.org/maven2/com/typesafe/scala-logging/scala-logging_2.13/3.9.2/scala-logging_2.13-3.9.2-sources.jar
+[debug] downloaded https://repo1.maven.org/maven2/com/jsoniter/jsoniter/0.9.1/jsoniter-0.9.1.pom
+[debug] downloaded https://repo1.maven.org/maven2/com/jsoniter/jsoniter/0.9.1/jsoniter-0.9.1.jar
+[debug] downloaded https://repo1.maven.org/maven2/org/javassist/javassist/3.21.0-GA/javassist-3.21.0-GA.jar
+[debug] downloaded https://repo1.maven.org/maven2/org/javassist/javassist/3.21.0-GA/javassist-3.21.0-GA-sources.jar
+[debug] downloaded https://repo1.maven.org/maven2/com/jsoniter/jsoniter/0.9.1/jsoniter-0.9.1-sources.jar
+[debug] downloaded https://repo1.maven.org/maven2/com/jsoniter/jsoniter/0.9.1/jsoniter-0.9.1-javadoc.jar
+[debug] downloaded https://repo1.maven.org/maven2/org/javassist/javassist/3.21.0-GA/javassist-3.21.0-GA-javadoc.jar

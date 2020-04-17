@@ -1,7 +1,6 @@
 package com.github.caeus.elodin.lang
 
 import com.github.caeus.elodin.interpreter.printers.ForNode
-import com.github.caeus.elodin.lang.Step.{Down, Index, Key}
 
 case class Meta[+A](value: A, children: List[Meta[A]])
 
@@ -26,7 +25,7 @@ case class Path(value: Seq[Step]) {
   final def parent                   = Path(value.init)
   final def head: Step               = value.head
   final def tail: Path               = Path(value.tail)
-  override def toString              = "\\" + value.mkString(".")
+  override def toString: String      = "\\" + value.mkString(".")
 
 }
 object Path {
@@ -38,20 +37,6 @@ sealed trait Node {
 }
 
 object Node {
-  implicit class Ops(private val node: Node) extends AnyVal {
-    def prettyPrint(nesting: Int): String = pretty(nesting)(node)
-    def /(step: Step): Node = (step, node) match {
-      case (Down, FnNode(_, body))          => body
-      case (Down, LetNode(_, body))         => body
-      case (Index(index), ApplyNode(args))  => args(index)
-      case (Index(index), ArrNode(items))   => items(index)
-      case (Key(key), LetNode(bindings, _)) => bindings(key)
-      case (Key(key), DictNode(items))      => items(key)
-      case _ =>
-        throw new Exception(
-          s"Step: $step is not valid for node of type: ${node.getClass.getSimpleName}")
-    }
-  }
 
   case class LetNode(bindings: Map[String, Node], body: Node) extends Node
 
@@ -69,46 +54,5 @@ object Node {
   case class DictNode(items: Map[String, Node]) extends Node
   case class RefNode(to: String)                extends Node
   case class ReqNode(to: String)                extends Node
-
-  def pretty(nesting: Int)(node: Node): String =
-    node match {
-      case LetNode(bindings: Map[String, Node], body: Node) =>
-        s"""
-           |let {
-           | ${bindings.view
-             .mapValues(pretty(nesting + 1))
-             .map {
-               case (name, expr) => (" " * nesting) + s"$name = $expr"
-             }
-             .mkString(",\n")}
-           |} in ${pretty(nesting + 1)(body)}
-       """.stripMargin
-      case FnNode(
-          params: Seq[String],
-          body: Node
-          ) =>
-        s"""{(${params.mkString(", ")})=>
-           |${" " * nesting}${pretty(nesting + 1)(body)}}""".stripMargin
-      case ApplyNode(args) =>
-        s"(${args.map(pretty(nesting + 1)).mkString(" ")})"
-      case TextNode(value: String) => s""""$value""""
-      case IntNode(value)          => value.toString
-      case FloatNode(value)        => value.toString
-      case BoolNode(value)         => value.toString
-      case ArrNode(items)          => s"[${items.map(pretty(nesting + 1)).mkString(", ")}]"
-      case DictNode(items) =>
-        s"""
-           |{
-           | ${items.view
-             .mapValues(pretty(nesting + 1))
-             .map {
-               case (name, expr) => (" " * nesting) + s"$name = $expr"
-             }
-             .mkString(",\n")}
-           |}
-       """.stripMargin
-      case RefNode(to) => to
-      case ReqNode(to) => s"require($to)"
-    }
 
 }

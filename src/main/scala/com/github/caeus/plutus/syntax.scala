@@ -2,6 +2,8 @@ package com.github.caeus.plutus
 
 import com.github.caeus.plutus.Packer._
 
+import scala.util.matching.Regex
+
 trait SyntaxSugar[Col, El] {
 
   def fromCol(col: Col): Packer[Col, El, Unit]
@@ -10,10 +12,13 @@ trait SyntaxSugar[Col, El] {
 
   final def P(col: Col): Packer[Col, El, Unit] = fromCol(col)
   final def P(els: El*): Packer[Col, El, Unit] = fromEls(els.toSeq)
+  final def P(pred: El => Boolean): Packer[Col, El, El] = fromPartial {
+    case el if pred(el) => el
+  }
   final def P[T](partial: PartialFunction[El, T]): Packer[Col, El, T] =
     fromPartial(partial)
 
-  final def End:Packer[Col,El,Unit] = Packer.end
+  final def End: Packer[Col, El, Unit] = Packer.end
 
 }
 
@@ -28,6 +33,18 @@ object SyntaxSugar {
 
     override def fromPartial[T](partial: PartialFunction[Char, T]): Packer[String, Char, T] =
       Packer.fromPartial(partial)
+
+    final def fromRegex(regex: Regex): Packer[String, Char, String] = make { input =>
+      val matcher = regex.pattern.matcher(input.source)
+      matcher.region(input.pos, matcher.regionEnd())
+      if (matcher.lookingAt()) {
+        val caught = matcher.group()
+        input.done(caught, input.move(caught.length))
+      } else {
+        input.failed(s"didn't match regex ${regex.pattern.pattern()}", input)
+      }
+    }
+    final def P(regex: Regex): Packer[String, Char, String] = fromRegex(regex)
 
   }
   class VectorSyntaxSugar[El] extends SyntaxSugar[Vector[El], El] {
@@ -83,7 +100,7 @@ object syntax {
 
     def ! : Packer[Col, In, Window[Col, In]] = capture(value)
 
-    def |[NewOut >: Out](other: => Packer[Col, In, NewOut]): Packer[Col, In, NewOut] = {
+    def |[NewOut >: Out](other: Packer[Col, In, NewOut]): Packer[Col, In, NewOut] = {
       longestOf(value, other)
     }
   }
