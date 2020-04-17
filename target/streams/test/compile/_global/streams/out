@@ -1,7 +1,0 @@
-[0m[[0m[31merror[0m] [0m[0m/home/caeus/work/caeus/elodin/src/test/scala/com/github/caeus/elodin/ParsingSuites.scala:44:25: value value is not a member of com.github.caeus.plutus.Cursor[String,Char][0m
-[0m[[0m[31merror[0m] [0m[0m        assert(original.value)(equalTo("1")) &&[0m
-[0m[[0m[31merror[0m] [0m[0m                        ^[0m
-[0m[[0m[31merror[0m] [0m[0m/home/caeus/work/caeus/elodin/src/test/scala/com/github/caeus/elodin/ParsingSuites.scala:46:30: value value is not a member of com.github.caeus.plutus.Cursor[String,Char][0m
-[0m[[0m[31merror[0m] [0m[0m        assert(original.tail.value)(equalTo("")) &&[0m
-[0m[[0m[31merror[0m] [0m[0m                             ^[0m
-[0m[[0m[31merror[0m] [0m[0mtwo errors found[0m

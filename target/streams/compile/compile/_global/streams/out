@@ -1,5 +1,0 @@
-[0m[[0m[31merror[0m] [0m[0m/home/caeus/work/caeus/elodin/src/main/scala/com/github/caeus/elodin/frontend/Parser.scala:42:23: match may not be exhaustive.[0m
-[0m[[0m[31merror[0m] [0m[0mIt would fail on the following input: Nil[0m
-[0m[[0m[31merror[0m] [0m[0m        steps.reverse.toList match {[0m
-[0m[[0m[31merror[0m] [0m[0m                      ^[0m
-[0m[[0m[31merror[0m] [0m[0mone error found[0m
