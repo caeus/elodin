@@ -172,7 +172,7 @@ lazy val escape = P("\\") ~ (P("[\"/\\\\bfnrt]".r) | unicodeEscape)
 lazy val strChars = P("""[^\\\"]*""".r)
 
 lazy val stringPacker = (P("\"") ~ (strChars | escape).rep ~ P("\"")).!.map { window =>
-  JSText(Jsoniter.parse(window.value).readString())
+  JSText(unescapeJsonString(window.value))
 }
 lazy val space: Packer[String, Char, Unit] = P(_.isWhitespace).rep.ignore
 lazy val arrayPacker = (P("[") ~ (space ~ jsonPacker).rep(sep = space ~ P(",")) ~ space ~ P("]"))
