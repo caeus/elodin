@@ -28,11 +28,16 @@ class Parser {
     }
   }
 
+  private def genWrap(node: Node): ApplyNode = {
+    ApplyNode(Seq(ReqNode("Gen.wrap"), node))
+  }
   private def recDoNotation(revSteps: List[(String, Node)], result: ApplyNode): ApplyNode = {
     revSteps match {
       case Nil => result
       case (param, step) :: rest =>
-        recDoNotation(rest, ApplyNode(Seq(ReqNode("Gen.chain"), step, FnNode(Seq(param), result))))
+        recDoNotation(
+          rest,
+          ApplyNode(Seq(ReqNode("Gen.chain"), genWrap(step), FnNode(Seq(param), result))))
     }
   }
   lazy val doNotation: Pckr[ApplyNode] = {
@@ -42,7 +47,7 @@ class Parser {
         steps.reverse.toList match {
           case (param, step) :: rest =>
             recDoNotation(rest,
-                          ApplyNode(Seq(ReqNode("Gen.map"), step, FnNode(Seq(param), result))))
+                          ApplyNode(Seq(ReqNode("Gen.map"), genWrap(step), FnNode(Seq(param), result))))
           case Nil => ???
         }
     }
@@ -60,7 +65,9 @@ class Parser {
   lazy val textLiteral: Pckr[TextNode] = P {
     case Text(value) => TextNode(value)
   }
-
+  lazy val requireLiteral: Pckr[ReqNode] = P {
+    case Require(value) => ReqNode(value)
+  }
   lazy val expr: Pckr[Node] = (doNotation |
     textExpr.named("textOutside") |
     letExpr.named("letOutside") |
@@ -72,6 +79,7 @@ class Parser {
     intLiteral |
     floatLiteral |
     boolLiteral |
+    requireLiteral |
     textLiteral).named("expr")
 
   lazy val textExpr: Pckr[TextNode] = Packer.failed("Text not supported yet")
@@ -113,7 +121,6 @@ class Parser {
 
   def parse(seq: Seq[ElodinToken]): Task[Node] = {
     Task.effectSuspend {
-      println(seq.length, "----------------------------------------")
       (expr ~ End).take(Cursor.fromSeq(seq)) match {
         case Done(result, _) => Task.succeed(result)
         case f @ Failed(error) =>

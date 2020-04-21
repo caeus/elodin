@@ -25,7 +25,7 @@ object Scope {
     def unapply(scopeK: Scope[Node]): Option[Scope[N]] = scopeK.narrow[N]
   }
   object WhenLet    extends When[LetNode]
-  object WhenLambda extends When[FnNode]
+  object WhenFn extends When[FnNode]
   object WhenRef    extends When[RefNode]
   object WhenApply  extends When[ApplyNode]
   object WhenReq    extends When[ReqNode]
@@ -80,7 +80,7 @@ object Scope {
       value.widen match {
         case WhenLet(scope) if scope.node.bindings.contains(to) =>
           Some(Left(scope.binding(to).get))
-        case WhenLambda(scope) if scope.node.params.contains(to) =>
+        case WhenFn(scope) if scope.node.params.contains(to) =>
           Some(Right(scope.args.get(scope.node.params.lastIndexOf(to))))
         case _ => enclosing.flatMap(_.resolveRef(to))
       }

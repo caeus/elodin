@@ -9,8 +9,8 @@ import com.github.caeus.elodin.interpreter.scope.Scope.{
   WhenBool,
   WhenDict,
   WhenFloat,
+  WhenFn,
   WhenInt,
-  WhenLambda,
   WhenLet,
   WhenRef,
   WhenReq,
@@ -52,12 +52,12 @@ class Interpreter(moduleLoader: ModuleLoader) {
     } else Task.succeed(func)
 
   def toVal: Scope[Node] => Task[Val] = {
-    case WhenLet(scope) => toVal(scope.body)
-    case WhenLambda(scope) =>
+    case WhenLet(scope) =>
+      toVal(scope.body)
+    case WhenFn(scope) =>
+      println("WHAAAAAA",scope)
       scope.body
-        .map(
-          toVal
-        )
+        .map(toVal)
         .getOrElse(Task.succeed(Val.Lazy(Right(scope.widen))))
     case WhenApply(scope) =>
       Task
@@ -104,8 +104,8 @@ class Interpreter(moduleLoader: ModuleLoader) {
 
   def reduce(scopeK: Scope[Node]): Task[WithRemnant] = {
     val arityAndArgs: Scope[Node] => Task[(Int, Seq[Val])] = {
-      case WhenLambda(scope) => Task.succeed(scope.node.params.size -> scope.args.getOrElse(Nil))
-      case scope             => Task.succeed(0                      -> scope.args.getOrElse(Nil))
+      case WhenFn(scope) => Task.succeed(scope.node.params.size -> scope.args.getOrElse(Nil))
+      case scope         => Task.succeed(0                      -> scope.args.getOrElse(Nil))
     }
     arityAndArgs(scopeK).flatMap {
       case (arity, args) if args.size >= arity =>

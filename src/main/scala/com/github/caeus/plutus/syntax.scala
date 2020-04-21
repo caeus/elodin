@@ -101,7 +101,7 @@ object syntax {
     def ! : Packer[Col, In, Window[Col, In]] = capture(value)
 
     def |[NewOut >: Out](other: Packer[Col, In, NewOut]): Packer[Col, In, NewOut] = {
-      longestOf(value, other)
+      greediestOf(value, other).map(_.fold(identity, identity))
     }
   }
 

@@ -33,7 +33,6 @@ object Path {
 
 }
 sealed trait Node {
-  override final def toString: String = ForNode.print(0)(this)
 }
 
 object Node {

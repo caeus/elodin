@@ -5,134 +5,21 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="02372507-5331-4012-a339-e53c6fde29e8" name="Default Changelist" comment="">
+      <change afterPath="$PROJECT_DIR$/plutus.README.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/scala/com/github/caeus/elodin/frontend/asd/JsonPacker.scala" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/scala/com/github/caeus/elodin/runtime/ModuleSystem.scala" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/test/scala/com/github/caeus/elodin/JsonPackerSuites.scala" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/.history" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/scala-2.13/classes/com/github/caeus/elodin/Main$$anon$1.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/scala-2.13/classes/com/github/caeus/elodin/Main$.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/scala-2.13/classes/com/github/caeus/elodin/Main.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/scala-2.13/classes/com/github/caeus/elodin/generator/ASd$.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/scala-2.13/classes/com/github/caeus/elodin/generator/ASd.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/scala-2.13/classes/com/github/caeus/elodin/generator/Generator$.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/scala-2.13/classes/com/github/caeus/elodin/generator/Generator$Done$.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/scala-2.13/classes/com/github/caeus/elodin/generator/Generator$Done.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/scala-2.13/classes/com/github/caeus/elodin/generator/Generator$Halted$.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/scala-2.13/classes/com/github/caeus/elodin/generator/Generator$Halted.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/scala-2.13/classes/com/github/caeus/elodin/generator/Generator.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/scala-2.13/classes/com/github/caeus/elodin/interpreter/Interpreter.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/scala-2.13/classes/com/github/caeus/elodin/interpreter/ModuleLoader.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/scala-2.13/classes/com/github/caeus/elodin/interpreter/Val$.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/scala-2.13/classes/com/github/caeus/elodin/interpreter/Val$Arr$.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/scala-2.13/classes/com/github/caeus/elodin/interpreter/Val$Arr.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/scala-2.13/classes/com/github/caeus/elodin/interpreter/Val$Bool$.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/scala-2.13/classes/com/github/caeus/elodin/interpreter/Val$Bool.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/scala-2.13/classes/com/github/caeus/elodin/interpreter/Val$Dict$.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/scala-2.13/classes/com/github/caeus/elodin/interpreter/Val$Dict.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/scala-2.13/classes/com/github/caeus/elodin/interpreter/Val.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/scala-2.13/classes/com/github/caeus/elodin/interpreter/package$.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/scala-2.13/classes/com/github/caeus/elodin/interpreter/package.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/scala-2.13/classes/com/github/caeus/elodin/lang/Meta$.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/scala-2.13/classes/com/github/caeus/elodin/lang/Meta.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/scala-2.13/classes/com/github/caeus/elodin/lang/Node$.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/scala-2.13/classes/com/github/caeus/elodin/lang/Node$ArrNode$.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/scala-2.13/classes/com/github/caeus/elodin/lang/Node$ArrNode.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/scala-2.13/classes/com/github/caeus/elodin/lang/Node$BoolNode$.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/scala-2.13/classes/com/github/caeus/elodin/lang/Node$BoolNode.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/scala-2.13/classes/com/github/caeus/elodin/lang/Node$DictNode$.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/scala-2.13/classes/com/github/caeus/elodin/lang/Node$DictNode.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/scala-2.13/classes/com/github/caeus/elodin/lang/Node$IntNode$.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/scala-2.13/classes/com/github/caeus/elodin/lang/Node$IntNode.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/scala-2.13/classes/com/github/caeus/elodin/lang/Node$LetNode$.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/scala-2.13/classes/com/github/caeus/elodin/lang/Node$LetNode.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/scala-2.13/classes/com/github/caeus/elodin/lang/Node$RefNode$.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/scala-2.13/classes/com/github/caeus/elodin/lang/Node$RefNode.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/scala-2.13/classes/com/github/caeus/elodin/lang/Node$ReqNode$.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/scala-2.13/classes/com/github/caeus/elodin/lang/Node$ReqNode.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/scala-2.13/classes/com/github/caeus/elodin/lang/Node.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/scala-2.13/classes/com/github/caeus/elodin/lang/Path$.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/scala-2.13/classes/com/github/caeus/elodin/lang/Path.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/scala-2.13/classes/com/github/caeus/elodin/lang/Step$.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/scala-2.13/classes/com/github/caeus/elodin/lang/Step$Down$.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/scala-2.13/classes/com/github/caeus/elodin/lang/Step$Index$.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/scala-2.13/classes/com/github/caeus/elodin/lang/Step$Index.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/scala-2.13/classes/com/github/caeus/elodin/lang/Step$Key$.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/scala-2.13/classes/com/github/caeus/elodin/lang/Step$Key.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/scala-2.13/classes/com/github/caeus/elodin/lang/Step.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/scala-2.13/classes/logback.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/scala-2.13/test-classes/com/github/caeus/elodin/AllSuites$$anon$1.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/scala-2.13/test-classes/com/github/caeus/elodin/AllSuites$.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/scala-2.13/test-classes/com/github/caeus/elodin/AllSuites.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/scala-2.13/update/update_cache_2.13/inputs" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/scala-2.13/update/update_cache_2.13/output" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/streams/_global/_global/_global/streams/out" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/streams/_global/_global/checkBuildSources/_global/inputFileStamps/previous" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/streams/_global/_global/checkBuildSources/_global/streams/out" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/streams/_global/_global/csrLogger/_global/streams/out" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/streams/_global/_global/dumpStructure/_global/streams/out" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/streams/_global/csrConfiguration/_global/streams/out" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/streams/_global/csrProject/_global/streams/out" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/streams/_global/dependencyPositions/_global/streams/update_cache_2.13/input_dsp" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/streams/_global/dependencyPositions/_global/streams/update_cache_2.13/output_dsp" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/streams/_global/ivyConfiguration/_global/streams/out" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/streams/_global/ivySbt/_global/streams/out" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/streams/_global/moduleSettings/_global/streams/out" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/streams/_global/projectDescriptors/_global/streams/out" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/streams/_global/scalaCompilerBridgeScope/_global/streams/out" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/streams/_global/testListeners/_global/streams/out" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/streams/_global/update/_global/streams/out" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/streams/_global/updateClassifiers/_global/streams/out" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/streams/_global/updateClassifiers/_global/streams/update_cache_2.13/inputs" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/streams/_global/updateClassifiers/_global/streams/update_cache_2.13/output" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/streams/compile/_global/_global/compileBinaryFileInputs/previous" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/streams/compile/_global/_global/compileOutputs/previous" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/streams/compile/_global/_global/compileSourceFileInputs/previous" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/streams/compile/_global/_global/dependencyClasspathFiles/previous" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/streams/compile/_global/_global/discoveredMainClasses/data" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/streams/compile/_global/_global/managedSourcePaths/previous" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/streams/compile/compile/_global/streams/out" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/streams/compile/compileIncSetup/_global/streams/inc_compile_2.13.zip" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/streams/compile/compileIncremental/_global/streams/export" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/streams/compile/compileIncremental/_global/streams/out" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/streams/compile/copyResources/_global/streams/copy-resources" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/streams/compile/copyResources/_global/streams/out" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/streams/compile/dependencyClasspath/_global/streams/export" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/streams/compile/exportedProducts/_global/streams/export" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/streams/compile/externalDependencyClasspath/_global/streams/export" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/streams/compile/internalDependencyClasspath/_global/streams/export" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/streams/compile/managedClasspath/_global/streams/export" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/streams/compile/unmanagedClasspath/_global/streams/export" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/streams/compile/unmanagedJars/_global/streams/export" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/streams/runtime/exportedProducts/_global/streams/export" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/streams/runtime/externalDependencyClasspath/_global/streams/export" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/streams/runtime/managedClasspath/_global/streams/export" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/streams/runtime/unmanagedClasspath/_global/streams/export" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/streams/runtime/unmanagedJars/_global/streams/export" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/streams/test/_global/_global/compileBinaryFileInputs/previous" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/streams/test/_global/_global/compileOutputs/previous" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/streams/test/_global/_global/compileSourceFileInputs/previous" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/streams/test/_global/_global/definedTestNames/data" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/streams/test/_global/_global/dependencyClasspathFiles/previous" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/streams/test/_global/_global/discoveredMainClasses/data" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/streams/test/_global/_global/managedSourcePaths/previous" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/streams/test/compile/_global/streams/out" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/streams/test/compileIncSetup/_global/streams/inc_compile_2.13.zip" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/streams/test/compileIncremental/_global/streams/export" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/streams/test/compileIncremental/_global/streams/out" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/streams/test/copyResources/_global/streams/copy-resources" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/streams/test/copyResources/_global/streams/out" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/streams/test/definedTests/_global/streams/out" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/streams/test/dependencyClasspath/_global/streams/export" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/streams/test/exportedProducts/_global/streams/export" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/streams/test/externalDependencyClasspath/_global/streams/export" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/streams/test/fullClasspath/_global/streams/export" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/streams/test/internalDependencyClasspath/_global/streams/export" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/streams/test/loadedTestFrameworks/_global/streams/out" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/streams/test/managedClasspath/_global/streams/export" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/streams/test/test/_global/streams/out" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/streams/test/test/_global/streams/succeeded_tests" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/streams/test/test/isModule=true name=com.github.caeus.elodin.AllSuites/test/out" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/streams/test/unmanagedClasspath/_global/streams/export" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/streams/test/unmanagedJars/_global/streams/export" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/test-reports/TEST-com.github.caeus.elodin.AllSuites.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/scala/com/github/caeus/elodin/frontend/Lexer.scala" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/scala/com/github/caeus/elodin/frontend/Lexer.scala" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/scala/com/github/caeus/elodin/frontend/Parser.scala" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/scala/com/github/caeus/elodin/frontend/Parser.scala" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/scala/com/github/caeus/elodin/interpreter/Interpreter.scala" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/scala/com/github/caeus/elodin/interpreter/Interpreter.scala" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/scala/com/github/caeus/elodin/interpreter/printers/ForNode.scala" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/scala/com/github/caeus/elodin/interpreter/printers/ForNode.scala" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/scala/com/github/caeus/elodin/interpreter/scope/Scope.scala" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/scala/com/github/caeus/elodin/interpreter/scope/Scope.scala" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/scala/com/github/caeus/elodin/lang/Node.scala" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/scala/com/github/caeus/elodin/lang/Node.scala" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/scala/com/github/caeus/plutus/Packer.scala" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/scala/com/github/caeus/plutus/Packer.scala" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/scala/com/github/caeus/plutus/syntax.scala" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/scala/com/github/caeus/plutus/syntax.scala" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/scala/com/github/caeus/elodin/AllSuites.scala" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/scala/com/github/caeus/elodin/AllSuites.scala" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/scala/com/github/caeus/elodin/ParsingSuites.scala" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/scala/com/github/caeus/elodin/ParsingSuites.scala" afterDir="false" />
     </list>
     <ignored path="$PROJECT_DIR$/classes/" />
     <ignored path="$PROJECT_DIR$/target/" />
@@ -201,11 +88,24 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/src/test/scala/com/github/caeus/elodin/ParsingSuites.scala">
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/main/scala/com/github/caeus/elodin/frontend/asd/JsonPacker.scala">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="247">
-              <caret line="35" column="31" selection-start-line="35" selection-start-column="28" selection-end-line="35" selection-end-column="31" />
+            <state relative-caret-position="316">
+              <caret line="51" column="5" lean-forward="true" selection-start-line="51" selection-start-column="5" selection-end-line="51" selection-end-column="5" />
+              <folding>
+                <element signature="e#46#96#0" expanded="true" />
+                <element signature="e#590#652#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/test/scala/com/github/caeus/elodin/AllSuites.scala">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="304">
+              <caret line="22" selection-start-line="22" selection-end-line="22" />
               <folding>
                 <element signature="e#33#88#0" expanded="true" />
               </folding>
@@ -213,83 +113,14 @@
           </provider>
         </entry>
       </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/main/scala/com/github/caeus/elodin/lang/Node.scala">
+      <file pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/src/main/scala/com/github/caeus/plutus/Packer.scala">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="1045">
-              <caret line="55" column="60" selection-start-line="55" selection-start-column="60" selection-end-line="55" selection-end-column="60" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/main/scala/com/github/caeus/elodin/frontend/Parser.scala">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-209">
-              <caret line="30" column="93" selection-start-line="30" selection-start-column="93" selection-end-line="30" selection-end-column="93" />
+            <state relative-caret-position="168">
+              <caret line="164" selection-start-line="164" selection-end-line="164" />
               <folding>
-                <element signature="e#42#95#0" expanded="true" />
+                <element signature="e#33#91#0" expanded="true" />
               </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/main/scala/com/github/caeus/elodin/frontend/Lexer.scala">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="1938">
-              <caret line="108" column="31" selection-start-line="108" selection-start-column="31" selection-end-line="108" selection-end-column="31" />
-              <folding>
-                <element signature="e#42#95#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/main/scala/com/github/caeus/elodin/interpreter/printers/ForNode.scala">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="172">
-              <caret line="19" column="27" selection-start-line="19" selection-start-column="27" selection-end-line="19" selection-end-column="27" />
-              <folding>
-                <element signature="e#54#94#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="jar://$USER_HOME$/.cache/coursier/v1/https/repo1.maven.org/maven2/com/jsoniter/jsoniter/0.9.1/jsoniter-0.9.1-sources.jar!/com/jsoniter/Jsoniter.java">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="1596">
-              <caret line="95" column="26" selection-start-line="95" selection-start-column="18" selection-end-line="95" selection-end-column="26" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="jar://$USER_HOME$/.cache/coursier/v1/https/repo1.maven.org/maven2/io/circe/circe-core_2.13/0.13.0/circe-core_2.13-0.13.0-sources.jar!/io/circe/Json.scala">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="4693">
-              <caret line="250" column="7" selection-start-line="250" selection-start-column="7" selection-end-line="250" selection-end-column="7" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/build.sbt">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="342">
-              <caret line="18" column="65" selection-start-line="18" selection-start-column="65" selection-end-line="18" selection-end-column="65" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="jar://$USER_HOME$/.cache/coursier/v1/https/repo1.maven.org/maven2/io/circe/circe-core_2.13/0.13.0/circe-core_2.13-0.13.0-sources.jar!/io/circe/Parser.scala">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="76">
-              <caret line="5" column="10" selection-start-line="5" selection-start-column="10" selection-end-line="5" selection-end-column="10" />
             </state>
           </provider>
         </entry>
@@ -297,10 +128,34 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/main/scala/com/github/caeus/plutus/syntax.scala">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="741">
+            <state relative-caret-position="779">
               <caret line="41" column="25" selection-start-line="41" selection-start-column="25" selection-end-line="41" selection-end-column="25" />
               <folding>
                 <element signature="e#33#72#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/test/scala/com/github/caeus/elodin/JsonPackerSuites.scala">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="259">
+              <caret line="27" column="56" selection-start-line="27" selection-start-column="56" selection-end-line="27" selection-end-column="56" />
+              <folding>
+                <element signature="e#33#95#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/test/scala/com/github/caeus/elodin/ParsingSuites.scala">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="430">
+              <caret line="54" column="34" lean-forward="true" selection-start-line="54" selection-start-column="34" selection-end-line="54" selection-end-column="34" />
+              <folding>
+                <element signature="e#33#88#0" expanded="true" />
               </folding>
             </state>
           </provider>
@@ -318,10 +173,6 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>nativ</find>
-      <find>slice</find>
-      <find>def s</find>
-      <find>Order</find>
       <find>silen</find>
       <find>origin</find>
       <find>didn</find>
@@ -333,7 +184,6 @@
       <find>asjh</find>
       <find>alsk</find>
       <find>long</find>
-      <find>Whaa</find>
       <find>longe</find>
       <find>fromI</find>
       <find>Branch</find>
@@ -348,6 +198,11 @@
       <find>^</find>
       <find>println</find>
       <find>logg</find>
+      <find>---</find>
+      <find>logging</find>
+      <find>Whaa</find>
+      <find>hex</find>
+      <find>space</find>
     </findStrings>
     <replaceStrings>
       <replace>=&gt; ???</replace>
@@ -369,9 +224,6 @@
   <component name="IdeDocumentHistory">
     <option name="CHANGED_PATHS">
       <list>
-        <option value="$PROJECT_DIR$/src/main/scala/com/github/caeus/elodin/compile/SelectSwapNodes.scala" />
-        <option value="$PROJECT_DIR$/src/main/scala/com/github/caeus/elodin/compile/PrepareNodes.scala" />
-        <option value="$PROJECT_DIR$/src/main/scala/com/github/caeus/elodin/compile/AnalizeParams.scala" />
         <option value="$PROJECT_DIR$/src/main/scala/com/github/caeus/elodin/compile/Compiler.scala" />
         <option value="$PROJECT_DIR$/src/main/scala/com/github/caeus/elodin/compile/NodeOps.scala" />
         <option value="$PROJECT_DIR$/src/main/scala/com/github/caeus/elodin/generator/Generator.scala" />
@@ -398,9 +250,7 @@
         <option value="$PROJECT_DIR$/src/main/scala/com/github/caeus/elodin/interpreter/Scope.scala" />
         <option value="$PROJECT_DIR$/src/main/scala/com/github/caeus/elodin/interpreter/ModuleLoader.scala" />
         <option value="$PROJECT_DIR$/src/main/scala/com/github/caeus/elodin/interpreter/scope/ScopeK.scala" />
-        <option value="$PROJECT_DIR$/src/main/scala/com/github/caeus/elodin/interpreter/scope/Scope.scala" />
         <option value="$PROJECT_DIR$/src/main/scala/com/github/caeus/elodin/interpreter/printers/ForVal.scala" />
-        <option value="$PROJECT_DIR$/src/main/scala/com/github/caeus/elodin/interpreter/Interpreter.scala" />
         <option value="$PROJECT_DIR$/src/test/scala/com/github/caeus/elodin/T2Suites.scala" />
         <option value="$PROJECT_DIR$/src/test/scala/com/github/caeus/elodin/scriptFile.scala" />
         <option value="$PROJECT_DIR$/src/main/scala/com/github/caeus/plutus/TupOps.scala" />
@@ -411,15 +261,20 @@
         <option value="$PROJECT_DIR$/src/main/scala/com/github/caeus/plutus/Slicter.scala" />
         <option value="$PROJECT_DIR$/src/main/scala/com/github/caeus/plutus/Slicer.scala" />
         <option value="$PROJECT_DIR$/src/main/scala/com/github/caeus/plutus/Cursor.scala" />
-        <option value="$PROJECT_DIR$/src/test/scala/com/github/caeus/elodin/AllSuites.scala" />
-        <option value="$PROJECT_DIR$/src/main/scala/com/github/caeus/plutus/Packer.scala" />
-        <option value="$PROJECT_DIR$/src/main/scala/com/github/caeus/plutus/syntax.scala" />
         <option value="$PROJECT_DIR$/build.sbt" />
+        <option value="$PROJECT_DIR$/src/main/scala/com/github/caeus/elodin/interpreter/printers/ForNode.scala" />
+        <option value="$PROJECT_DIR$/src/main/scala/com/github/caeus/elodin/interpreter/scope/Scope.scala" />
+        <option value="$PROJECT_DIR$/src/main/scala/com/github/caeus/elodin/interpreter/Interpreter.scala" />
+        <option value="$PROJECT_DIR$/src/test/scala/com/github/caeus/elodin/AllSuites.scala" />
         <option value="$PROJECT_DIR$/src/main/scala/com/github/caeus/elodin/lang/Node.scala" />
-        <option value="$PROJECT_DIR$/src/test/scala/com/github/caeus/elodin/ParsingSuites.scala" />
         <option value="$PROJECT_DIR$/src/main/scala/com/github/caeus/elodin/frontend/Parser.scala" />
         <option value="$PROJECT_DIR$/src/main/scala/com/github/caeus/elodin/frontend/Lexer.scala" />
-        <option value="$PROJECT_DIR$/src/main/scala/com/github/caeus/elodin/interpreter/printers/ForNode.scala" />
+        <option value="$PROJECT_DIR$/src/main/scala/com/github/caeus/elodin/frontend/asd/Asd.scala" />
+        <option value="$PROJECT_DIR$/src/test/scala/com/github/caeus/elodin/ParsingSuites.scala" />
+        <option value="$PROJECT_DIR$/src/main/scala/com/github/caeus/elodin/frontend/asd/JsonPacker.scala" />
+        <option value="$PROJECT_DIR$/src/test/scala/com/github/caeus/elodin/JsonPackerSuites.scala" />
+        <option value="$PROJECT_DIR$/src/main/scala/com/github/caeus/plutus/Packer.scala" />
+        <option value="$PROJECT_DIR$/src/main/scala/com/github/caeus/plutus/syntax.scala" />
       </list>
     </option>
   </component>
@@ -435,11 +290,149 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
+      <pane id="PackagesPane" />
       <pane id="ProjectPane">
         <subPane>
           <expand>
             <path>
               <item name="elodin" type="b2602c69:ProjectViewProjectNode" />
+              <item name="elodin" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="elodin" type="b2602c69:ProjectViewProjectNode" />
+              <item name="elodin" type="462c0819:PsiDirectoryNode" />
+              <item name="src" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="elodin" type="b2602c69:ProjectViewProjectNode" />
+              <item name="elodin" type="462c0819:PsiDirectoryNode" />
+              <item name="src" type="462c0819:PsiDirectoryNode" />
+              <item name="main" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="elodin" type="b2602c69:ProjectViewProjectNode" />
+              <item name="elodin" type="462c0819:PsiDirectoryNode" />
+              <item name="src" type="462c0819:PsiDirectoryNode" />
+              <item name="main" type="462c0819:PsiDirectoryNode" />
+              <item name="scala" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="elodin" type="b2602c69:ProjectViewProjectNode" />
+              <item name="elodin" type="462c0819:PsiDirectoryNode" />
+              <item name="src" type="462c0819:PsiDirectoryNode" />
+              <item name="main" type="462c0819:PsiDirectoryNode" />
+              <item name="scala" type="462c0819:PsiDirectoryNode" />
+              <item name="caeus" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="elodin" type="b2602c69:ProjectViewProjectNode" />
+              <item name="elodin" type="462c0819:PsiDirectoryNode" />
+              <item name="src" type="462c0819:PsiDirectoryNode" />
+              <item name="main" type="462c0819:PsiDirectoryNode" />
+              <item name="scala" type="462c0819:PsiDirectoryNode" />
+              <item name="caeus" type="462c0819:PsiDirectoryNode" />
+              <item name="elodin" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="elodin" type="b2602c69:ProjectViewProjectNode" />
+              <item name="elodin" type="462c0819:PsiDirectoryNode" />
+              <item name="src" type="462c0819:PsiDirectoryNode" />
+              <item name="main" type="462c0819:PsiDirectoryNode" />
+              <item name="scala" type="462c0819:PsiDirectoryNode" />
+              <item name="caeus" type="462c0819:PsiDirectoryNode" />
+              <item name="elodin" type="462c0819:PsiDirectoryNode" />
+              <item name="frontend" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="elodin" type="b2602c69:ProjectViewProjectNode" />
+              <item name="elodin" type="462c0819:PsiDirectoryNode" />
+              <item name="src" type="462c0819:PsiDirectoryNode" />
+              <item name="main" type="462c0819:PsiDirectoryNode" />
+              <item name="scala" type="462c0819:PsiDirectoryNode" />
+              <item name="caeus" type="462c0819:PsiDirectoryNode" />
+              <item name="elodin" type="462c0819:PsiDirectoryNode" />
+              <item name="frontend" type="462c0819:PsiDirectoryNode" />
+              <item name="asd" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="elodin" type="b2602c69:ProjectViewProjectNode" />
+              <item name="elodin" type="462c0819:PsiDirectoryNode" />
+              <item name="src" type="462c0819:PsiDirectoryNode" />
+              <item name="main" type="462c0819:PsiDirectoryNode" />
+              <item name="scala" type="462c0819:PsiDirectoryNode" />
+              <item name="caeus" type="462c0819:PsiDirectoryNode" />
+              <item name="elodin" type="462c0819:PsiDirectoryNode" />
+              <item name="generator" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="elodin" type="b2602c69:ProjectViewProjectNode" />
+              <item name="elodin" type="462c0819:PsiDirectoryNode" />
+              <item name="src" type="462c0819:PsiDirectoryNode" />
+              <item name="main" type="462c0819:PsiDirectoryNode" />
+              <item name="scala" type="462c0819:PsiDirectoryNode" />
+              <item name="caeus" type="462c0819:PsiDirectoryNode" />
+              <item name="elodin" type="462c0819:PsiDirectoryNode" />
+              <item name="interpreter" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="elodin" type="b2602c69:ProjectViewProjectNode" />
+              <item name="elodin" type="462c0819:PsiDirectoryNode" />
+              <item name="src" type="462c0819:PsiDirectoryNode" />
+              <item name="main" type="462c0819:PsiDirectoryNode" />
+              <item name="scala" type="462c0819:PsiDirectoryNode" />
+              <item name="caeus" type="462c0819:PsiDirectoryNode" />
+              <item name="elodin" type="462c0819:PsiDirectoryNode" />
+              <item name="interpreter" type="462c0819:PsiDirectoryNode" />
+              <item name="printers" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="elodin" type="b2602c69:ProjectViewProjectNode" />
+              <item name="elodin" type="462c0819:PsiDirectoryNode" />
+              <item name="src" type="462c0819:PsiDirectoryNode" />
+              <item name="main" type="462c0819:PsiDirectoryNode" />
+              <item name="scala" type="462c0819:PsiDirectoryNode" />
+              <item name="caeus" type="462c0819:PsiDirectoryNode" />
+              <item name="elodin" type="462c0819:PsiDirectoryNode" />
+              <item name="lang" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="elodin" type="b2602c69:ProjectViewProjectNode" />
+              <item name="elodin" type="462c0819:PsiDirectoryNode" />
+              <item name="src" type="462c0819:PsiDirectoryNode" />
+              <item name="main" type="462c0819:PsiDirectoryNode" />
+              <item name="scala" type="462c0819:PsiDirectoryNode" />
+              <item name="caeus" type="462c0819:PsiDirectoryNode" />
+              <item name="elodin" type="462c0819:PsiDirectoryNode" />
+              <item name="runtime" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="elodin" type="b2602c69:ProjectViewProjectNode" />
+              <item name="elodin" type="462c0819:PsiDirectoryNode" />
+              <item name="src" type="462c0819:PsiDirectoryNode" />
+              <item name="main" type="462c0819:PsiDirectoryNode" />
+              <item name="scala" type="462c0819:PsiDirectoryNode" />
+              <item name="caeus" type="462c0819:PsiDirectoryNode" />
+              <item name="plutus" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="elodin" type="b2602c69:ProjectViewProjectNode" />
+              <item name="elodin" type="462c0819:PsiDirectoryNode" />
+              <item name="src" type="462c0819:PsiDirectoryNode" />
+              <item name="test" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="elodin" type="b2602c69:ProjectViewProjectNode" />
+              <item name="elodin" type="462c0819:PsiDirectoryNode" />
+              <item name="src" type="462c0819:PsiDirectoryNode" />
+              <item name="test" type="462c0819:PsiDirectoryNode" />
+              <item name="scala" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="elodin" type="b2602c69:ProjectViewProjectNode" />
+              <item name="elodin" type="462c0819:PsiDirectoryNode" />
+              <item name="src" type="462c0819:PsiDirectoryNode" />
+              <item name="test" type="462c0819:PsiDirectoryNode" />
+              <item name="scala" type="462c0819:PsiDirectoryNode" />
               <item name="elodin" type="462c0819:PsiDirectoryNode" />
             </path>
             <path>
@@ -475,103 +468,86 @@
             <path>
               <item name="elodin" type="b2602c69:ProjectViewProjectNode" />
               <item name="External Libraries" type="cb654da1:ExternalLibrariesNode" />
-              <item name="&lt; 1.8 &gt;" type="70bed36:NamedLibraryElementNode" />
-              <item name="rt.jar" type="462c0819:PsiDirectoryNode" />
-              <item name="java" type="462c0819:PsiDirectoryNode" />
-              <item name="util" type="462c0819:PsiDirectoryNode" />
+              <item name="sbt: com.jsoniter:jsoniter:0.9.1:jar" type="70bed36:NamedLibraryElementNode" />
             </path>
             <path>
               <item name="elodin" type="b2602c69:ProjectViewProjectNode" />
               <item name="External Libraries" type="cb654da1:ExternalLibrariesNode" />
-              <item name="&lt; 1.8 &gt;" type="70bed36:NamedLibraryElementNode" />
-              <item name="rt.jar" type="462c0819:PsiDirectoryNode" />
-              <item name="java" type="462c0819:PsiDirectoryNode" />
-              <item name="util" type="462c0819:PsiDirectoryNode" />
-              <item name="regex" type="462c0819:PsiDirectoryNode" />
+              <item name="sbt: com.jsoniter:jsoniter:0.9.1:jar" type="70bed36:NamedLibraryElementNode" />
+              <item name="jsoniter-0.9.1.jar" type="462c0819:PsiDirectoryNode" />
             </path>
             <path>
               <item name="elodin" type="b2602c69:ProjectViewProjectNode" />
               <item name="External Libraries" type="cb654da1:ExternalLibrariesNode" />
-              <item name="sbt: sbt-and-plugins" type="70bed36:NamedLibraryElementNode" />
+              <item name="sbt: com.jsoniter:jsoniter:0.9.1:jar" type="70bed36:NamedLibraryElementNode" />
+              <item name="jsoniter-0.9.1.jar" type="462c0819:PsiDirectoryNode" />
+              <item name="jsoniter" type="462c0819:PsiDirectoryNode" />
             </path>
             <path>
               <item name="elodin" type="b2602c69:ProjectViewProjectNode" />
               <item name="External Libraries" type="cb654da1:ExternalLibrariesNode" />
-              <item name="sbt: sbt-and-plugins" type="70bed36:NamedLibraryElementNode" />
-              <item name="scala-compiler.jar" type="462c0819:PsiDirectoryNode" />
+              <item name="sbt: dev.zio:zio_2.13:1.0.0-RC18-2:jar" type="70bed36:NamedLibraryElementNode" />
             </path>
             <path>
               <item name="elodin" type="b2602c69:ProjectViewProjectNode" />
               <item name="External Libraries" type="cb654da1:ExternalLibrariesNode" />
-              <item name="sbt: sbt-and-plugins" type="70bed36:NamedLibraryElementNode" />
-              <item name="scala-compiler.jar" type="462c0819:PsiDirectoryNode" />
+              <item name="sbt: dev.zio:zio_2.13:1.0.0-RC18-2:jar" type="70bed36:NamedLibraryElementNode" />
+              <item name="zio_2.13-1.0.0-RC18-2.jar" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="elodin" type="b2602c69:ProjectViewProjectNode" />
+              <item name="External Libraries" type="cb654da1:ExternalLibrariesNode" />
+              <item name="sbt: dev.zio:zio_2.13:1.0.0-RC18-2:jar" type="70bed36:NamedLibraryElementNode" />
+              <item name="zio_2.13-1.0.0-RC18-2.jar" type="462c0819:PsiDirectoryNode" />
+              <item name="zio" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="elodin" type="b2602c69:ProjectViewProjectNode" />
+              <item name="External Libraries" type="cb654da1:ExternalLibrariesNode" />
+              <item name="sbt: dev.zio:zio_2.13:1.0.0-RC18-2:jar" type="70bed36:NamedLibraryElementNode" />
+              <item name="zio_2.13-1.0.0-RC18-2.jar" type="462c0819:PsiDirectoryNode" />
+              <item name="zio" type="462c0819:PsiDirectoryNode" />
+              <item name="duration" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="elodin" type="b2602c69:ProjectViewProjectNode" />
+              <item name="External Libraries" type="cb654da1:ExternalLibrariesNode" />
+              <item name="sbt: org.scala-lang:scala-library:2.13.1:jar" type="70bed36:NamedLibraryElementNode" />
+            </path>
+            <path>
+              <item name="elodin" type="b2602c69:ProjectViewProjectNode" />
+              <item name="External Libraries" type="cb654da1:ExternalLibrariesNode" />
+              <item name="sbt: org.scala-lang:scala-library:2.13.1:jar" type="70bed36:NamedLibraryElementNode" />
+              <item name="scala-library-2.13.1.jar" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="elodin" type="b2602c69:ProjectViewProjectNode" />
+              <item name="External Libraries" type="cb654da1:ExternalLibrariesNode" />
+              <item name="sbt: org.scala-lang:scala-library:2.13.1:jar" type="70bed36:NamedLibraryElementNode" />
+              <item name="scala-library-2.13.1.jar" type="462c0819:PsiDirectoryNode" />
               <item name="scala" type="462c0819:PsiDirectoryNode" />
             </path>
             <path>
               <item name="elodin" type="b2602c69:ProjectViewProjectNode" />
               <item name="External Libraries" type="cb654da1:ExternalLibrariesNode" />
-              <item name="sbt: sbt-and-plugins" type="70bed36:NamedLibraryElementNode" />
-              <item name="scala-compiler.jar" type="462c0819:PsiDirectoryNode" />
+              <item name="sbt: org.scala-lang:scala-library:2.13.1:jar" type="70bed36:NamedLibraryElementNode" />
+              <item name="scala-library-2.13.1.jar" type="462c0819:PsiDirectoryNode" />
               <item name="scala" type="462c0819:PsiDirectoryNode" />
-              <item name="tools" type="462c0819:PsiDirectoryNode" />
+              <item name="collection" type="462c0819:PsiDirectoryNode" />
             </path>
             <path>
               <item name="elodin" type="b2602c69:ProjectViewProjectNode" />
               <item name="External Libraries" type="cb654da1:ExternalLibrariesNode" />
-              <item name="sbt: sbt-and-plugins" type="70bed36:NamedLibraryElementNode" />
-              <item name="scala-compiler.jar" type="462c0819:PsiDirectoryNode" />
+              <item name="sbt: org.scala-lang:scala-library:2.13.1:jar" type="70bed36:NamedLibraryElementNode" />
+              <item name="scala-library-2.13.1.jar" type="462c0819:PsiDirectoryNode" />
               <item name="scala" type="462c0819:PsiDirectoryNode" />
-              <item name="tools" type="462c0819:PsiDirectoryNode" />
-              <item name="nsc" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="elodin" type="b2602c69:ProjectViewProjectNode" />
-              <item name="External Libraries" type="cb654da1:ExternalLibrariesNode" />
-              <item name="sbt: sbt-and-plugins" type="70bed36:NamedLibraryElementNode" />
-              <item name="scala-compiler.jar" type="462c0819:PsiDirectoryNode" />
-              <item name="scala" type="462c0819:PsiDirectoryNode" />
-              <item name="tools" type="462c0819:PsiDirectoryNode" />
-              <item name="reflect" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="elodin" type="b2602c69:ProjectViewProjectNode" />
-              <item name="External Libraries" type="cb654da1:ExternalLibrariesNode" />
-              <item name="sbt: sbt-and-plugins" type="70bed36:NamedLibraryElementNode" />
-              <item name="scala-reflect.jar" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="elodin" type="b2602c69:ProjectViewProjectNode" />
-              <item name="External Libraries" type="cb654da1:ExternalLibrariesNode" />
-              <item name="sbt: sbt-and-plugins" type="70bed36:NamedLibraryElementNode" />
-              <item name="scala-reflect.jar" type="462c0819:PsiDirectoryNode" />
-              <item name="reflect" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="elodin" type="b2602c69:ProjectViewProjectNode" />
-              <item name="External Libraries" type="cb654da1:ExternalLibrariesNode" />
-              <item name="sbt: sbt-and-plugins" type="70bed36:NamedLibraryElementNode" />
-              <item name="util-logging_2.12-1.3.3.jar" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="elodin" type="b2602c69:ProjectViewProjectNode" />
-              <item name="External Libraries" type="cb654da1:ExternalLibrariesNode" />
-              <item name="sbt: sbt-and-plugins" type="70bed36:NamedLibraryElementNode" />
-              <item name="util-logging_2.12-1.3.3.jar" type="462c0819:PsiDirectoryNode" />
-              <item name="sbt" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="elodin" type="b2602c69:ProjectViewProjectNode" />
-              <item name="External Libraries" type="cb654da1:ExternalLibrariesNode" />
-              <item name="sbt: sbt-and-plugins" type="70bed36:NamedLibraryElementNode" />
-              <item name="util-logging_2.12-1.3.3.jar" type="462c0819:PsiDirectoryNode" />
-              <item name="sbt" type="462c0819:PsiDirectoryNode" />
-              <item name="util" type="462c0819:PsiDirectoryNode" />
+              <item name="collection" type="462c0819:PsiDirectoryNode" />
+              <item name="mutable" type="462c0819:PsiDirectoryNode" />
             </path>
           </expand>
           <select />
         </subPane>
       </pane>
-      <pane id="PackagesPane" />
       <pane id="Scope" />
     </panes>
   </component>
@@ -711,17 +687,21 @@
       <workItem from="1586545056724" duration="1797000" />
       <workItem from="1586794824267" duration="71707000" />
       <workItem from="1587125865165" duration="5219000" />
-      <workItem from="1587131109862" duration="1240000" />
+      <workItem from="1587131109862" duration="14191000" />
+      <workItem from="1587411303128" duration="1385000" />
+      <workItem from="1587422129010" duration="3759000" />
+      <workItem from="1587426637916" duration="1617000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="456749000" />
+    <option name="totallyTimeSpent" value="476461000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="67" y="25" width="1853" height="1055" extended-state="6" />
+    <editor active="true" />
     <layout>
-      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.31820697" />
+      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.32982844" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info id="Designer" order="2" />
       <window_info id="Image Layers" order="3" />
@@ -729,7 +709,7 @@
       <window_info id="UI Designer" order="5" />
       <window_info id="Favorites" order="6" side_tool="true" />
       <window_info anchor="bottom" id="Message" order="0" />
-      <window_info anchor="bottom" id="Find" order="1" />
+      <window_info anchor="bottom" id="Find" order="1" weight="0.32937366" />
       <window_info anchor="bottom" id="Run" order="2" />
       <window_info anchor="bottom" id="Debug" order="3" weight="0.4" />
       <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
@@ -737,7 +717,7 @@
       <window_info anchor="bottom" id="TODO" order="6" />
       <window_info anchor="bottom" id="Build" order="7" weight="0.32937366" />
       <window_info anchor="bottom" id="sbt-shell-toolwindow" order="8" weight="0.3297414" />
-      <window_info anchor="bottom" id="Terminal" order="9" sideWeight="0.7426674" visible="true" weight="0.39416847" />
+      <window_info active="true" anchor="bottom" id="Terminal" order="9" sideWeight="0.7426674" visible="true" weight="0.39416847" />
       <window_info anchor="bottom" id="Docker" order="10" show_stripe_button="false" />
       <window_info anchor="bottom" id="Event Log" order="11" sideWeight="0.2573326" side_tool="true" weight="0.3297414" />
       <window_info anchor="bottom" id="Database Changes" order="12" />
@@ -751,7 +731,7 @@
       <window_info anchor="right" id="sbt" order="5" weight="0.09905922" />
       <window_info anchor="right" id="Capture Analysis" order="6" />
       <window_info anchor="right" id="Gradle" order="7" />
-      <window_info anchor="right" id="Database" order="8" />
+      <window_info anchor="right" id="Database" order="8" weight="0.11621472" />
       <window_info anchor="right" id="Palette&#9;" order="9" />
       <window_info anchor="right" id="Theme Preview" order="10" />
     </layout>
@@ -760,96 +740,6 @@
     <option name="version" value="1" />
   </component>
   <component name="editorHistoryManager">
-    <entry file="jar://$USER_HOME$/.cache/coursier/v1/https/repo1.maven.org/maven2/dev/zio/zio-test_2.13/1.0.0-RC18-2/zio-test_2.13-1.0.0-RC18-2-sources.jar!/zio/test/FailureDetails.scala">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="133">
-          <caret line="21" column="17" selection-start-line="21" selection-start-column="17" selection-end-line="21" selection-end-column="17" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="jar://$USER_HOME$/.cache/coursier/v1/https/repo1.maven.org/maven2/com/softwaremill/tapir/tapir-core_2.13/0.11.10/tapir-core_2.13-0.11.10-sources.jar!/tapir/typelevel/TupleOps.scala">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="367">
-          <caret line="26" column="7" selection-start-line="26" selection-start-column="7" selection-end-line="26" selection-end-column="7" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="jar://$USER_HOME$/.cache/coursier/v1/https/repo1.maven.org/maven2/com/softwaremill/tapir/tapir-core_2.13/0.11.10/tapir-core_2.13-0.11.10-sources.jar!/tapir/typelevel/ParamConcat.scala">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="418">
-          <caret line="28" column="71" selection-start-line="28" selection-start-column="71" selection-end-line="28" selection-end-column="71" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="jar://$USER_HOME$/.cache/coursier/v1/https/repo1.maven.org/maven2/com/softwaremill/tapir/tapir-core_2.13/0.11.10/tapir-core_2.13-0.11.10-sources.jar!/tapir/Endpoint.scala">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="215">
-          <caret line="31" column="42" selection-start-line="31" selection-start-column="42" selection-end-line="31" selection-end-column="42" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="jar://$USER_HOME$/.cache/coursier/v1/https/repo1.maven.org/maven2/com/softwaremill/tapir/tapir-core_2.13/0.11.10/tapir-core_2.13-0.11.10-sources.jar!/tapir/EndpointIO.scala">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="95">
-          <caret line="14" column="6" selection-start-line="14" selection-start-column="6" selection-end-line="14" selection-end-column="6" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="jar://$USER_HOME$/.cache/coursier/v1/https/repo1.maven.org/maven2/org/scala-lang/scala-library/2.13.1/scala-library-2.13.1-sources.jar!/scala/collection/BuildFrom.scala">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="589">
-          <caret line="45" column="7" selection-start-line="45" selection-start-column="7" selection-end-line="45" selection-end-column="7" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="jar://$USER_HOME$/.cache/coursier/v1/https/repo1.maven.org/maven2/org/scala-lang/scala-library/2.13.1/scala-library-2.13.1-sources.jar!/scala/collection/mutable/Builder.scala">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="228">
-          <caret line="22" column="6" selection-start-line="22" selection-start-column="6" selection-end-line="22" selection-end-column="6" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="jar:///usr/lib/jvm/java-1.8.0-openjdk-amd64/jre/lib/rt.jar!/java/lang/CharacterData.class">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="196">
-          <caret line="15" column="21" selection-start-line="15" selection-start-column="21" selection-end-line="15" selection-end-column="21" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="jar://$USER_HOME$/.cache/coursier/v1/https/repo1.maven.org/maven2/org/scala-lang/scala-library/2.13.1/scala-library-2.13.1-sources.jar!/scala/runtime/RichChar.scala">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="196">
-          <caret line="40" column="61" selection-start-line="40" selection-start-column="61" selection-end-line="40" selection-end-column="61" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="jar:///usr/lib/jvm/java-1.8.0-openjdk-amd64/jre/lib/rt.jar!/java/lang/Character.class">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="215">
-          <caret line="442" column="23" selection-start-line="442" selection-start-column="23" selection-end-line="442" selection-end-column="23" />
-          <folding>
-            <element signature="e#14422#14423#0" expanded="true" />
-            <element signature="e#14471#14472#0" expanded="true" />
-            <element signature="e#14526#14527#0" expanded="true" />
-            <element signature="e#14580#14581#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="jar://$USER_HOME$/.cache/coursier/v1/https/repo1.maven.org/maven2/org/scala-lang/scala-library/2.13.1/scala-library-2.13.1-sources.jar!/scala/collection/mutable/ListBuffer.scala">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="196">
-          <caret line="37" column="19" selection-start-line="37" selection-start-column="19" selection-end-line="37" selection-end-column="19" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="jar://$USER_HOME$/.cache/coursier/v1/https/repo1.maven.org/maven2/org/scala-lang/scala-library/2.13.1/scala-library-2.13.1-sources.jar!/scala/collection/immutable/List.scala">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="329">
-          <caret line="619" column="50" selection-start-line="619" selection-start-column="50" selection-end-line="619" selection-end-column="50" />
-        </state>
-      </provider>
-    </entry>
     <entry file="jar://$USER_HOME$/.cache/coursier/v1/https/repo1.maven.org/maven2/org/scala-lang/scala-library/2.13.1/scala-library-2.13.1-sources.jar!/scala/collection/immutable/Queue.scala">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="188">
@@ -929,13 +819,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/scala/com/github/caeus/elodin/generator/Gen.scala">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="378">
-          <caret line="25" column="13" selection-start-line="25" selection-start-column="13" selection-end-line="25" selection-end-column="13" />
-        </state>
-      </provider>
-    </entry>
     <entry file="jar://$USER_HOME$/.cache/coursier/v1/https/repo1.maven.org/maven2/org/slf4j/slf4j-api/1.7.26/slf4j-api-1.7.26-sources.jar!/org/slf4j/MarkerFactory.java">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="-533">
@@ -999,13 +882,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/scala/com/github/caeus/elodin/interpreter/Interpreter.scala">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="322">
-          <caret line="88" column="58" selection-start-line="88" selection-start-column="58" selection-end-line="88" selection-end-column="58" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/src/main/scala/com/github/caeus/plutus/Cursor.scala">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="190">
@@ -1013,33 +889,10 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/test/scala/com/github/caeus/elodin/AllSuites.scala">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="266">
-          <caret line="54" selection-start-line="54" selection-end-line="54" />
-          <folding>
-            <element signature="e#33#77#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/scala/com/github/caeus/elodin/interpreter/ModuleLoader.scala">
-      <provider selected="true" editor-type-id="text-editor" />
-    </entry>
     <entry file="jar:///usr/lib/jvm/java-1.8.0-openjdk-amd64/jre/lib/rt.jar!/java/util/regex/Pattern.class">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="301">
           <caret line="81" column="16" lean-forward="true" selection-start-line="81" selection-start-column="16" selection-end-line="81" selection-end-column="16" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/scala/com/github/caeus/plutus/Packer.scala">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="158">
-          <caret line="78" column="6" selection-start-line="78" selection-start-column="6" selection-end-line="78" selection-end-column="6" />
-          <folding>
-            <element signature="e#33#91#0" expanded="true" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -1068,30 +921,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/scala/com/github/caeus/elodin/lang/Node.scala">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1045">
-          <caret line="55" column="60" selection-start-line="55" selection-start-column="60" selection-end-line="55" selection-end-column="60" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/scala/com/github/caeus/elodin/frontend/Lexer.scala">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1938">
-          <caret line="108" column="31" selection-start-line="108" selection-start-column="31" selection-end-line="108" selection-end-column="31" />
-          <folding>
-            <element signature="e#42#95#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="jar://$USER_HOME$/.cache/coursier/v1/https/repo1.maven.org/maven2/com/jsoniter/jsoniter/0.9.1/jsoniter-0.9.1-sources.jar!/com/jsoniter/Jsoniter.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1596">
-          <caret line="95" column="26" selection-start-line="95" selection-start-column="18" selection-end-line="95" selection-end-column="26" />
-        </state>
-      </provider>
-    </entry>
     <entry file="jar://$USER_HOME$/.cache/coursier/v1/https/repo1.maven.org/maven2/io/circe/circe-core_2.13/0.13.0/circe-core_2.13-0.13.0-sources.jar!/io/circe/Json.scala">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="4693">
@@ -1113,9 +942,181 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/.gitignore">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="jar://$USER_HOME$/.cache/coursier/v1/https/repo1.maven.org/maven2/org/scala-lang/scala-library/2.13.1/scala-library-2.13.1-sources.jar!/scala/collection/mutable/Growable.scala">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="291">
+          <caret line="67" column="22" selection-start-line="67" selection-start-column="22" selection-end-line="67" selection-end-column="22" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="jar://$USER_HOME$/.cache/coursier/v1/https/repo1.maven.org/maven2/com/jsoniter/jsoniter/0.9.1/jsoniter-0.9.1-sources.jar!/com/jsoniter/Jsoniter.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-9329">
+          <caret line="15" column="13" selection-start-line="15" selection-start-column="13" selection-end-line="15" selection-end-column="13" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="jar://$USER_HOME$/.cache/coursier/v1/https/repo1.maven.org/maven2/org/scala-lang/scala-library/2.13.1/scala-library-2.13.1-sources.jar!/scala/collection/mutable/StringBuilder.scala">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="177">
+          <caret line="40" column="12" selection-start-line="40" selection-start-column="12" selection-end-line="40" selection-end-column="12" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="jar:///usr/lib/jvm/java-1.8.0-openjdk-amd64/jre/lib/rt.jar!/java/lang/Object.class">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="177">
+          <caret line="23" column="18" selection-start-line="23" selection-start-column="18" selection-end-line="23" selection-end-column="18" />
+          <folding>
+            <element signature="e#487#488#0" expanded="true" />
+            <element signature="e#580#581#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/scala/com/github/caeus/elodin/interpreter/scope/Scope.scala">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="177">
+          <caret line="27" column="13" selection-start-line="27" selection-start-column="13" selection-end-line="27" selection-end-column="13" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/scala/com/github/caeus/elodin/interpreter/ModuleLoader.scala">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/scala/com/github/caeus/elodin/interpreter/Interpreter.scala">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="323">
+          <caret line="38" column="3" lean-forward="true" selection-start-line="38" selection-start-column="3" selection-end-line="38" selection-end-column="3" />
+          <folding>
+            <element signature="e#45#96#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/scala/com/github/caeus/elodin/lang/Node.scala">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="665">
+          <caret line="35" selection-start-line="35" selection-end-line="35" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/plutus.README.md">
+      <provider selected="true" editor-type-id="split-provider[text-editor;markdown-preview-editor]">
+        <state split_layout="SPLIT">
+          <first_editor />
+          <second_editor />
+        </state>
+      </provider>
+    </entry>
+    <entry file="jar://$USER_HOME$/.cache/coursier/v1/https/repo1.maven.org/maven2/dev/zio/zio_2.13/1.0.0-RC18-2/zio_2.13-1.0.0-RC18-2-sources.jar!/zio/ZIO.scala">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="7353">
+          <caret line="411" column="31" selection-start-line="411" selection-start-column="31" selection-end-line="411" selection-end-column="31" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="jar://$USER_HOME$/.cache/coursier/v1/https/repo1.maven.org/maven2/dev/zio/zio_2.13/1.0.0-RC18-2/zio_2.13-1.0.0-RC18-2-sources.jar!/zio/duration/Duration.scala">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="228">
+          <caret line="30" column="13" selection-start-line="30" selection-start-column="13" selection-end-line="30" selection-end-column="13" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/scala/com/github/caeus/elodin/interpreter/printers/ForNode.scala">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="2831">
+          <caret line="156" column="21" selection-start-line="156" selection-start-column="21" selection-end-line="156" selection-end-column="21" />
+          <folding>
+            <element signature="e#54#105#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/scala/com/github/caeus/elodin/generator/Generator.scala">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/scala/com/github/caeus/elodin/generator/Gen.scala">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="475">
+          <caret line="25" column="13" selection-start-line="25" selection-start-column="13" selection-end-line="25" selection-end-column="13" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/scala/com/github/caeus/elodin/frontend/Parser.scala">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="798">
+          <caret line="49" column="73" selection-start-line="49" selection-start-column="73" selection-end-line="49" selection-end-column="73" />
+          <folding>
+            <element signature="e#42#95#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/scala/com/github/caeus/elodin/frontend/Lexer.scala">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="1596">
+          <caret line="90" column="30" selection-start-line="90" selection-start-column="25" selection-end-line="90" selection-end-column="30" />
+          <folding>
+            <element signature="e#42#95#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/scala/com/github/caeus/elodin/runtime/ModuleSystem.scala">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="38">
+          <caret line="2" column="20" selection-start-line="2" selection-start-column="20" selection-end-line="2" selection-end-column="20" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/test/scala/com/github/caeus/elodin/AllSuites.scala">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="304">
+          <caret line="22" selection-start-line="22" selection-end-line="22" />
+          <folding>
+            <element signature="e#33#88#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/test/scala/com/github/caeus/elodin/ParsingSuites.scala">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="430">
+          <caret line="54" column="34" lean-forward="true" selection-start-line="54" selection-start-column="34" selection-end-line="54" selection-end-column="34" />
+          <folding>
+            <element signature="e#33#88#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/scala/com/github/caeus/elodin/frontend/asd/JsonPacker.scala">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="316">
+          <caret line="51" column="5" lean-forward="true" selection-start-line="51" selection-start-column="5" selection-end-line="51" selection-end-column="5" />
+          <folding>
+            <element signature="e#46#96#0" expanded="true" />
+            <element signature="e#590#652#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/test/scala/com/github/caeus/elodin/JsonPackerSuites.scala">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="259">
+          <caret line="27" column="56" selection-start-line="27" selection-start-column="56" selection-end-line="27" selection-end-column="56" />
+          <folding>
+            <element signature="e#33#95#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/src/main/scala/com/github/caeus/plutus/syntax.scala">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="741">
+        <state relative-caret-position="779">
           <caret line="41" column="25" selection-start-line="41" selection-start-column="25" selection-end-line="41" selection-end-column="25" />
           <folding>
             <element signature="e#33#72#0" expanded="true" />
@@ -1123,32 +1124,12 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/scala/com/github/caeus/elodin/frontend/Parser.scala">
+    <entry file="file://$PROJECT_DIR$/src/main/scala/com/github/caeus/plutus/Packer.scala">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-209">
-          <caret line="30" column="93" selection-start-line="30" selection-start-column="93" selection-end-line="30" selection-end-column="93" />
+        <state relative-caret-position="168">
+          <caret line="164" selection-start-line="164" selection-end-line="164" />
           <folding>
-            <element signature="e#42#95#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/scala/com/github/caeus/elodin/interpreter/printers/ForNode.scala">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="172">
-          <caret line="19" column="27" selection-start-line="19" selection-start-column="27" selection-end-line="19" selection-end-column="27" />
-          <folding>
-            <element signature="e#54#94#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/test/scala/com/github/caeus/elodin/ParsingSuites.scala">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="247">
-          <caret line="35" column="31" selection-start-line="35" selection-start-column="28" selection-end-line="35" selection-end-column="31" />
-          <folding>
-            <element signature="e#33#88#0" expanded="true" />
+            <element signature="e#33#91#0" expanded="true" />
           </folding>
         </state>
       </provider>

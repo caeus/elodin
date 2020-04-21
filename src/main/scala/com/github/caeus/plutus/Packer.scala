@@ -41,7 +41,7 @@ object PackerResult {
           errors
             .groupBy(_.pos)
             .toSeq
-            .sortBy(- _._1)
+            .sortBy(-_._1)
             .map {
               case (pos, errors) =>
                 Json.obj(
@@ -126,6 +126,7 @@ object Packer extends StrictLogging {
       flatMap(out => Packer.pure(func(out)))
 
     final def as[Out1](value: => Out1): Packer[Col, In, Out1] = map(_ => value)
+    final def ignore: Packer[Col, In, Unit]                   = map(_ => ())
   }
 
   def capture[Col, El, Out](value: Packer[Col, El, Out]): Packer[Col, El, Window[Col, El]] =
@@ -160,12 +161,12 @@ object Packer extends StrictLogging {
         case -1 => throw new IllegalArgumentException("Repeat quantity must be greater than 0")
         case 0  => pure(accum)
         case 1 =>
-          val sepPacker =
-            longestOf[Col, In, Option[Out]](pure(None),
-                                            (if (accum.nonEmpty)
-                                               sep.flatMap(_ => packer)
-                                             else
-                                               packer).map(Some(_)))
+          val sepPacker: Packer[Col, In, Option[Out]] =
+            greediestOf(pure[Col, In, Unit](()),
+                        if (accum.nonEmpty)
+                          sep.flatMap(_ => packer)
+                        else
+                          packer).map(_.toOption)
           sepPacker.flatMap {
             case None =>
               pure(accum)
@@ -223,19 +224,19 @@ object Packer extends StrictLogging {
       }
     }
 
-  def longestOf[Col, In, Out](
-      packer1: Packer[Col, In, Out],
-      packer2: Packer[Col, In, Out]
-  ): Packer[Col, In, Out] = make { input =>
+  def greediestOf[Col, In, Out1, Out2](
+      packer1: Packer[Col, In, Out1],
+      packer2: Packer[Col, In, Out2]
+  ): Packer[Col, In, Either[Out1, Out2]] = make { input =>
     {
       val value = (packer1.take(input), packer2.take(input))
       value match {
-        case (r1 @ Done(src1, pos1), r2 @ Done(src2, pos2)) =>
+        case (r1 @ Done(_, pos1), r2 @ Done(_, pos2)) =>
           if (pos1 < pos2)
-            r2
-          else r1
-        case (r @ Done(_, _), _) => r
-        case (_, r @ Done(_, _)) => r
+            r2.map(Right.apply)
+          else r1.map(Left.apply)
+        case (r @ Done(_, _), _) => r.map(Left.apply)
+        case (_, r @ Done(_, _)) => r.map(Right.apply)
         case (Failed(error1), Failed(error2)) =>
           input.failed(error1.appendedAll(error2))
       }

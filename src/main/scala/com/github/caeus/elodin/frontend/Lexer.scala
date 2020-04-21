@@ -33,6 +33,7 @@ object ElodinToken {
   case class Bool(value: Boolean)        extends ElodinToken
   case class Text(value: String)         extends ElodinToken
   case object Ignore                     extends ElodinToken
+  case class Require(module: String)     extends ElodinToken
 
 }
 
@@ -70,8 +71,6 @@ class Lexer {
 
   lazy val hexDigit: Packer[String, Char, String] = P("[0-9a-fA-F]".r)
 
-  lazy val space: Packer[String, Char, String] = P("[ \r\n]*".r)
-
   lazy val unicodeEscape: Packer[String, Char, Unit] =
     (P("u") ~ hexDigit ~
       hexDigit ~ hexDigit ~ hexDigit).as(())
@@ -83,15 +82,15 @@ class Lexer {
 
   lazy val strChars: Packer[String, Char, String] = P(stringChars _).rep.!.map(_.value)
 
-  lazy val stringToken =
-    (P("\"").logging("QUOTES") ~ (strChars | escape).rep.logging("CNTNT") ~ P("\"")).!.map {
-      window =>
-        val value = window.value
-        println(value)
-        val text = Text(Jsoniter.parse(value).readString())
-        println(text.value)
-        text
-    }.logging("STR")
+  lazy val textToken: Packer[String, Char, Text] =
+    (P("\"") ~ (strChars | escape).rep ~ P("\"")).!.map { window =>
+      Text(Jsoniter.parse(window.value).readString())
+    }
+
+  lazy val requireToken: Packer[String, Char, Require] =
+    P("$") ~ P(!_.isWhitespace).rep(min=1).!.map(_.value).map(Require.apply)
+
+
 
   private val lexerPacker: Packer[String, Char, Vector[ElodinToken]] =
     (P("(").as(Some(Parenthesis.Open)) |
@@ -107,13 +106,12 @@ class Lexer {
       P("let").as(Some(Let)) |
       P(":").as(Some(Colon)) |
       P("_").as(Some(Ignore)) |
+      requireToken.map(Some.apply) |
       booleanToken.map(Some.apply) |
       refToken.map(Some.apply) |
       integralToken.map(Some.apply) |
       floatingToken.map(Some.apply) |
-      stringToken.map(Some.apply))
-    //.logging("AToken")
-    .rep
+      textToken.map(Some.apply)).rep
       .map(_.collect[ElodinToken] {
         case Some(x) => x
       }) ~ End
