@@ -4,7 +4,6 @@ import com.github.caeus.elodin.frontend.asd.JSON._
 import com.github.caeus.plutus.PrettyPacker.{PackerException, ThrowablePrettyPacker}
 import com.github.caeus.plutus.{Packer, PrettyPacker}
 import com.jsoniter.Jsoniter
-import zio.ZIO
 
 sealed trait JSON {}
 
@@ -61,9 +60,9 @@ class JsonPacker {
       .rep(sep = space ~ P(",")) ~ space ~ P("}")).map { tuples =>
       JSObject(tuples.toMap)
     }
-  lazy val jsonPacker
-    : Packer[String, Char, JSON] = nullPacker | booleanPacker | numberPacker | stringPacker | arrayPacker | objectPacker
-  lazy val finalPacker           = space ~ jsonPacker ~ space ~ End
+  lazy val jsonPacker: Packer[String, Char, JSON] =
+    nullPacker | booleanPacker | numberPacker | stringPacker | arrayPacker | objectPacker
+  lazy val finalPacker = space ~ jsonPacker ~ space ~ End
 
   lazy val prettyPacker = PrettyPacker.version1(finalPacker)
 
