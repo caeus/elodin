@@ -1,24 +1,33 @@
 package com.github.caeus.elodin.frontend.asd
 
 import com.github.caeus.elodin.frontend.asd.JSON._
-import com.github.caeus.plutus.Packer
+import com.github.caeus.plutus.PrettyPacker.{PackerException, ThrowablePrettyPacker}
+import com.github.caeus.plutus.{Packer, PrettyPacker}
 import com.jsoniter.Jsoniter
 import zio.ZIO
 
 sealed trait JSON {}
+
 object JSON {
-  case object JSNull                            extends JSON
-  case class JSBool(value: Boolean)             extends JSON
-  case class JSNumber(value: BigDecimal)        extends JSON
-  case class JSText(value: String)              extends JSON
-  case class JSArray(value: Seq[JSON])          extends JSON
+
+  case object JSNull extends JSON
+
+  case class JSBool(value: Boolean) extends JSON
+
+  case class JSNumber(value: BigDecimal) extends JSON
+
+  case class JSText(value: String) extends JSON
+
+  case class JSArray(value: Seq[JSON]) extends JSON
+
   case class JSObject(value: Map[String, JSON]) extends JSON
+
 }
 
 class JsonPacker {
-  ZIO.descriptor
-  import com.github.caeus.plutus.SyntaxSugar.StringSyntaxSugar._
-  import com.github.caeus.plutus.syntax._
+
+  import com.github.caeus.plutus.PackerSyntax.StringPackerSyntax._
+
   lazy val nullPacker    = P("null").as(JSNull)
   lazy val booleanPacker = (P("false") | P("true")).!.map(window => JSBool(window.value.toBoolean))
   lazy val digits        = P(_.isDigit).rep(min = 1)
@@ -55,4 +64,8 @@ class JsonPacker {
   lazy val jsonPacker
     : Packer[String, Char, JSON] = nullPacker | booleanPacker | numberPacker | stringPacker | arrayPacker | objectPacker
   lazy val finalPacker           = space ~ jsonPacker ~ space ~ End
+
+  lazy val prettyPacker = PrettyPacker.version1(finalPacker)
+
+  def run(src: String): Either[PackerException, JSON] = prettyPacker.process(src)
 }

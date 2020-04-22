@@ -21,7 +21,6 @@ import com.github.caeus.plutus.PackerResult.{Done, Failed}
 
 case class Window[Col, El](source: Col, from: Int, until: Int) {
 
-  def from(pos: Int): Window[Col, El]          = Window(source, pos, until)
   def value(implicit slicer: Slicer[Col]): Col = slicer.slice(source)(from, until)
 
   def sample(implicit slicer: Slicer[Col]): String =
@@ -42,9 +41,9 @@ sealed trait Cursor[Col, El] {
   final def tail: Cursor[Col, El] = move(1)
   def length: Int
   final def failed[T](msg: String, cursor: Cursor[Col, El]): PackerResult[T] = {
-    failed(Seq(LeafErr(Nil, msg, cursor.pos)))
+    failed(Seq(PackerError(Nil, msg, cursor.pos)))
   }
-  final def failed[T](errs: Seq[LeafErr]): PackerResult[T] = {
+  final def failed[T](errs: Seq[PackerError]): PackerResult[T] = {
     Failed(errs)
   }
   final def done[T](value: T, cursor: Cursor[Col, El]): PackerResult[T] =
@@ -115,4 +114,38 @@ object UnfinishedCursor {
     if (source.isEmpty) None
     else Some(source.head -> source.tail)
   }
+}
+trait ToCursor[Src, El] {
+  def apply(src: Src): Cursor[Src, El]
+}
+object ToCursor {
+  object StringToCursor extends ToCursor[String, Char] {
+    override def apply(src: String): Cursor[String, Char] = Cursor.fromString(src)
+  }
+  object VectorToCursor extends ToCursor[Vector[Any], Any] {
+    override def apply(src: Vector[Any]): Cursor[Vector[Any], Any] = Cursor.fromSeq(src)
+  }
+}
+
+trait Slicer[Src] {
+  def slice(col: Src)(from: Int, until: Int): Src
+
+  def length(src: Src): Int
+}
+
+object Slicer {
+  def apply[Src: Slicer]: Slicer[Src] = implicitly[Slicer[Src]]
+
+  object StringSlicer extends Slicer[String] {
+    override def slice(col: String)(from: Int, until: Int): String = col.slice(from, until)
+
+    override def length(src: String): Int = src.length
+  }
+
+  object VectorSlicer extends Slicer[Vector[_]] {
+    override def slice(col: Vector[_])(from: Int, until: Int): Vector[_] = col.slice(from, until)
+
+    override def length(src: Vector[_]): Int = src.length
+  }
+
 }

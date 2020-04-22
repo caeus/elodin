@@ -2,7 +2,6 @@ package com.github.caeus.elodin
 
 import com.github.caeus.elodin.interpreter.{Interpreter, ModuleLoader, NativeImpl, Val}
 import com.github.caeus.elodin.lang.Node._
-import com.github.caeus.plutus.syntax._
 import zio._
 
 object Main extends App {

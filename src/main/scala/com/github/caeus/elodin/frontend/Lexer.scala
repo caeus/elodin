@@ -1,10 +1,9 @@
 package com.github.caeus.elodin.frontend
 
 import com.github.caeus.elodin.frontend.ElodinToken._
-import com.github.caeus.plutus.Packer
+import com.github.caeus.plutus.{Packer, PrettyPacker}
 import com.github.caeus.plutus.PackerResult.{Done, Failed}
-import com.github.caeus.plutus.SyntaxSugar.StringSyntaxSugar
-import com.github.caeus.plutus.syntax._
+import com.github.caeus.plutus.PackerSyntax.StringPackerSyntax
 import com.jsoniter.Jsoniter
 import zio.Task
 
@@ -38,7 +37,7 @@ object ElodinToken {
 }
 
 class Lexer {
-  import StringSyntaxSugar._
+  import StringPackerSyntax._
 
   lazy val digits: Packer[String, Char, Unit] = P(_.isDigit).rep(min = 1).as(())
 
@@ -88,9 +87,7 @@ class Lexer {
     }
 
   lazy val requireToken: Packer[String, Char, Require] =
-    P("$") ~ P(!_.isWhitespace).rep(min=1).!.map(_.value).map(Require.apply)
-
-
+    P("$") ~ P(!_.isWhitespace).rep(min = 1).!.map(_.value).map(Require.apply)
 
   private val lexerPacker: Packer[String, Char, Vector[ElodinToken]] =
     (P("(").as(Some(Parenthesis.Open)) |
@@ -115,11 +112,9 @@ class Lexer {
       .map(_.collect[ElodinToken] {
         case Some(x) => x
       }) ~ End
+  lazy val prettyPacker = PrettyPacker.version1(lexerPacker)
+
   def lex(source: String): Task[Vector[ElodinToken]] =
-    Task.effectSuspend(lexerPacker.take(source) match {
-      case Done(result, _) =>
-        Task.succeed(result)
-      case f @ Failed(errors) => Task.fail(new Exception(s"Lexing error at : ${f.report(source)}"))
-    })
+    Task.effectSuspend(Task.fromEither(prettyPacker.process(source)))
 
 }

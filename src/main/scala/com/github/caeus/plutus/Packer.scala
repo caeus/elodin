@@ -1,4 +1,5 @@
 package com.github.caeus.plutus
+import scala.language.implicitConversions
 
 import com.github.caeus.plutus.PackerResult.{Done, Failed}
 import com.typesafe.scalalogging.StrictLogging
@@ -16,10 +17,11 @@ import scala.util.Random
  *
  * */
 
-case class LeafErr(path: List[String], msg: String, pos: Int)
+case class PackerError(path: List[String], msg: String, pos: Int)
 
 sealed trait PackerResult[+Out] extends {
   def value: Option[Out]
+
   final def map[Out1](func: Out => Out1): PackerResult[Out1] = this match {
     case Done(result, pos) =>
       Done(func(result), pos)
@@ -30,33 +32,9 @@ sealed trait PackerResult[+Out] extends {
 object PackerResult {
 
   case class Failed(
-      errors: Seq[LeafErr]
+      errors: Seq[PackerError]
   ) extends PackerResult[Nothing] {
-    override def value: Option[Nothing] =
-      None
-
-    def report[Src: Slicer](src: Src): String = {
-      Json
-        .arr(
-          errors
-            .groupBy(_.pos)
-            .toSeq
-            .sortBy(-_._1)
-            .map {
-              case (pos, errors) =>
-                Json.obj(
-                  "position" -> Json.fromInt(pos),
-                  "details" -> Json.arr(errors.map { err =>
-                    Json.obj(
-                      "path"    -> Json.fromString(err.path.mkString("/")),
-                      "sample"  -> Json.fromString(Slicer[Src].slice(src)(pos, pos + 5).toString),
-                      "message" -> Json.fromString(err.msg)
-                    )
-                  }: _*)
-                )
-            }: _*)
-        .spaces2
-    }
+    override def value: Option[Nothing] = None
   }
 
   case class Done[+Out](
@@ -70,13 +48,13 @@ object PackerResult {
   //Adding this makes it very difficult to add the forking ability
 }
 
-case class Packer[Col, In, +Out](run: Cursor[Col, In] => PackerResult[Out]) {
-  def take(input: Cursor[Col, In]) = run(input)
+case class Packer[Src, El, +Out](run: Cursor[Src, El] => PackerResult[Out]) {
+  def take(input: Cursor[Src, El]) = run(input)
 }
 
 object Packer extends StrictLogging {
 
-  def make[Col, In, Out](take: Cursor[Col, In] => PackerResult[Out]) =
+  def make[Src, El, Out](take: Cursor[Src, El] => PackerResult[Out]) =
     Packer(take)
 
   def failed[Col, El, T](msg: String): Packer[Col, El, T] =
@@ -84,8 +62,41 @@ object Packer extends StrictLogging {
       input.failed(msg, input)
     }
 
-  implicit class PackerOps[Col, In, Out](private val packer: Packer[Col, In, Out]) extends AnyVal {
-    final def named(name: String): Packer[Col, In, Out] = make { input =>
+  @inline
+  private implicit def toPackerOps[Src, El, Out](
+      packer: Packer[Src, El, Out]): PackerOps[Src, El, Out] = new PackerOps[Src, El, Out](packer)
+
+  class PackerOps[Src, El, Out](private val packer: Packer[Src, El, Out]) extends AnyVal {
+
+    def ~[Out1, R](next: => Packer[Src, El, Out1])(
+        implicit concat: TConcat.Aux[Out, Out1, R]): Packer[Src, El, R] =
+      packer.flatMap(a => next.map(b => concat.apply(a, b)))
+
+    def ? : Packer[Src, El, Option[Out]] =
+      repeatUpTo(packer, Some(1), pure(())).map(_.headOption)
+
+    def rep(min: Int = 0,
+            max: Option[Int] = None,
+            sep: Packer[Src, El, _] = pure(())): Packer[Src, El, Vector[Out]] = {
+      if (min > 0)
+        for {
+          prefix <- repeatExactly(packer, min, sep)
+          suffix <- repeatUpTo(sep.flatMap(_ => packer), max, pure(()))
+        } yield prefix.appendedAll(suffix)
+      else repeatUpTo(packer, max, sep)
+    }
+
+    def rep: Packer[Src, El, Vector[Out]] = {
+      repeatUpTo(packer, None, pure(()))
+    }
+
+    def ! : Packer[Src, El, Window[Src, El]] = capture(packer)
+
+    def |[NewOut >: Out](other: Packer[Src, El, NewOut]): Packer[Src, El, NewOut] = {
+      greediestOf(packer, other).map(_.fold(identity, identity))
+    }
+
+    final def named(name: String): Packer[Src, El, Out] = make { input =>
       packer.take(input) match {
         case Failed(errors) =>
           Failed(errors.map { err =>
@@ -94,7 +105,8 @@ object Packer extends StrictLogging {
         case r => r
       }
     }
-    final def logging(by: String): Packer[Col, In, Out] = make { input =>
+
+    final def logging(by: String): Packer[Src, El, Out] = make { input =>
       val id = Random.nextInt()
       logger.info(s"@$by (id: $id) is about to take ${input.sample} at pos: ${input.pos}")
       packer.take(input) match {
@@ -106,11 +118,12 @@ object Packer extends StrictLogging {
           f
       }
     }
-    final def take(input: Col)(implicit toSource: ToSource.Aux[Col, In]): PackerResult[Out] =
-      packer.take(toSource.toSource(input))
 
-    final def flatMap[Out1](func: Out => Packer[Col, In, Out1]): Packer[Col, In, Out1] =
-      make { input: Cursor[Col, In] =>
+    final def take(input: Src)(implicit toCursor: ToCursor[Src, El]): PackerResult[Out] =
+      packer.take(toCursor(input))
+
+    final def flatMap[Out1](func: Out => Packer[Src, El, Out1]): Packer[Src, El, Out1] =
+      make { input: Cursor[Src, El] =>
         packer.take(input) match {
           case Done(value, pos) =>
             func(value).take(input.at(pos)) match {
@@ -122,11 +135,13 @@ object Packer extends StrictLogging {
           case f => f.asInstanceOf[PackerResult[Out1]]
         }
       }
-    final def map[Out1](func: Out => Out1): Packer[Col, In, Out1] =
+
+    final def map[Out1](func: Out => Out1): Packer[Src, El, Out1] =
       flatMap(out => Packer.pure(func(out)))
 
-    final def as[Out1](value: => Out1): Packer[Col, In, Out1] = map(_ => value)
-    final def ignore: Packer[Col, In, Unit]                   = map(_ => ())
+    final def as[Out1](value: => Out1): Packer[Src, El, Out1] = map(_ => value)
+
+    final def ignore: Packer[Src, El, Unit] = map(_ => ())
   }
 
   def capture[Col, El, Out](value: Packer[Col, El, Out]): Packer[Col, El, Window[Col, El]] =
@@ -137,6 +152,7 @@ object Packer extends StrictLogging {
         case f => f.asInstanceOf[PackerResult[Window[Col, El]]]
       }
     }
+
   def fromPartial[Col, In, X](predicate: PartialFunction[In, X]): Packer[Col, In, X] =
     make { input: Cursor[Col, In] =>
       UnfinishedCursor.unapply[Col, In](input) match {
@@ -151,6 +167,7 @@ object Packer extends StrictLogging {
           input.failed(s"Expected one token, EOI gotten instead", input.move(0))
       }
     }
+
   def repeatUpTo[Col, In, Out](
       packer: Packer[Col, In, Out],
       upTo: Option[Int],
@@ -198,8 +215,9 @@ object Packer extends StrictLogging {
 
     recursive(exactly, Queue.empty).map(_.toVector)
   }
+
   @tailrec
-  def isPrefix[T](value: Iterable[T], of: Iterable[T], resultTaken: Int): (Int, Boolean) = {
+  private def isPrefix[T](value: Iterable[T], of: Iterable[T], resultTaken: Int): (Int, Boolean) = {
     if (value.isEmpty)
       resultTaken -> true
     else {
@@ -214,6 +232,7 @@ object Packer extends StrictLogging {
   def pure[Col, In, Out](value: Out): Packer[Col, In, Out] = make { input =>
     input.done(value, input)
   }
+
   def fromIterable[Col, In](from: Iterable[In]): Packer[Col, In, Unit] =
     make { input: Cursor[Col, In] =>
       isPrefix(from, input.iterable, 0) match {
@@ -228,18 +247,16 @@ object Packer extends StrictLogging {
       packer1: Packer[Col, In, Out1],
       packer2: Packer[Col, In, Out2]
   ): Packer[Col, In, Either[Out1, Out2]] = make { input =>
-    {
-      val value = (packer1.take(input), packer2.take(input))
-      value match {
-        case (r1 @ Done(_, pos1), r2 @ Done(_, pos2)) =>
-          if (pos1 < pos2)
-            r2.map(Right.apply)
-          else r1.map(Left.apply)
-        case (r @ Done(_, _), _) => r.map(Left.apply)
-        case (_, r @ Done(_, _)) => r.map(Right.apply)
-        case (Failed(error1), Failed(error2)) =>
-          input.failed(error1.appendedAll(error2))
-      }
+    val value = (packer1.take(input), packer2.take(input))
+    value match {
+      case (r1 @ Done(_, pos1), r2 @ Done(_, pos2)) =>
+        if (pos1 < pos2)
+          r2.map(Right.apply)
+        else r1.map(Left.apply)
+      case (r @ Done(_, _), _) => r.map(Left.apply)
+      case (_, r @ Done(_, _)) => r.map(Right.apply)
+      case (Failed(error1), Failed(error2)) =>
+        input.failed(error1.appendedAll(error2))
     }
   }
 
@@ -249,21 +266,4 @@ object Packer extends StrictLogging {
     case c => c.done((), c)
   }
 
-}
-trait ToSource[T] {
-  type El
-  def toSource(value: T): Cursor[T, El]
-}
-object ToSource {
-  type Aux[T, El1] = ToSource[T] { type El = El1 }
-  implicit object StringToSource extends ToSource[String] {
-    override type El = Char
-    override def toSource(value: String): Cursor[String, Char] = Cursor.fromString(value)
-  }
-
-  class VectorToSource[T] extends ToSource[Vector[T]] {
-    override type El = T
-    override def toSource(value: Vector[T]): Cursor[Vector[T], T] = Cursor.fromSeq(value)
-  }
-  implicit def vectorToSource[T]: ToSource[Vector[T]] { type El = T } = new VectorToSource[T]
 }

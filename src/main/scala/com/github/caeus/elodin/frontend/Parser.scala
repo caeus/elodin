@@ -4,15 +4,14 @@ import com.github.caeus.elodin.frontend.ElodinToken._
 import com.github.caeus.elodin.lang.Node
 import com.github.caeus.elodin.lang.Node._
 import com.github.caeus.plutus.PackerResult.{Done, Failed}
-import com.github.caeus.plutus.SyntaxSugar.VectorSyntaxSugar
-import com.github.caeus.plutus.syntax._
-import com.github.caeus.plutus.{Cursor, Packer}
+import com.github.caeus.plutus.PackerSyntax.VectorPackerSyntax
+import com.github.caeus.plutus.{Cursor, Packer, PrettyPacker}
 import zio.Task
 
 class Parser {
   type Pckr[Out] = Packer[Vector[ElodinToken], ElodinToken, Out]
 
-  private val syntax = new VectorSyntaxSugar[ElodinToken]
+  private val syntax = new VectorPackerSyntax[ElodinToken]
   import syntax._
 
   lazy val doStep: Pckr[(String, Node)] = {
@@ -46,8 +45,9 @@ class Parser {
       case (steps, result) =>
         steps.reverse.toList match {
           case (param, step) :: rest =>
-            recDoNotation(rest,
-                          ApplyNode(Seq(ReqNode("Gen.map"), genWrap(step), FnNode(Seq(param), result))))
+            recDoNotation(
+              rest,
+              ApplyNode(Seq(ReqNode("Gen.map"), genWrap(step), FnNode(Seq(param), result))))
           case Nil => ???
         }
     }
@@ -119,13 +119,10 @@ class Parser {
       }
   }
 
+  lazy val prettyPacker = PrettyPacker.version1(expr ~ End)
   def parse(seq: Seq[ElodinToken]): Task[Node] = {
     Task.effectSuspend {
-      (expr ~ End).take(Cursor.fromSeq(seq)) match {
-        case Done(result, _) => Task.succeed(result)
-        case f @ Failed(error) =>
-          Task.fail(new Exception(s"Failed with message: \n${f.report(seq.toVector)}"))
-      }
+      Task.fromEither(prettyPacker.process(seq.toVector))
     }
   }
 }
