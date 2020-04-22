@@ -3,7 +3,6 @@ package com.github.caeus.elodin.frontend.asd
 import com.github.caeus.elodin.frontend.asd.JSON._
 import com.github.caeus.plutus.Packer
 import com.jsoniter.Jsoniter
-import zio.ZIO
 
 sealed trait JSON {}
 object JSON {
@@ -16,7 +15,6 @@ object JSON {
 }
 
 class JsonPacker {
-  ZIO.descriptor
   import com.github.caeus.plutus.SyntaxSugar.StringSyntaxSugar._
   import com.github.caeus.plutus.syntax._
   lazy val nullPacker    = P("null").as(JSNull)
@@ -52,7 +50,7 @@ class JsonPacker {
       .rep(sep = space ~ P(",")) ~ space ~ P("}")).map { tuples =>
       JSObject(tuples.toMap)
     }
-  lazy val jsonPacker
-    : Packer[String, Char, JSON] = nullPacker | booleanPacker | numberPacker | stringPacker | arrayPacker | objectPacker
-  lazy val finalPacker           = space ~ jsonPacker ~ space ~ End
+  lazy val jsonPacker: Packer[String, Char, JSON] =
+    nullPacker | booleanPacker | numberPacker | stringPacker | arrayPacker | objectPacker
+  lazy val finalPacker = space ~ jsonPacker ~ space ~ End
 }
