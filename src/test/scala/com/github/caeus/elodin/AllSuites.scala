@@ -69,7 +69,7 @@ object AllSuites extends DefaultRunnableSpec {
   override def spec = {
 
     suite("AllSuites")(
-      interpreterTest
+      //interpreterTest
     )
   }
 }
