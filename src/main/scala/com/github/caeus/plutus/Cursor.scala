@@ -2,51 +2,33 @@ package com.github.caeus.plutus
 
 import com.github.caeus.plutus.PackerResult.{Done, Failed}
 
-//sealed trait Slicer[Col, +El] {
-//  def size(col: Col): Int
-//  final def take(col: Col, until: Int): Option[Col] = slice(col, 0, until)
-//  final def drop(col: Col, from: Int): Option[Col]  = slice(col, from, size(col))
-//  def slice(col: Col, from: Int, until: Int): Option[Col]
-//  def at(pos: Int): Option[El]
-//}
-//object Slicer {
-//  implicit object StringSlicer extends Slicer[String, Char] {
-//    override def size(col: String): Int = ???
-//
-//    override def slice(col: String, from: Int, until: Int): Option[String] = ???
-//
-//    override def at(pos: Int): Option[Char] = ???
-//  }
-//}
+case class Window[Src, El](source: Src, from: Int, until: Int) {
 
-case class Window[Col, El](source: Col, from: Int, until: Int) {
+  def value(implicit slicer: Slicer[Src]): Src = slicer.slice(source)(from, until)
 
-  def value(implicit slicer: Slicer[Col]): Col = slicer.slice(source)(from, until)
-
-  def sample(implicit slicer: Slicer[Col]): String =
+  def sample(implicit slicer: Slicer[Src]): String =
     s"```${slicer.slice(source)(Math.max(0, until - 1), Math.min(until + 4, slicer.length(source))).toString}```"
-
 }
 
-sealed trait Cursor[Col, El] {
+sealed trait Cursor[Src, El] {
   final def head: El = elem(pos)
-  def at(newPos: Int): Cursor[Col, El]
+  def at(newPos: Int): Cursor[Src, El]
   def pos: Int
   def elem(pos: Int): El
-  def move(offset: Int): Cursor[Col, El]
-  def source: Col
+  def move(offset: Int): Cursor[Src, El]
+  def source: Src
   def isEmpty: Boolean
   def sample: String
   def iterable: Iterable[El]
-  final def tail: Cursor[Col, El] = move(1)
+  final def tail: Cursor[Src, El] = move(1)
   def length: Int
-  final def failed[T](msg: String, cursor: Cursor[Col, El]): PackerResult[T] = {
+  final def failed[T](msg: String, cursor: Cursor[Src, El]): PackerResult[T] = {
     failed(Seq(PackerError(Nil, msg, cursor.pos)))
   }
   final def failed[T](errs: Seq[PackerError]): PackerResult[T] = {
     Failed(errs)
   }
-  final def done[T](value: T, cursor: Cursor[Col, El]): PackerResult[T] =
+  final def done[T](value: T, cursor: Cursor[Src, El]): PackerResult[T] =
     Done(value, cursor.pos)
 }
 
@@ -72,9 +54,9 @@ object Cursor {
     override def move(offset: Int): Cursor[String, Char] =
       new StringCursor(source, pos + offset)
 
-    override lazy val sample: String = {
-      if (isEmpty) "<empty window>" else s"```${source.slice(pos, pos + 5)}...```"
-    }
+    override lazy val sample: String =
+      if (isEmpty) "<empty cursor>" else s"```${source.slice(pos, pos + 5)}...```"
+
     override lazy val isEmpty: Boolean = pos == length
 
     override def elem(pos: Int): Char = source.charAt(pos)
@@ -95,14 +77,14 @@ object Cursor {
       new VectorCursor(source, pos + offset)
 
     override lazy val sample: String =
-      if (isEmpty) "<empty window>"
+      if (isEmpty) "<empty cursor>"
       else s"```${source.slice(pos, pos + 5).mkString(",")}...```"
 
     override lazy val isEmpty: Boolean = pos == length
 
     override def elem(pos: Int): T = source(pos)
 
-    override lazy val iterable: Iterable[T] = source.drop(pos)
+    override lazy val iterable: Iterable[T] = source.view.slice(pos, source.length)
 
     override lazy val length: Int = source.length
 
@@ -110,7 +92,7 @@ object Cursor {
   }
 }
 object UnfinishedCursor {
-  def unapply[Col, El](source: Cursor[Col, El]): Option[(El, Cursor[Col, El])] = {
+  def unapply[Src, El](source: Cursor[Src, El]): Option[(El, Cursor[Src, El])] = {
     if (source.isEmpty) None
     else Some(source.head -> source.tail)
   }
@@ -128,7 +110,7 @@ object ToCursor {
 }
 
 trait Slicer[Src] {
-  def slice(col: Src)(from: Int, until: Int): Src
+  def slice(src: Src)(from: Int, until: Int): Src
 
   def length(src: Src): Int
 }
@@ -137,13 +119,13 @@ object Slicer {
   def apply[Src: Slicer]: Slicer[Src] = implicitly[Slicer[Src]]
 
   object StringSlicer extends Slicer[String] {
-    override def slice(col: String)(from: Int, until: Int): String = col.slice(from, until)
+    override def slice(src: String)(from: Int, until: Int): String = src.slice(from, until)
 
     override def length(src: String): Int = src.length
   }
 
   object VectorSlicer extends Slicer[Vector[_]] {
-    override def slice(col: Vector[_])(from: Int, until: Int): Vector[_] = col.slice(from, until)
+    override def slice(src: Vector[_])(from: Int, until: Int): Vector[_] = src.slice(from, until)
 
     override def length(src: Vector[_]): Int = src.length
   }

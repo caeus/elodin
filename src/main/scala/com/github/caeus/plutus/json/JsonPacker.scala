@@ -1,6 +1,6 @@
-package com.github.caeus.elodin.frontend.asd
+package com.github.caeus.plutus.json
 
-import com.github.caeus.elodin.frontend.asd.JSON._
+import com.github.caeus.plutus.json.JSON._
 import com.github.caeus.plutus.PrettyPacker.{PackerException, ThrowablePrettyPacker}
 import com.github.caeus.plutus.{Packer, PrettyPacker}
 import com.jsoniter.Jsoniter
@@ -35,7 +35,7 @@ class JsonPacker {
 
   lazy val fractional = P(".") ~ digits
 
-  lazy val integral = (P("0") | P("""[1-9]""".r)) ~ digits.?
+  lazy val integral =(P("0") | P("""[1-9]""".r)) ~ digits.?
 
   lazy val numberPacker =
     (P("""[+\-]""".r).? ~ integral ~ fractional.? ~ exponent.?).!.map { window =>
@@ -61,8 +61,8 @@ class JsonPacker {
       JSObject(tuples.toMap)
     }
   lazy val jsonPacker: Packer[String, Char, JSON] =
-    nullPacker | booleanPacker | numberPacker | stringPacker | arrayPacker | objectPacker
-  lazy val finalPacker = space ~ jsonPacker ~ space ~ End
+   ( nullPacker | booleanPacker | numberPacker | stringPacker | arrayPacker | objectPacker).logging("jsonPacker")
+  lazy val finalPacker = space ~ jsonPacker ~ space ~ end
 
   lazy val prettyPacker = PrettyPacker.version1(finalPacker)
 

@@ -111,7 +111,7 @@ class Lexer {
       textToken.map(Some.apply)).rep
       .map(_.collect[ElodinToken] {
         case Some(x) => x
-      }) ~ End
+      }) ~ end
   lazy val prettyPacker = PrettyPacker.version1(lexerPacker)
 
   def lex(source: String): Task[Vector[ElodinToken]] =

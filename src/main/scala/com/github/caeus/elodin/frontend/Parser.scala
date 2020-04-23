@@ -3,9 +3,8 @@ package com.github.caeus.elodin.frontend
 import com.github.caeus.elodin.frontend.ElodinToken._
 import com.github.caeus.elodin.lang.Node
 import com.github.caeus.elodin.lang.Node._
-import com.github.caeus.plutus.PackerResult.{Done, Failed}
 import com.github.caeus.plutus.PackerSyntax.VectorPackerSyntax
-import com.github.caeus.plutus.{Cursor, Packer, PrettyPacker}
+import com.github.caeus.plutus.{Packer, PrettyPacker}
 import zio.Task
 
 class Parser {
@@ -19,10 +18,13 @@ class Parser {
       refExpr ~ P(Yield) ~ expr).map {
       case (bindings, stepBinding, step) =>
         stepBinding.to -> (if (bindings.nonEmpty) {
-                             LetNode(bindings.map {
-                               case (ref, node) =>
-                                 ref.to -> node
-                             }.toMap, step)
+                             LetNode(
+                               bindings.map {
+                                 case (ref, node) =>
+                                   ref.to -> node
+                               }.toMap,
+                               step
+                             )
                            } else step)
     }
   }
@@ -36,7 +38,8 @@ class Parser {
       case (param, step) :: rest =>
         recDoNotation(
           rest,
-          ApplyNode(Seq(ReqNode("Gen.chain"), genWrap(step), FnNode(Seq(param), result))))
+          ApplyNode(Seq(ReqNode("Gen.chain"), genWrap(step), FnNode(Seq(param), result)))
+        )
     }
   }
   lazy val doNotation: Pckr[ApplyNode] = {
@@ -47,7 +50,8 @@ class Parser {
           case (param, step) :: rest =>
             recDoNotation(
               rest,
-              ApplyNode(Seq(ReqNode("Gen.map"), genWrap(step), FnNode(Seq(param), result))))
+              ApplyNode(Seq(ReqNode("Gen.map"), genWrap(step), FnNode(Seq(param), result)))
+            )
           case Nil => ???
         }
     }
@@ -119,7 +123,7 @@ class Parser {
       }
   }
 
-  lazy val prettyPacker = PrettyPacker.version1(expr ~ End)
+  lazy val prettyPacker = PrettyPacker.version1(expr ~ end)
   def parse(seq: Seq[ElodinToken]): Task[Node] = {
     Task.effectSuspend {
       Task.fromEither(prettyPacker.process(seq.toVector))
