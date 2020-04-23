@@ -1,11 +1,11 @@
 package com.github.caeus.elodin.frontend.asd
 
 import com.github.caeus.elodin.frontend.asd.JSON._
-import com.github.caeus.plutus.PrettyPacker.{PackerException, ThrowablePrettyPacker}
+import com.github.caeus.plutus.PackerSyntax.StringPackerSyntax
+import com.github.caeus.plutus.PrettyPacker.PackerException
 import com.github.caeus.plutus.{Packer, PrettyPacker}
 import com.jsoniter.Jsoniter
-
-sealed trait JSON {}
+sealed trait JSON
 
 object JSON {
 
@@ -25,7 +25,7 @@ object JSON {
 
 class JsonPacker {
 
-  import com.github.caeus.plutus.PackerSyntax.StringPackerSyntax._
+  import StringPackerSyntax._
 
   lazy val nullPacker    = P("null").as(JSNull)
   lazy val booleanPacker = (P("false") | P("true")).!.map(window => JSBool(window.value.toBoolean))
