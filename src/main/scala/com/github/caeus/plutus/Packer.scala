@@ -1,7 +1,6 @@
 package com.github.caeus.plutus
 import com.github.caeus.plutus.PackerResult.{Done, Failed}
 
-import scala.annotation.tailrec
 import scala.collection.immutable.Queue
 import scala.language.implicitConversions
 
@@ -164,16 +163,18 @@ object Packer {
         return taken -> true
       if (!ofI.hasNext)
         return taken -> false
-      if (thatI.next() == ofI.next()) {
-        taken = taken + 1
-      } else
+      taken = taken + 1
+      if (thatI.next() != ofI.next()) {
         return taken -> false
+      }
+
     }
     null
   }
 
   /**
     * This, mathematically speaking, is the `pure` of the packer monad `Monad[Packer[Src,El,?]]`
+    *
     * @param value
     * @tparam Src
     * @tparam El
@@ -191,7 +192,10 @@ object Packer {
         case (taken, true) =>
           input.done((), input.move(taken))
         case (taken, false) =>
-          input.failed(s"'${input.sample}' didn't match '${from.mkString("")}'", input.move(taken))
+          input.failed(
+            s"'${input.sample}' didn't match '${from.mkString("")}'",
+            input.move(taken)
+          )
       }
     }
 

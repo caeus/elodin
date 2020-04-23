@@ -15,7 +15,7 @@ import scala.util.matching.Regex
 
 trait PackerSyntax[Src, El] {
 
-  def fromCol(col: Src): Packer[Src, El, Unit]
+  def fromSrc(src: Src): Packer[Src, El, Unit]
 
   def fromEls(el: Seq[El]): Packer[Src, El, Unit]
 
@@ -23,7 +23,7 @@ trait PackerSyntax[Src, El] {
 
   final def succeed[T](value: T): Packer[Src, El, T] = Packer.succeed(value)
 
-  final def P(col: Src): Packer[Src, El, Unit] = fromCol(col)
+  final def P(src: Src): Packer[Src, El, Unit] = fromSrc(src)
 
   final def P(els: El*): Packer[Src, El, Unit] = fromEls(els.toSeq)
 
@@ -51,8 +51,8 @@ trait PackerSyntax[Src, El] {
 object PackerSyntax extends StrictLogging {
 
   object StringPackerSyntax extends PackerSyntax[String, Char] {
-    override def fromCol(col: String): Packer[String, Char, Unit] =
-      Packer.fromIterable(col)
+    override def fromSrc(src: String): Packer[String, Char, Unit] =
+      Packer.fromIterable(src)
 
     override def fromEls(el: Seq[Char]): Packer[String, Char, Unit] =
       Packer.fromIterable(el)
@@ -80,8 +80,8 @@ object PackerSyntax extends StrictLogging {
   }
 
   class VectorPackerSyntax[El] extends PackerSyntax[Vector[El], El] {
-    override def fromCol(col: Vector[El]): Packer[Vector[El], El, Unit] =
-      Packer.fromIterable(col)
+    override def fromSrc(src: Vector[El]): Packer[Vector[El], El, Unit] =
+      Packer.fromIterable(src)
 
     override def fromPartial[T](partial: PartialFunction[El, T]): Packer[Vector[El], El, T] =
       Packer.fromPartial(partial)
