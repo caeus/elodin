@@ -6,6 +6,8 @@ Imagine I have a language with the keyword `switch` and a rule for Identifiers w
 
 Another problem is: When to conclude the current rule and proceed to the next? Easy, when there's a whitespace, right? (well, at least in most languages). But what if you have this `max(1,2)`? There's no spaces in this expression and still you'd want it to be a valid expression if you were creating a Java-ish grammar.
 
+And last but not least: When creating languages you usually want the capabilities of a parsing library to do two different things: Parsing (duh!) and lexing (or tokenizing). The problem with Scala Parser Combinators and fastparse is that they only work with Strings... what if I want to parse combinations of other types of data like `Int`s or some custom data type that represents the tokens of my language?
+
 Enter plutus. Plutus defines what I call a `Packer[Src,El,R]`. which is basically an alias for this function:
 
 `Cursor[Src,El]=>PackerResult[R]`

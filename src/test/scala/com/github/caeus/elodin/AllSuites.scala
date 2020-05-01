@@ -9,19 +9,27 @@ import zio.test._
 import zio.{RIO, Task}
 object AllSuites extends DefaultRunnableSpec {
   val node = ApplyNode(
-    Seq(FnNode(params = Seq("f"),
-               LetNode(bindings = Map(
-                         "x" -> ApplyNode(
-                           Seq(RefNode("f"), RefNode("x"))
-                         )),
-                       RefNode("x"))),
-        ReqNode("elodin.control/if")))
+    Seq(
+      FnNode(
+        params = Seq("f"),
+        LetNode(
+          bindings = Map(
+            "x" -> ApplyNode(
+              Seq(RefNode("f"), RefNode("x"))
+            )
+          ),
+          RefNode("x")
+        )
+      ),
+      ReqNode("elodin.control/if")
+    )
+  )
 
   val interpreterTest = testM("whatever") {
     val interpreter = new Interpreter(new ModuleLoader {
       override def get(name: String): Task[Val] = {
         if (name == "elodin.control/if") {
-          Task.succeed(Val.Lazy(Left(Val.Native("elodin.control/if", Nil))))
+          Task.succeed(Val.Partial(Left(Val.Native("elodin.control/if", 3)),Nil))
         } else Task.fail(new Exception("not defined"))
       }
 
@@ -34,18 +42,21 @@ object AllSuites extends DefaultRunnableSpec {
                 case Seq(cond: Val, ifTrue, ifFalse) =>
                   for {
                     interpreter: Interpreter <- RIO.environment[Interpreter]
-                    cond                     <- interpreter.reduce(cond)
+                    cond                     <- interpreter.atomize(cond)
                     result <- cond match {
-                      case Val.Bool(true)  => Task.succeed(ifTrue)
-                      case Val.Bool(false) => Task.succeed(ifFalse)
-                      case x =>
-                        Task.fail(
-                          new Exception(
-                            s"Expected a boolean but got a ${x.getClass.getSimpleName}"))
-                    }
+                               case Val.Bool(true)  => Task.succeed(ifTrue)
+                               case Val.Bool(false) => Task.succeed(ifFalse)
+                               case x =>
+                                 Task.fail(
+                                   new Exception(
+                                     s"Expected a boolean but got a ${x.getClass.getSimpleName}"
+                                   )
+                                 )
+                             }
                   } yield result
               }
-            ))
+            )
+          )
         } else {
           ???
         }
@@ -58,18 +69,17 @@ object AllSuites extends DefaultRunnableSpec {
                  """.stripMargin
     for {
       tokens <- lexer.lex(source)
-      _ = println(tokens)
+      _       = println(tokens)
       node   <- parser.parse(tokens)
-      _ = println(ForNode.print(node))
-      r <- interpreter.run("lakjsdklasd", node)
-      _ <- zio.console.putStrLn(r.toString)
+      _       = println(ForNode.print(node))
+      r      <- interpreter.run(node)
+      _      <- zio.console.putStrLn(r.toString)
     } yield assert(true)(isTrue)
 
   }
   override def spec = {
-
     suite("AllSuites")(
       interpreterTest
-    )@@ TestAspect.ignore
+    ) @@ TestAspect.ignore
   }
 }
