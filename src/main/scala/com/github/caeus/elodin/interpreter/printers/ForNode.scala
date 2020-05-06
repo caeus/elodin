@@ -150,8 +150,6 @@ object ForNode {
       builder += Bool(value)
     case RefNode(to) =>
       builder += Reference(to)
-    case ReqNode(to) =>
-      builder += Reference(s"$$$to")
   }
 
   def print(node: Node): String = {

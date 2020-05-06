@@ -22,7 +22,7 @@ object Hola {
 
   def $lazy(skope: Env, pepe: Noode): Kal = new $Lazy(skope, pepe)
 
-  def $unit: Kalom
+  def $unit: Kalom = ???
 
   class $Lazy(skope: Env, noode: Noode) extends Kal
   case class $Ref(to: String) extends Noode {
@@ -85,6 +85,7 @@ object Hola {
         case noode :: Nil => $lazy(skope, noode)
         case $Fn(skope, params, preArgs, body) :: args =>
           ???
+        case _ => ???
       }
   }
 
@@ -95,14 +96,15 @@ object Hola {
     args.size match {
       case 0 => ??? //unit
       case 1 =>
-        args.head($) match {
-          case $Fn(params, preArgs, body) =>
-            val (fnArgs, remaining) = preArgs.appendedAll(args.tail.map($lazy)).splitAt(params.size)
-            $apply(remaining.prepended($Fn(params, fnArgs, body)))
-            ???
-        }
+//        args.head($) match {
+//         /* case $Fn(params, preArgs, body) =>
+//            val (fnArgs, remaining) = preArgs.appendedAll(args.tail.map($lazy)).splitAt(params.size)
+//            $apply(remaining.prepended($Fn(params, fnArgs, body)))
+//            ???*/
+//        }
       case _ =>
     }
+    ???
   }
   def $ref(to: String): Noode                                = { $ => $.ref(to) }
   def $fn(params: Seq[String], body: Noode): Noode           = ???
@@ -127,9 +129,8 @@ object Hola {
 
   def ref$code(refNode: RefNode): String = s"""$$.ref{}"""
 
-  def req$code(reqNode: ReqNode): String = s"""$$req($$,${escape(reqNode.to)})"""
 
-  def text$code(textNode: TextNode): String = escape()
+  def text$code(textNode: TextNode): String = ???
 
   def dict$code(dictNode: DictNode): String = {
     if (dictNode.items.isEmpty) {
@@ -166,7 +167,8 @@ object Hola {
       case letNode: LetNode     => let$code(letNode)
       case fnNode: FnNode       => fn$code(fnNode)
       case applyNode: ApplyNode => apply$code(applyNode)
-      case refNode: RefNode     =>
+      case refNode: RefNode     => ???
+      case _ => ???
     }
   }
 

@@ -1,12 +1,13 @@
 package com.github.caeus.elodin
 
 import com.github.caeus.elodin.frontend.{Lexer, Parser}
+import com.github.caeus.elodin.interpreter.Val.Atom
 import com.github.caeus.elodin.interpreter._
 import com.github.caeus.elodin.interpreter.printers.ForNode
 import com.github.caeus.elodin.lang.Node._
+import zio.Task
 import zio.test.Assertion._
 import zio.test._
-import zio.{RIO, Task}
 object AllSuites extends DefaultRunnableSpec {
   val node = ApplyNode(
     Seq(
@@ -21,45 +22,20 @@ object AllSuites extends DefaultRunnableSpec {
           RefNode("x")
         )
       ),
-      ReqNode("elodin.control/if")
+      ???
     )
   )
 
   val interpreterTest = testM("whatever") {
-    val interpreter = new Interpreter(new ModuleLoader {
-      override def get(name: String): Task[Val] = {
-        if (name == "elodin.control/if") {
-          Task.succeed(Val.Partial(Left(Val.Native("elodin.control/if", 3)),Nil))
-        } else Task.fail(new Exception("not defined"))
+    val interpreter = new Interpreter(new FFI {
+      def get(name: String): Task[Val] = {
+        Task.succeed(Atom(Void))
       }
 
       override def nativeImpl(name: String): Task[NativeImpl] =
-        if (name == "elodin.control/if") {
-          Task.succeed(
-            NativeImpl(
-              3,
-              reducer = {
-                case Seq(cond: Val, ifTrue, ifFalse) =>
-                  for {
-                    interpreter: Interpreter <- RIO.environment[Interpreter]
-                    cond                     <- interpreter.atomize(cond)
-                    result <- cond match {
-                               case Val.Bool(true)  => Task.succeed(ifTrue)
-                               case Val.Bool(false) => Task.succeed(ifFalse)
-                               case x =>
-                                 Task.fail(
-                                   new Exception(
-                                     s"Expected a boolean but got a ${x.getClass.getSimpleName}"
-                                   )
-                                 )
-                             }
-                  } yield result
-              }
-            )
-          )
-        } else {
-          ???
-        }
+        Task.fail(new Exception("not implemented"))
+
+      override def get(interpreter: Interpreter)(expr: Val): Task[Val] = ???
     })
 
     val lexer  = new Lexer

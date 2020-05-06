@@ -1,4 +1,4 @@
-package com.github.caeus.elodin.clj
+package com.github.caeus.elodin.groov
 
 import java.io.{File, FileOutputStream, ObjectOutputStream}
 

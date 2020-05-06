@@ -1,7 +1,5 @@
 package com.github.caeus.elodin.lang
 
-import com.github.caeus.elodin.interpreter.printers.ForNode
-
 case class Meta[+A](value: A, children: List[Meta[A]])
 
 sealed trait Step
@@ -32,26 +30,19 @@ object Path {
   def root = Path(Vector.empty)
 
 }
-sealed trait Node {
-}
+sealed trait Node
 
 object Node {
 
   case class LetNode(bindings: Map[String, Node], body: Node) extends Node
-
-  case class FnNode(
-      params: Seq[String],
-      body: Node
-  ) extends Node
-
-  case class ApplyNode(args: Seq[Node])         extends Node
-  case class TextNode(value: String)            extends Node
-  case class IntNode(value: BigInt)             extends Node
-  case class FloatNode(value: BigDecimal)       extends Node
-  case class BoolNode(value: Boolean)           extends Node
-  case class ArrNode(items: Seq[Node])          extends Node
-  case class DictNode(items: Map[String, Node]) extends Node
-  case class RefNode(to: String)                extends Node
-  case class ReqNode(to: String)                extends Node
+  case class FnNode(params: Seq[String], body: Node)          extends Node
+  case class ApplyNode(args: Seq[Node])                       extends Node
+  case class TextNode(value: String)                          extends Node
+  case class IntNode(value: BigInt)                           extends Node
+  case class FloatNode(value: BigDecimal)                     extends Node
+  case class BoolNode(value: Boolean)                         extends Node
+  case class ArrNode(items: Seq[Node])                        extends Node
+  case class DictNode(items: Map[String, Node])               extends Node
+  case class RefNode(to: String)                              extends Node
 
 }

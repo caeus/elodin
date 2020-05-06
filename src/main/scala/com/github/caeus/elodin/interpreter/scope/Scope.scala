@@ -7,7 +7,6 @@ import com.github.caeus.elodin.lang.Node
 import com.github.caeus.elodin.lang.Node._
 
 sealed trait Scope[N <: Node] {
-
   def node: N
 }
 
@@ -19,7 +18,6 @@ object Scope {
   object WhenFn    extends When[FnNode]
   object WhenRef   extends When[RefNode]
   object WhenApply extends When[ApplyNode]
-  object WhenReq   extends When[ReqNode]
   object WhenArr   extends When[ArrNode]
   object WhenDict  extends When[DictNode]
   object WhenText   extends When[TextNode]

@@ -1,7 +1,7 @@
 package com.github.caeus.elodin
 
 import com.github.caeus.elodin.interpreter.scope.Scope.Root
-import com.github.caeus.elodin.interpreter.{Interpreter, ModuleLoader, NativeImpl, Val}
+import com.github.caeus.elodin.interpreter.{Interpreter, FFI, NativeImpl, Val}
 import com.github.caeus.elodin.lang.Node._
 import zio._
 
@@ -21,10 +21,11 @@ object Main extends App {
                                  )),
                                RefNode("x"))),
             TextNode("alksjd")))
-    val interpreter = new Interpreter(new ModuleLoader {
-      override def get(name: String): Task[Val] = ???
+    val interpreter = new Interpreter(new FFI {
 
       override def nativeImpl(name: String): Task[NativeImpl] = ???
+
+      override def get(interpreter: Interpreter)(expr: Val): Task[Val] = ???
     })
 
     interpreter
