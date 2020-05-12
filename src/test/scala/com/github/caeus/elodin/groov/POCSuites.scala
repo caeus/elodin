@@ -57,7 +57,7 @@ object POCSuites extends DefaultRunnableSpec {
 
           classLoader.defineClass(cl.getName, cl.getBytes)
         }
-        def deleteFolder(file: File):Unit = {
+        def deleteFolder(file: File): Unit = {
           println(s"OHHHHHH////$file")
           if (file.isDirectory) {
             file.listFiles().foreach(deleteFolder)
@@ -76,5 +76,5 @@ object POCSuites extends DefaultRunnableSpec {
           _ <- Task.unit
         } yield ())(anything)
       })
-    )
+    ) @@ TestAspect.ignore
 }

@@ -1,9 +1,8 @@
 package com.github.caeus.elodin.frontend
 
 import com.github.caeus.elodin.frontend.ElodinToken._
-import com.github.caeus.plutus.{Packer, PrettyPacker}
-import com.github.caeus.plutus.PackerResult.{Done, Failed}
 import com.github.caeus.plutus.PackerSyntax.StringPackerSyntax
+import com.github.caeus.plutus.{Packer, PrettyPacker}
 import com.jsoniter.Jsoniter
 import zio.Task
 
@@ -68,6 +67,9 @@ class Lexer {
           Reference(a + b)
       }
 
+  lazy val reqToken: Packer[String, Char, Require] =
+    P("$") ~ P("[a-fA-F]+(:[a-fA-F]+)?".r).map(Require.apply)
+
   lazy val hexDigit: Packer[String, Char, String] = P("[0-9a-fA-F]".r)
 
   lazy val unicodeEscape: Packer[String, Char, Unit] =
@@ -106,6 +108,7 @@ class Lexer {
       requireToken.map(Some.apply) |
       booleanToken.map(Some.apply) |
       refToken.map(Some.apply) |
+      reqToken.map(Some.apply) |
       integralToken.map(Some.apply) |
       floatingToken.map(Some.apply) |
       textToken.map(Some.apply)).rep

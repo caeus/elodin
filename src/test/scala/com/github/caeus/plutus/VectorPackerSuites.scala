@@ -228,5 +228,5 @@ object VectorPackerSuites extends DefaultRunnableSpec {
           vstx.fail(errorMessage).take(toCursor(Vector.empty))
         )(isFailed(hasPackerError(msg = equalTo(errorMessage), equalTo(0))))
       }
-    )
+    )@@ TestAspect.ignore
 }

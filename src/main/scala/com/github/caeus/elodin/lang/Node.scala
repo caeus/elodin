@@ -41,8 +41,9 @@ object Node {
   case class IntNode(value: BigInt)                           extends Node
   case class FloatNode(value: BigDecimal)                     extends Node
   case class BoolNode(value: Boolean)                         extends Node
-  case class ArrNode(items: Seq[Node])                        extends Node
-  case class DictNode(items: Map[String, Node])               extends Node
-  case class RefNode(to: String)                              extends Node
+  //case class ArrNode(items: Seq[Node])                        extends Node
+  //case class DictNode(items: Map[String, Node])               extends Node
+  case class RefNode(to: String) extends Node
+  case class ReqNode(to: String) extends Node
 
 }

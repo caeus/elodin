@@ -80,6 +80,7 @@ class Parser {
     arrExpr.named("arrOutside") |
     dictExpr.named("dictOutside") |
     applyExpr.named("applyOutside") |
+    reqExpr.named("reqOutside") |
     intLiteral |
     floatLiteral |
     boolLiteral |
@@ -94,20 +95,43 @@ class Parser {
   lazy val applyExpr: Pckr[ApplyNode] =
     P(Parenthesis.Open) ~ expr.rep.map(ApplyNode.apply) ~ P(Parenthesis.Close)
 
-  lazy val dictExpr: Pckr[DictNode] =
-    P(Curly.Open) ~ (refExpr ~ P(Colon) ~ expr).rep.map { items =>
-      DictNode(items.map {
-        case (RefNode(to), node) =>
-          to -> node
-      }.toMap)
-    } ~ P(Curly.Close)
+  lazy val reqExpr: Pckr[ReqNode] =
+    P {
+      case Require(module) => ReqNode(module)
+    }
 
-  lazy val arrExpr: Pckr[ArrNode] = P(Bracket.Open) ~ expr.rep.map(ArrNode.apply) ~ P(Bracket.Close)
+  lazy val objExpr: Pckr[Map[String, Node]] = P(Curly.Open) ~ (refExpr ~ P(Colon) ~ expr).rep.map {
+    items =>
+      items.map {
+        case (RefNode(to), node) => to -> node
+      }.toMap
+  } ~ P(Curly.Close)
+
+  lazy val dictExpr: Pckr[ApplyNode] = objExpr.map { items =>
+    val args = items.toSeq.flatMap {
+      case (to, node) =>
+        Seq(TextNode(to), node)
+    }
+    ApplyNode(
+      args
+        .prepended(IntNode(args.size))
+        .prepended(ReqNode("dict.make"))
+    )
+  }
+
+  lazy val arrExpr: Pckr[ApplyNode] = P(Bracket.Open) ~ expr.rep.map { items =>
+    val args = items
+    ApplyNode(
+      args
+        .prepended(IntNode(args.size))
+        .prepended(ReqNode("array.make"))
+    )
+  } ~ P(Bracket.Close)
 
   lazy val letExpr: Packer[Vector[ElodinToken], ElodinToken, LetNode] =
-    (P(Parenthesis.Open) ~ P(Let) ~ dictExpr.named("Letbindings") ~ expr ~ P(Parenthesis.Close))
+    (P(Parenthesis.Open) ~ P(Let) ~ objExpr.named("Letbindings") ~ expr ~ P(Parenthesis.Close))
       .map {
-        case (DictNode(items), node) => LetNode(items, node)
+        case (items, node) => LetNode(items, node)
       }
 
   lazy val fnExpr: Packer[Vector[ElodinToken], ElodinToken, FnNode] = {
