@@ -98,7 +98,7 @@ object PackerSyntax extends StrictLogging {
 
     def ~[Out1, R](
         next: => Packer[Src, El, Out1]
-    )(implicit concat: TConcat.Aux[Out, Out1, R]): Packer[Src, El, R] =
+    )(implicit concat: TAppend.Aux[Out, Out1, R]): Packer[Src, El, R] =
       for {
         a <- packer
         b <- next

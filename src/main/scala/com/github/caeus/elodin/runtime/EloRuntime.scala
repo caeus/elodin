@@ -5,12 +5,8 @@ import com.github.caeus.elodin.runtime.Val.{Atomic, FnPointer}
 import com.github.caeus.elodin.types.EloEffect
 import zio.{Task, TaskManaged, ZManaged}
 
-trait EffectEngine {
-  def exec(desc: EloEffect.EffectDesc): Task[Either[Val, Val]]
-
-}
 trait EloFunction {
-  def apply(value: Val): Task[Atomic]
+  def apply(value: Val): Task[Either[Atomic,Atomic]]
 }
 
 trait EloRuntime {
@@ -28,23 +24,36 @@ final class DefaultEloRuntime(
     system(name).flatMap {
       case fn: FnPointer =>
         Task.succeed { value: Val =>
-          eval(fn.applyTo(Seq(value)))
+          run(fn.applyTo(Seq(value)))
         }
       case _ => Task.fail(new Exception("laksjdlkasd"))
     }
   }
 
-  def eval(value: Val): Task[Atomic] = {
-    system.eval(value)
+  def run(value: Val): Task[Either[Atomic,Atomic]] = {
+    system.atomize(value).flatMap {
+      case Val.Atom(EloEffect.Halt(desc, onSuccess, onFailure)) =>
+        effectEngine
+          .run(desc)
+          .map {
+            case Right(value) => onSuccess.applyTo(Seq(value))
+            case Left(value)  => onFailure.applyTo(Seq(value))
+          }
+          .flatMap(run)
+          .provide(system)
+      case Val.Atom(EloEffect.Done(result)) => system.atomize(result).map(Right.apply)
+      case Val.Atom(EloEffect.Failed(result)) => system.atomize(result).map(Left.apply)
+      case _ => ???
+    }
   }
 
   override def register(script: EloScript): Task[Unit] = system.register(script)
 }
 
 object EloRuntime {
-  def make(effectEngine: EffectEngine): TaskManaged[EloRuntime] = {
+  def make: TaskManaged[EloRuntime] = {
     ZManaged.fromEffect(EloSystem.make.map { system =>
-      new DefaultEloRuntime(system, effectEngine)
+      new DefaultEloRuntime(system, new DefaultEffectEngine)
     })
   }
 }

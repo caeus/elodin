@@ -12,17 +12,21 @@ object BlackBoxSuites extends DefaultRunnableSpec {
       testM("happy path") {
         assertM(
           EloRuntime
-            .make((desc: EloEffect.EffectDesc) => ???)
+            .make
             .use { runtime =>
               for {
                 _ <- runtime.register(
                       EloScript
                         .StrScript("mytest", """
-                |($mod.def "dummy" (fn [hola] ($std.println hola)))
+                |(
+                |  $mod:def "dummy" (fn [hola]
+                |    ($std:println hola)
+                |  )
+                |)
               """.stripMargin)
                     )
-                func <- runtime.asFunction("mytest.dummy")
-                _    <- func.apply(Val.Atom("MUAHAHAH"))
+                func <- runtime.asFunction("mytest:dummy")
+                _    <- func.apply(Val.Atom("HOLA LUCREITHINA DEL GODOY"))
               } yield ()
             }
         )(Assertion.anything)

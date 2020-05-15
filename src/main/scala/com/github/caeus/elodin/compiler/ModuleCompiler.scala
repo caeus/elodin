@@ -1,5 +1,6 @@
 package com.github.caeus.elodin.compiler
 
+import com.github.caeus.elodin.modules.{EloModule, SrcModule}
 import com.github.caeus.elodin.compiler.Dig.Path
 import com.github.caeus.elodin.compiler.EloScript.StrScript
 import com.github.caeus.elodin.compiler.Lexcope.{
@@ -216,70 +217,77 @@ class ModuleCompiler {
       paths <- emit.get
     } yield paths.updated(root, Set.empty)
   }
+  case class NodeBundle(
+      id: Int,
+      scope: Lexcope[Node],
+      capturedParamsSize: Int,
+      header: Seq[DeclParam],
+      pointer: PPointer
+  )
+  def headerOf(node: Lexcope[Node], capturedParams: Seq[DeclParam]): Seq[DeclParam] = {
+    capturedParams
+      .appendedAll(node match {
+        case WhenFn(scope) => scope.params.toSeq
+        case _             => Nil
+      })
+      .sortBy(p => p.path.length -> p.index)
+  }
+  def createInit(
+      namespace: String,
+      chosenNodes: Map[Lexcope[Node], Seq[DeclParam]]
+  ): IndexedSeq[Shifter] = {
 
-  def createInit(namespace: String, chosenNodes: Map[Lexcope[Node], Seq[DeclParam]]): ModuleInit = {
+    val indexed: Seq[((Lexcope[Node], Seq[DeclParam]), Int)] = chosenNodes.toSeq.sortBy {
+      case (s, _) => s.path.length
+    }.zipWithIndex
 
-    val withIndex: Seq[(Lexcope[Node], Int)] = chosenNodes.toSeq
-      .sortBy {
-        case (lexcope, params) =>
-          lexcope.path.length
-      }
-      .map(_._1)
-      .zipWithIndex
+    val bundles: IndexedSeq[NodeBundle] = indexed.map {
+      case ((scope, params), id) =>
+        val header = headerOf(scope, params)
+        NodeBundle(id, scope, params.size, header, PPointer.Compiled(namespace, id))
+    }.toIndexedSeq
 
-    val indexes: Map[Lexcope[Node], Int] = withIndex.toMap
+    val indexedBundles = bundles.map(b => b.scope.path -> b).toMap
 
-    def headerOf(node: Lexcope[Node]) = {
-      chosenNodes(node).toSeq
-        .appendedAll(node match {
-          case WhenFn(scope) => scope.params.toSeq
-          case _             => Nil
-        })
-        .sortBy(p => p.path.length -> p.index)
-    }
-    val pointers: Map[Lexcope[Node], Val.Lazy] = indexes.toSeq.map {
-      case (node, index) =>
-        node ->
-          Val.Lazy(
-            PPointer.Compiled(namespace, headerOf(node).size, indexes(node)),
-            Nil
-          )
-    }.toMap
-    def invocationShift(node: Lexcope[Node], enclosing: Seq[DeclParam]): Shift = {
-      chosenNodes
-        .get(node)
-        .map { usedParams =>
-          //FIXME should be an index with a specific class
-          Shift.Apply(Seq(Shift.Atom(pointers(node))).appendedAll(usedParams.map { usedParam =>
-            val i = enclosing.indexOf(usedParam)
-            i.ensuring(
-              i >= 0, {
-                println(enclosing)
-                println(usedParam)
-                "Assertion failed GONORREA"
-              }
+    def invocationShift(scope: Lexcope[Node], enclosing: NodeBundle): Shift = {
+      indexedBundles
+        .get(scope.path)
+        .map { bundle =>
+          Shift.Apply(
+            Seq(Shift.Atom(Val.Lazy(bundle.pointer, Nil))).appendedAll(
+              bundle.header
+                .take(bundle.capturedParamsSize)
+                .map { usedParam =>
+                  val i = enclosing.header.indexOf(usedParam)
+                  i.ensuring(
+                    i >= 0, {
+                      println(enclosing)
+                      println(usedParam)
+                      "Assertion failed GONORREA"
+                    }
+                  )
+                  Shift.Arg(i)
+                }
             )
-            Shift.Arg(i)
-          }))
+          )
         }
-        .getOrElse(toShift(node, enclosing))
+        .getOrElse(toShift(scope, enclosing))
     }
 
-    def toShift(node: Lexcope[Node], header: Seq[DeclParam]): Shift = {
-
-      node match {
+    def toShift(scope: Lexcope[Node], bundle: NodeBundle): Shift = {
+      scope match {
         case WhenFn(xcope) =>
-          invocationShift(xcope.body, header)
+          invocationShift(xcope.body, bundle)
         case WhenApply(lexcope) =>
-          Shift.Apply(lexcope.args.map(x => invocationShift(x, header)))
+          Shift.Apply(lexcope.args.map(x => invocationShift(x, bundle)))
         case WhenLet(lexcope) =>
-          invocationShift(lexcope.body, header)
+          invocationShift(lexcope.body, bundle)
         case WhenRef(lexcope) =>
           lexcope.resolve(lexcope.node.to).get match {
             case Left(refdLexcope) =>
-              invocationShift(refdLexcope, header)
+              invocationShift(refdLexcope, bundle)
             case Right(param) =>
-              val i = header.indexOf(param)
+              val i = bundle.header.indexOf(param)
               i.ensuring(_ >= 0)
               Shift.Arg(i)
           }
@@ -291,11 +299,10 @@ class ModuleCompiler {
       }
     }
 
-    def toCombinator(node: Lexcope[Node]): Shifter = {
-      val header = headerOf(node)
-      Shifter(arity = header.length, toShift(node, header))
+    bundles.map { bundle =>
+      Shifter(arity = bundle.header.length, toShift(bundle.scope, bundle))
     }
-    ModuleInit(namespace, withIndex.map(_._1).map(toCombinator).toIndexedSeq)
+
   }
 
   def compile(namespace: String, node: Node): RIO[EloSystem, EloModule] = {
