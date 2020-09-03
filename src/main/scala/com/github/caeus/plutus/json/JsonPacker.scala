@@ -55,7 +55,7 @@ class JsonPacker {
   lazy val jsonPacker: Packer[String, Char, JSON] =
     (nullPacker | booleanPacker | numberPacker | stringPacker | arrayPacker | objectPacker)
       .logging("jsonPacker")
-  lazy val finalPacker                                = space ~ jsonPacker ~ space ~ end
+  lazy val finalPacker                                = space ~ jsonPacker ~ space ~ End
   lazy val prettyPacker                               = PrettyPacker.version1(finalPacker)
   def run(src: String): Either[PackerException, JSON] = prettyPacker.process(src)
 }

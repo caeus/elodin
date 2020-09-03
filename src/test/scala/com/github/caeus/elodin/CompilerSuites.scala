@@ -6,11 +6,11 @@ import zio.test.Assertion._
 import zio.test.{DefaultRunnableSpec, ZSpec, _}
 
 object CompilerSuites extends DefaultRunnableSpec {
-  val node = FnNode(
+  val node = FunNode(
     Seq("$req"),
     ApplyNode(
       Seq(
-        FnNode(
+        FunNode(
           params = Seq("f"),
           LetNode(
             bindings = Map(
@@ -33,9 +33,9 @@ object CompilerSuites extends DefaultRunnableSpec {
       },
       testM("Undeclared ref") {
         assertM(moduleCompiler.choosePaths(RefNode("laksjd")))(anything)
-      } @@ TestAspect.failure,
+      } @@ TestAspect.failing,
       testM("FnExpr") {
-        assertM(moduleCompiler.choosePaths(FnNode(Seq("f"), TextNode("lakjsd"))).map(_.toSeq))(
+        assertM(moduleCompiler.choosePaths(FunNode(Seq("f"), TextNode("lakjsd"))).map(_.toSeq))(
           hasSize(equalTo(1))
         )
       }

@@ -12,16 +12,17 @@ lazy val root = (project in file("."))
     version := "0.0.1-SNAPSHOT",
     scalaVersion := "2.13.1",
     libraryDependencies ++= Seq(
-      "dev.zio"                    %% "zio-test"        % "1.0.0-RC18-2" % Test,
-      "dev.zio"                    %% "zio-test-sbt"    % "1.0.0-RC18-2" % Test,
-      "dev.zio"                    %% "zio"             % "1.0.0-RC18-2",
-      "dev.zio"                    %% "zio-streams"     % "1.0.0-RC18-2",
+      "dev.zio"                    %% "zio-test"        % "1.0.0-RC21-2" % Test,
+      "dev.zio"                    %% "zio-test-sbt"    % "1.0.0-RC21-2" % Test,
+      "dev.zio"                    %% "zio"             % "1.0.0-RC21-2",
+      "dev.zio"                    %% "zio-streams"     % "1.0.0-RC21-2",
       "io.circe"                   %% "circe-core"      % "0.13.0",
       "com.jsoniter"                % "jsoniter"        % "0.9.1",
       "ch.qos.logback"              % "logback-classic" % LogbackVersion,
       "org.scala-lang"              % "scala-compiler"  % "2.13.1",
       "com.typesafe.scala-logging" %% "scala-logging"   % "3.9.2",
-      "org.codehaus.groovy"         % "groovy"          % "3.0.3"
+      "org.codehaus.groovy"         % "groovy"          % "3.0.3",
+      "com.lihaoyi"                %% "pprint"          % "0.5.6"
     ),
     testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework")),
     addCompilerPlugin("org.typelevel" %% "kind-projector"     % "0.10.3"),

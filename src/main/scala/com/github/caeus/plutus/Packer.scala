@@ -39,9 +39,6 @@ object PackerResult {
   ) extends PackerResult[Out] {
     override def value: Option[Out] = Some(result)
   }
-
-  //Sorry byt later case class Cont[In, Out](next: Tarser[In, Out]) extends TarserResult[In, Out]
-  //Adding this makes it very difficult to add the forking ability
 }
 
 case class Packer[Src, El, +Out](run: Cursor[Src, El] => PackerResult[Out]) {
@@ -217,11 +214,13 @@ object Packer {
       }
     }
 
-  def end[Src, El]: Packer[Src, El, Unit] =
-    make {
+  private val _end: Packer[_, _, Unit] =
+    make[Any,Any,Unit] {
       case c @ UnfinishedCursor(_, next) =>
         c.failed(s"EOI expected but got ${c.sample} ", next): PackerResult[Unit]
       case c => c.done((), c)
     }
+
+  def End[Src, El]: Packer[Src, El, Unit] = _end.asInstanceOf[Packer[Src, El, Unit]]
 
 }

@@ -1,4 +1,4 @@
-package com.github.caeus.elodin.types
+package com.github.caeus.elodin.modules
 
 import com.github.caeus.elodin.runtime.Val
 import com.github.caeus.elodin.runtime.Val.{Atomic, FnPointer}

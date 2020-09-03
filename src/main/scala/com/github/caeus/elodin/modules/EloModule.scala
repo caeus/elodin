@@ -61,35 +61,5 @@ final class SrcModule(
 
 object SrcModule {
 
-  private def buildRec(value: Val, members: Map[String, Val]): RIO[EloSystem, Map[String, Val]] = {
-    RIO.environment[EloSystem].flatMap { system =>
-      system.atomize(value).flatMap {
-        case Val.Atom(ModuleEffect(op, cont)) =>
-          op match {
-            case DefMember(name, value) =>
-              buildRec(cont.applyTo(Seq(Val.Atom(()))), members.updated(name, value))
-          }
-        case Val.Atom(DoneModule) =>
-          RIO.succeed(members)
-        case _ => RIO.fail(new Exception("UNAA:SDLA:SLD"))
-      }
-    }
-  }
-  def build(namespace: String, shifters: IndexedSeq[Shifter]): RIO[EloSystem, SrcModule] = {
-    val initialInstruction = shifters(0)
-    if (initialInstruction.arity > 0)
-      Task.fail(new Exception("This makes no fucking sense"))
-    else {
-      RIO.environment[EloSystem].flatMap { system =>
-        initialInstruction
-          .shift(Nil)
-          .flatMap(value => buildRec(value, Map.empty))
-          .provide(system)
-          .memoize
-          .map { members =>
-            new SrcModule(namespace, shifters, members)
-          }
-      }
-    }
-  }
+
 }

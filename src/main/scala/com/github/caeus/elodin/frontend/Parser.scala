@@ -1,64 +1,198 @@
 package com.github.caeus.elodin.frontend
 
+import com.github.caeus.elodin.frontend.DoPart.{AssignmentPart, YieldPart}
 import com.github.caeus.elodin.frontend.ElodinToken._
 import com.github.caeus.elodin.lang.Node
 import com.github.caeus.elodin.lang.Node._
-import com.github.caeus.plutus.PackerSyntax.VectorPackerSyntax
+import com.github.caeus.elodin.util.Splitting.{Branch, Leaf}
+import com.github.caeus.elodin.util.{SepEl, SepNel, SplitTree}
 import com.github.caeus.plutus.{Packer, PrettyPacker}
+import com.github.caeus.plutus.PackerSyntax.VectorPackerSyntax
 import zio.Task
 
-class Parser {
+import scala.annotation.tailrec
+
+sealed trait DoPart
+object DoPart {
+  case class AssignmentPart(to: String, body: Node) extends DoPart
+  case class YieldPart(to: String, body: Node)      extends DoPart
+  @tailrec
+  private def reduceRec(revParts: List[DoPart], curr: Node): Node = {
+    revParts match {
+      case Nil => curr
+      case AssignmentPart(to, body) :: prevs =>
+        val newCurr = curr match {
+          case LetNode(bindings, letBody) =>
+            //Check to not add an already defined binding
+            LetNode(bindings.updated(to, body), letBody)
+          case _ => LetNode(Map(to -> body), curr)
+        }
+        reduceRec(prevs, newCurr)
+      case YieldPart(to, body) :: prevs =>
+        val newCurr = ApplyNode(Seq(QRefNode("gen", "chain"), body, FunNode(Seq(to), curr)))
+        reduceRec(prevs, newCurr)
+    }
+  }
+  def reduce(parts: Seq[DoPart], last: Node): Node = {
+    reduceRec(parts.reverse.toList, ApplyNode(Seq(QRefNode("gen", "done"), last)))
+  }
+
+}
+
+final class Parser {
   type Pckr[Out] = Packer[Vector[ElodinToken], ElodinToken, Out]
 
   private val syntax = new VectorPackerSyntax[ElodinToken]
   import syntax._
 
-  lazy val doStep: Pckr[(String, Node)] = {
-    ((refExpr ~ P(Colon) ~ expr).rep ~
-      refExpr ~ P(Yield) ~ expr).map {
-      case (bindings, stepBinding, step) =>
-        stepBinding.to -> (if (bindings.nonEmpty) {
-                             LetNode(
-                               bindings.map {
-                                 case (ref, node) =>
-                                   ref.to -> node
-                               }.toMap,
-                               step
-                             )
-                           } else step)
+  lazy val refSet: Pckr[Set[String]] =
+    (P(Curly.Open) ~ refExpr.rep(sep = P(Comma)) ~ P(Curly.Close))
+      .map(_.map(_.to).toSet)
+  lazy val refMap: Pckr[Map[String, String]] =
+    (P(Curly.Open) ~ (refExpr ~ P(Equals) ~ refExpr).rep(sep = P(Comma)) ~ P(Curly.Close))
+      .map {
+        _.map(r => r._1.to -> r._2.to).toMap
+      }
+  lazy val selectionPart: Pckr[Selection] = (fromPartial {
+    case Operator("^") => ()
+  }.? ~ refSet ~ refExpr.? ~ refMap.?).map {
+    case (complement, named, prefix_?, renamed) =>
+      Selection(complement.nonEmpty, named, prefix_?.map(_.to), renamed.getOrElse(Map.empty))
+  }
+
+  lazy val importExpr: Pckr[Node.ImportNode] = (P(ElodinToken.Import) ~
+    fromPartial {
+      case ElodinToken.Text(to) => to
+    } ~ selectionPart ~ P(Semicolon) ~ expr).map {
+    case (to, selection, body) =>
+      Node.ImportNode(to, selection, body)
+  }
+
+  lazy val funExpr: Pckr[Node.FunNode] = (P(ElodinToken.Fun) ~
+    P(Parenthesis.Open) ~ refExpr.rep((1), sep = P(Comma)) ~ P(
+    Parenthesis.Close
+  ) ~ P(Equals) ~ expr).map {
+    case (args, body) => Node.FunNode(args.map(_.to), body)
+  }
+
+  lazy val opExpr: Pckr[RefNode] = fromPartial {
+    case Operator(to) => RefNode(to)
+  }
+
+  lazy val refExpr: Pckr[Node.RefNode] = ((fromPartial {
+    case Reference(to) => RefNode(to)
+  } | P(Parenthesis.Open) ~ opExpr ~ P(Parenthesis.Close)) ~
+    (P(Dot) ~ refExpr).rep).map {
+    case (to, rest) if rest.isEmpty => to
+    case (to, rest)                 => RefNode(rest.prepended(to).mkString("."))
+  }
+
+  lazy val argsPart: Pckr[List[Node]] = ((P(ElodinToken.Parenthesis.Open) ~ expr ~
+    (P(ElodinToken.Comma) ~ expr).rep ~
+    P(ElodinToken.Parenthesis.Close)).map {
+    case (node, nodes) => node :: nodes.toList
+  } | delimitedExpr.map(el => List(el))).rep(1).map(_.flatten.toList)
+
+  /**
+    * sum3(3,4,6)
+    * sum(3)(4,6)
+    */
+  lazy val applyExpr: Pckr[Node] = ((delimitedExpr ~ argsPart.?) ~
+    (opExpr ~ delimitedExpr ~ argsPart.?).rep).map {
+    case (node, args_?, postfixes) =>
+      splitTreeToApply(
+        SepNel(
+          args_?
+            .map { r =>
+              ApplyNode(node :: r)
+            }
+            .getOrElse(node),
+          postfixes.map {
+            case (op, node, args_?) =>
+              SepEl(
+                op.to,
+                args_?
+                  .map { r =>
+                    ApplyNode(node :: r)
+                  }
+                  .getOrElse(node)
+              )
+          }.toList
+        ).splitFull
+      )
+  }
+
+  private def splitTreeToApply(splitTree: SplitTree[Node, String]): Node = {
+    def isLeftAssociative(sep: String): Boolean = !sep.endsWith(":")
+    splitTree match {
+      case Branch(sep, parts) =>
+        val nodes = parts.map(splitTreeToApply)
+        if (isLeftAssociative(sep)) {
+          nodes.reduceLeft { (nodeL, nodeR) =>
+            ApplyNode(Seq(RefNode(sep), nodeL, nodeR))
+          }
+        } else {
+          nodes.reduceRight { (nodeL, nodeR) =>
+            ApplyNode(Seq(RefNode(sep), nodeL, nodeR))
+          }
+        }
+      case Leaf(el) => el
     }
   }
 
-  private def genWrap(node: Node): ApplyNode = {
-    //ApplyNode(Seq(ReqNode("Gen.wrap"), node))
-    ???
-  }
-  private def recDoNotation(revSteps: List[(String, Node)], result: ApplyNode): ApplyNode = {
-    revSteps match {
-      case Nil => result
-      case (param, step) :: rest =>
-        recDoNotation(
-          rest,
-          //ApplyNode(Seq(ReqNode("Gen.chain"), genWrap(step), FnNode(Seq(param), result)))
-          ???
+  /**
+    * let
+    *   x=5,
+    *   y=7;
+    *   sum(x,y)
+    *
+    */
+  lazy val letExpr = P(Let) ~
+    ((refExpr ~ P(ElodinToken.Equals) ~ expr).rep(1, sep = P(ElodinToken.Comma)) ~
+      P(ElodinToken.Semicolon) ~
+      expr).map {
+      case (bindings, expr) =>
+        Node.LetNode(
+          bindings.map {
+            case (ref, to) => ref.to -> to
+          }.toMap,
+          expr
         )
     }
+
+  lazy val doSteps = ((refExpr ~ (P(Yield).as(true) | P(Equals).as(false)))
+    .rep(max = Some(1))
+    .map(_.headOption) ~ expr)
+    .rep(sep = P(Comma))
+    .map(_.map {
+      case (binding, body) =>
+        binding
+          .map {
+            case (binding, true)  => YieldPart(binding.to, body)
+            case (binding, false) => AssignmentPart(binding.to, body)
+          }
+          .getOrElse(YieldPart("_", body))
+    })
+
+  lazy val doExpr = (P(Do) ~ doSteps ~ P(Semicolon) ~ expr).map {
+    case (parts, last) =>
+      DoPart.reduce(parts, last)
   }
-  lazy val doNotation: Pckr[ApplyNode] = {
-    (P(Parenthesis.Open) ~ P(Do) ~ P(Bracket.Open) ~
-      doStep.rep(min = 1) ~ P(Bracket.Close) ~ expr ~ P(Parenthesis.Close)).map {
-      case (steps, result) =>
-        steps.reverse.toList match {
-          case (param, step) :: rest =>
-            recDoNotation(
-              rest,
-              //ApplyNode(Seq(ReqNode("Gen.map"), genWrap(step), FnNode(Seq(param), result)))
-              ???
-            )
-          case Nil => ???
-        }
-    }
-  }
+
+  lazy val dictExpr: Pckr[DictNode] =
+    P(Curly.Open) ~ (refExpr ~ P(Equals) ~ expr).rep(sep = P(Comma)).map { items =>
+      DictNode(items.map {
+        case (RefNode(to), node) => to -> node
+      }.toMap)
+    } ~ P(Curly.Close)
+
+  lazy val arrExpr: Pckr[ArrNode] = P(Bracket.Open) ~ expr.rep(sep = P(Comma)).map { items =>
+    ArrNode(items)
+  } ~ P(Bracket.Close)
+
+  lazy val groupedExpr: Pckr[Node] =
+    (P(ElodinToken.Parenthesis.Open) ~ expr ~ P(ElodinToken.Parenthesis.Close)) |
+      P(ElodinToken.Curly.Open) ~ expr ~ P(ElodinToken.Curly.Close)
 
   lazy val intLiteral: Pckr[IntNode] = P {
     case IntNum(value) => IntNode(value)
@@ -69,84 +203,30 @@ class Parser {
   lazy val boolLiteral: Pckr[BoolNode] = P {
     case Bool(value) => BoolNode(value)
   }
-  lazy val textLiteral: Pckr[TextNode] = P {
+  lazy val textLiteral: Pckr[Node.TextNode] = P {
     case Text(value) => TextNode(value)
   }
-  lazy val expr: Pckr[Node] = (doNotation |
-    textExpr.named("textOutside") |
-    letExpr.named("letOutside") |
-    refExpr.named("refOutside") |
-    fnExpr.named("fnOutside") |
-    arrExpr.named("arrOutside") |
-    dictExpr.named("dictOutside") |
-    applyExpr.named("applyOutside") |
-    reqExpr.named("reqOutside") |
-    intLiteral |
-    floatLiteral |
-    boolLiteral |
-    textLiteral).named("expr")
-
-  lazy val textExpr: Pckr[TextNode] = Packer.failed("Text not supported yet")
-
-  lazy val refExpr: Pckr[RefNode] = P[RefNode] {
-    case Reference(to) => RefNode(to)
+  lazy val qRefExpr: Pckr[Node.QRefNode] = (textLiteral ~ P(Dot) ~ refExpr).map {
+    case (text, ref) => QRefNode(text.value, ref.to)
   }
 
-  lazy val applyExpr: Pckr[ApplyNode] =
-    P(Parenthesis.Open) ~ expr.rep.map(ApplyNode.apply) ~ P(Parenthesis.Close)
+  lazy val greedyExpr = importExpr.named("GImport") |
+    letExpr.named("GLet") |
+    funExpr.named("GFun") |
+    doExpr.named("GDo") |
+    applyExpr.named("GApp")
+  lazy val delimitedExpr: Pckr[Node] = refExpr.named("DRef") |
+    arrExpr.named("DArr") |
+    dictExpr.named("DDict") |
+    groupedExpr.named("DGroup") |
+    qRefExpr.named("DQRef") |
+    intLiteral.named("DInt") |
+    floatLiteral.named("DFloat") |
+    boolLiteral.named("DBool") |
+    textLiteral.named("DText")
 
-  lazy val reqExpr: Pckr[ReqNode] =
-    P {
-      case Require(module) => ReqNode(module)
-    }
-
-  lazy val objExpr: Pckr[Map[String, Node]] = P(Curly.Open) ~ (refExpr ~ P(Colon) ~ expr).rep.map {
-    items =>
-      items.map {
-        case (RefNode(to), node) => to -> node
-      }.toMap
-  } ~ P(Curly.Close)
-
-  lazy val dictExpr: Pckr[ApplyNode] = objExpr.map { items =>
-    val args = items.toSeq.flatMap {
-      case (to, node) =>
-        Seq(TextNode(to), node)
-    }
-    ApplyNode(
-      args
-        .prepended(IntNode(args.size))
-        .prepended(ReqNode("dict.make"))
-    )
-  }
-
-  lazy val arrExpr: Pckr[ApplyNode] = P(Bracket.Open) ~ expr.rep.map { items =>
-    val args = items
-    ApplyNode(
-      args
-        .prepended(IntNode(args.size))
-        .prepended(ReqNode("array.make"))
-    )
-  } ~ P(Bracket.Close)
-
-  lazy val letExpr: Packer[Vector[ElodinToken], ElodinToken, LetNode] =
-    (P(Parenthesis.Open) ~ P(Let) ~ objExpr.named("Letbindings") ~ expr ~ P(Parenthesis.Close))
-      .map {
-        case (items, node) => LetNode(items, node)
-      }
-
-  lazy val fnExpr: Packer[Vector[ElodinToken], ElodinToken, FnNode] = {
-    val params = fromPartial {
-      case Reference(to) => to
-    }.rep(min = 1)
-
-    (P(Parenthesis.Open, Fn, Bracket.Open) ~
-      params ~ P(Bracket.Close) ~ expr ~ P(Parenthesis.Close))
-      .map {
-        case (params, node) => FnNode(params, node)
-      }
-  }
-
-  lazy val prettyPacker = PrettyPacker.version1(expr ~ end)
+  lazy val expr: Pckr[Node] = delimitedExpr.named("Delimited") | greedyExpr.named("Greedy")
+  lazy val prettyPacker     = PrettyPacker.version1(expr ~ End)
   def parse(seq: Seq[ElodinToken]): Task[Node] = {
     Task.effectSuspend {
       Task.fromEither(prettyPacker.process(seq.toVector))

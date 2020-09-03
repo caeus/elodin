@@ -1,5 +1,7 @@
 package com.github.caeus.elodin.lang
 
+import zio.stm.TSet
+
 case class Meta[+A](value: A, children: List[Meta[A]])
 
 sealed trait Step
@@ -33,17 +35,22 @@ object Path {
 sealed trait Node
 
 object Node {
-
-  case class LetNode(bindings: Map[String, Node], body: Node) extends Node
-  case class FnNode(params: Seq[String], body: Node)          extends Node
-  case class ApplyNode(args: Seq[Node])                       extends Node
-  case class TextNode(value: String)                          extends Node
-  case class IntNode(value: BigInt)                           extends Node
-  case class FloatNode(value: BigDecimal)                     extends Node
-  case class BoolNode(value: Boolean)                         extends Node
-  //case class ArrNode(items: Seq[Node])                        extends Node
-  //case class DictNode(items: Map[String, Node])               extends Node
-  case class RefNode(to: String) extends Node
-  case class ReqNode(to: String) extends Node
-
+  case class Selection(
+      complement: Boolean,
+      named: Set[String],
+      prefix: Option[String],
+      renamed: Map[String, String]
+  )
+  case class LetNode(bindings: Map[String, Node], body: Node)             extends Node
+  case class FunNode(params: Seq[String], body: Node)                     extends Node
+  case class ApplyNode(args: Seq[Node])                                   extends Node
+  case class TextNode(value: String)                                      extends Node
+  case class IntNode(value: BigInt)                                       extends Node
+  case class FloatNode(value: BigDecimal)                                 extends Node
+  case class BoolNode(value: Boolean)                                     extends Node
+  case class ArrNode(items: Seq[Node])                                    extends Node
+  case class DictNode(items: Map[String, Node])                           extends Node
+  case class RefNode(to: String)                                          extends Node
+  case class ImportNode(module: String, selection: Selection, body: Node) extends Node
+  case class QRefNode(module: String, member: String)                     extends Node
 }

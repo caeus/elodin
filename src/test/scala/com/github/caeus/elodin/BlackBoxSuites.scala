@@ -30,7 +30,7 @@ object BlackBoxSuites extends DefaultRunnableSpec {
               } yield ()
             }
         )(Assertion.anything)
-      }
+      } @@ TestAspect.ignore
     )
   }
 }

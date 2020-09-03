@@ -1,23 +1,12 @@
 package com.github.caeus.elodin.compiler
 
-import com.github.caeus.elodin.modules.{EloModule, SrcModule}
 import com.github.caeus.elodin.compiler.Dig.Path
 import com.github.caeus.elodin.compiler.EloScript.StrScript
-import com.github.caeus.elodin.compiler.Lexcope.{
-  Root,
-  WhenApply,
-  WhenBool,
-  WhenFloat,
-  WhenFn,
-  WhenInt,
-  WhenLet,
-  WhenRef,
-  WhenReq,
-  WhenText
-}
-import com.github.caeus.elodin.frontend.{Lexer, Parser}
+import com.github.caeus.elodin.compiler.Lexcope.{Root, WhenApply, WhenBool, WhenFloat, WhenFn, WhenInt, WhenLet, WhenQRef, WhenRef, WhenText}
+import com.github.caeus.elodin.frontend.{Lexer, OldParser}
 import com.github.caeus.elodin.lang.Node
 import com.github.caeus.elodin.lang.Node._
+import com.github.caeus.elodin.modules.EloModule
 import com.github.caeus.elodin.runtime.Val.FnPointer
 import com.github.caeus.elodin.runtime._
 import zio.{RIO, Ref, Task}
@@ -79,9 +68,9 @@ object Lexcope {
     }
   }
   object WhenLet   extends When[LetNode]
-  object WhenFn    extends When[FnNode]
+  object WhenFn    extends When[FunNode]
   object WhenRef   extends When[RefNode]
-  object WhenReq   extends When[ReqNode]
+  object WhenQRef  extends When[QRefNode]
   object WhenApply extends When[ApplyNode]
   object WhenText  extends When[TextNode]
   object WhenFloat extends When[FloatNode]
@@ -101,7 +90,7 @@ object Lexcope {
       }
     }
   }
-  implicit final class FnLexcopeOps(private val value: Lexcope[FnNode]) extends AnyVal {
+  implicit final class FnLexcopeOps(private val value: Lexcope[FunNode]) extends AnyVal {
     def body: Lexcope[Node] = {
       Child(value.node.body, Dig.Down, value.widen)
     }
@@ -156,7 +145,7 @@ class ModuleCompiler {
       case StrScript(_, code) =>
         for {
           tokens <- new Lexer().lex(code)
-          node   <- new Parser().parse(tokens)
+          node   <- new OldParser().parse(tokens)
           r      <- compile(script.namespace, node)
         } yield r
     }
@@ -291,7 +280,7 @@ class ModuleCompiler {
               i.ensuring(_ >= 0)
               Shift.Arg(i)
           }
-        case WhenReq(lexcope)   => Shift.System(lexcope.node.to)
+        case WhenQRef(lexcope)   => Shift.System(lexcope.node.module)
         case WhenText(lexcope)  => Shift.Atom(Val.Atom(lexcope.node.value))
         case WhenFloat(lexcope) => Shift.Atom(Val.Atom(lexcope.node.value))
         case WhenInt(lexcope)   => Shift.Atom(Val.Atom(lexcope.node.value))
@@ -311,7 +300,7 @@ class ModuleCompiler {
         choosePaths(node).map(_.view.mapValues(_.toSeq.sortBy(p => p.path.length -> p.index)).toMap)
       _       = println(paths.mkString("\n"))
       init   <- Task.effect(createInit(namespace, paths))
-      module <- SrcModule.build(namespace, init)
+      module <- RIO.fail(new Exception())
     } yield module
   }
 }

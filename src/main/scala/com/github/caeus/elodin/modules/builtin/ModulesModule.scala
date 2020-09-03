@@ -1,8 +1,7 @@
 package com.github.caeus.elodin.modules.builtin
 
-import com.github.caeus.elodin.modules.ModuleContainer
-import com.github.caeus.elodin.types.ModuleEffect._
-import com.github.caeus.elodin.types.ModuleOp
+import com.github.caeus.elodin.modules.{ModuleContainer, ModuleOp}
+import com.github.caeus.elodin.modules.ModuleEffect._
 
 object ModulesModule extends ModuleContainer {
   override def name: String = "effects"

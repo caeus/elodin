@@ -1,6 +1,6 @@
 package com.github.caeus.elodin
 
-import com.github.caeus.elodin.frontend.{Lexer, Parser}
+import com.github.caeus.elodin.frontend.{Lexer, OldParser}
 import com.github.caeus.plutus.Cursor
 import zio.test.Assertion._
 import zio.test._
@@ -26,7 +26,7 @@ object ParsingSuites extends DefaultRunnableSpec {
       },
       testM("Parser") {
         val lexer  = new Lexer
-        val parser = new Parser
+        val parser = new OldParser
         val source = """
                       (do [
                       |        name <: $Eff.Console.readline

@@ -35,9 +35,9 @@ trait PackerSyntax[Src, El] {
   final def P[T](partial: PartialFunction[El, T]): Packer[Src, El, T] =
     fromPartial(partial)
 
-  final def end: Packer[Src, El, Unit] = Packer.end
+  final def End: Packer[Src, El, Unit] = Packer.End
 
-  final def fail[T](msg:String):Packer[Src,El,T] = Packer.failed(msg)
+  final def fail[T](msg: String): Packer[Src, El, T] = Packer.failed(msg)
 
   implicit def slicer: Slicer[Src]
 
@@ -49,6 +49,20 @@ trait PackerSyntax[Src, El] {
 }
 
 object PackerSyntax extends StrictLogging {
+
+  class WhitespaceSyntax(sep_ : Packer[String, Char, Unit]) extends PackerSyntax[String, Char] {
+    private val sep                                               = sep_.rep.as(())
+    override def fromSrc(src: String): Packer[String, Char, Unit] = sep ~ Packer.fromIterable(src)
+
+    override def fromEls(el: Seq[Char]): Packer[String, Char, Unit] =
+      sep ~ Packer.fromIterable(el)
+
+    override def fromPartial[T](partial: PartialFunction[Char, T]): Packer[String, Char, T] =
+      sep ~ Packer.fromPartial(partial)
+    override implicit val slicer: Slicer[String] = StringSlicer
+
+    override implicit val toCursor: ToCursor[String, Char] = StringToCursor
+  }
 
   object StringPackerSyntax extends PackerSyntax[String, Char] {
     override def fromSrc(src: String): Packer[String, Char, Unit] =
