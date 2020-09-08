@@ -1,6 +1,6 @@
 package com.github.caeus.elodin.runtime
 
-import com.github.caeus.elodin.compiler.EloScript
+import com.github.caeus.elodin.nb.Script
 import com.github.caeus.elodin.runtime.Val.{Atomic, FnPointer}
 import com.github.caeus.elodin.types.EloEffect
 import zio.{Task, TaskManaged, ZManaged}
@@ -11,7 +11,7 @@ trait EloFunction {
 
 trait EloRuntime {
 
-  def register(script: EloScript): Task[Unit]
+  def register(script: Script): Task[Unit]
   def asFunction(value: String): Task[EloFunction]
 }
 
@@ -47,7 +47,7 @@ final class DefaultEloRuntime(
     }
   }
 
-  override def register(script: EloScript): Task[Unit] = system.register(script)
+  override def register(script: Script): Task[Unit] = system.register(script)
 }
 
 object EloRuntime {

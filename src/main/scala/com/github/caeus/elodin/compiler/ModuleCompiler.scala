@@ -1,15 +1,14 @@
 package com.github.caeus.elodin.compiler
 
-import com.github.caeus.elodin.compiler.Dig.Path
-import com.github.caeus.elodin.compiler.EloScript.StrScript
-import com.github.caeus.elodin.compiler.Lexcope.{Root, WhenApply, WhenBool, WhenFloat, WhenFn, WhenInt, WhenLet, WhenQRef, WhenRef, WhenText}
-import com.github.caeus.elodin.frontend.{Lexer, OldParser}
 import com.github.caeus.elodin.lang.Node
-import com.github.caeus.elodin.lang.Node._
 import com.github.caeus.elodin.modules.EloModule
-import com.github.caeus.elodin.runtime.Val.FnPointer
+import com.github.caeus.elodin.nb.{Elodin, Script}
+import com.github.caeus.elodin.nb.archive.CalculationRef
+import com.github.caeus.elodin.nb.compile.Lexcope
+import com.github.caeus.elodin.nb.runtime.Value.Applicable
+import com.github.caeus.elodin.nb.runtime.{Atomizer, Value}
 import com.github.caeus.elodin.runtime._
-import zio.{RIO, Ref, Task}
+import zio.{RIO, UIO}
 
 case class Shifter(arity: Int, shift: Shift) {}
 
@@ -31,276 +30,51 @@ object Dig {
 
 }
 
-sealed trait Lexcope[N <: Node] {
-  def node: N
-  def path: Dig.Path
-  def maybeParent: Option[Lexcope[Node]]
-  final def resolve(ref: String): Option[Either[Lexcope[Node], DeclParam]] = {
-    this.widen match {
-      case WhenFn(lexcope) if lexcope.node.params.contains(ref) =>
-        Some(Right(DeclParam(path, lexcope.node.params.lastIndexOf(ref))))
-      case WhenLet(lexcope) if lexcope.node.bindings.contains(ref) =>
-        Some(Left(lexcope.binding(ref).get))
-      case _ =>
-        maybeParent.flatMap(_.resolve(ref))
-    }
-  }
-
-  override def toString: String = path.mkString("\\", ".", "")
+sealed trait RefResolution
+object RefResolution {
+  case class FunParam(declParam: DeclParam)               extends RefResolution
+  case class LetBinding(name: String, to: Lexcope[Node])  extends RefResolution
+  case class ModuleMember(module: String, member: String) extends RefResolution
 }
 
-object Lexcope {
-  case class Root[N <: Node](node: N) extends Lexcope[N] {
-    override def path: Path                              = Vector.empty
-    override lazy val maybeParent: Option[Lexcope[Node]] = None
-  }
-  case class Child[N <: Node](node: N, dig: Dig, parent: Lexcope[Node]) extends Lexcope[N] {
-    override lazy val path: Path = parent.path.appended(dig)
-
-    override lazy val maybeParent: Option[Lexcope[Node]] = Some(parent)
-  }
-  sealed class When[N <: Node: Manifest] {
-    def unapply(lexcope: Lexcope[Node]): Option[Lexcope[N]] = {
-      lexcope.node match {
-        case _: N => Some(lexcope.asInstanceOf[Lexcope[N]])
-        case _    => None
-      }
-    }
-  }
-  object WhenLet   extends When[LetNode]
-  object WhenFn    extends When[FunNode]
-  object WhenRef   extends When[RefNode]
-  object WhenQRef  extends When[QRefNode]
-  object WhenApply extends When[ApplyNode]
-  object WhenText  extends When[TextNode]
-  object WhenFloat extends When[FloatNode]
-  object WhenInt   extends When[IntNode]
-  object WhenBool  extends When[BoolNode]
-
-  implicit final class LexcopeOps[N <: Node](private val value: Lexcope[N]) extends AnyVal {
-    def widen: Lexcope[Node] = value.asInstanceOf[Lexcope[Node]]
-  }
-  implicit final class LetLexcopeOps(private val value: Lexcope[LetNode]) extends AnyVal {
-    def body: Lexcope[Node] = {
-      Child(value.node.body, Dig.Down, value.widen)
-    }
-    def binding(to: String): Option[Lexcope[Node]] = {
-      value.node.bindings.get(to).map { node =>
-        Child(node, Dig.Key(to), value.widen)
-      }
-    }
-  }
-  implicit final class FnLexcopeOps(private val value: Lexcope[FunNode]) extends AnyVal {
-    def body: Lexcope[Node] = {
-      Child(value.node.body, Dig.Down, value.widen)
-    }
-    def params: Set[DeclParam] = {
-      value.node.params.zipWithIndex.map {
-        case (_, index) => DeclParam(value.path, index)
-      }.toSet
-    }
-  }
-  implicit final class ApplyLexcopeOps(private val value: Lexcope[ApplyNode]) extends AnyVal {
-    def args: Seq[Lexcope[Node]] = {
-      value.node.args.zipWithIndex.map {
-        case (node, index) => Child(node, Dig.Index(index), value.widen)
-      }
-    }
-  }
-
-}
 case class DeclParam(path: Dig.Path, index: Int)
 sealed trait Shift {
-  private final def applyRec(values: Seq[Val])(shift: Shift): RIO[EloSystem, Val] = {
+  private final def applyRec(values: Seq[Value])(shift: Shift): RIO[Atomizer, Value] = {
     shift match {
-      case Shift.Atom(to)   => RIO.succeed(to)
+      case Shift.Of(to)     => RIO.succeed(to)
       case Shift.Arg(index) => RIO.effect(values(index))
       case Shift.Apply(shifts: Seq[Shift]) =>
         RIO
           .collectAll(shifts.map(applyRec(values)))
           .flatMap {
-            case (fn: FnPointer) :: args =>
+            case (fn: Applicable) :: args =>
               RIO.succeed(fn.applyTo(args))
-            case Nil => RIO.succeed(Val.Atom(()))
+            case Nil => RIO.succeed(Value.Atom(()))
             case _   => RIO.fail(new Exception("NOT APLICABLE"))
           }
-      case Shift.System(value) =>
-        RIO.environment[EloSystem].flatMap(_.apply(value))
+      case Shift.Archive(page) =>
+        RIO.succeed(Value.Lazy(page,Nil))
     }
   }
-  final def apply(values: Seq[Val]): RIO[EloSystem, Val] = {
+  final def apply(values: Seq[Value]): RIO[Atomizer, Value] = {
     applyRec(values)(this)
   }
 }
 object Shift {
-  case class Atom(value: Val)        extends Shift
+  case class Of(value: Value)        extends Shift
   case class Apply(args: Seq[Shift]) extends Shift
   case class Arg(index: Int)         extends Shift
-  case class System(value: String)   extends Shift
+  case class Archive(page: CalculationRef)     extends Shift
+  object Archive {
+    def apply(module: String, id: Int): Archive = Archive(CalculationRef(module, id))
+  }
 }
-
-class ModuleCompiler {
-  def compile(script: EloScript): RIO[EloSystem, EloModule] = {
-    script match {
-      case StrScript(_, code) =>
-        for {
-          tokens <- new Lexer().lex(code)
-          node   <- new OldParser().parse(tokens)
-          r      <- compile(script.namespace, node)
-        } yield r
-    }
-
-  }
-
-  //Ref[Map[Path, Set[DeclParam]]]
-
-  def walkDown(
-      lexcope: Lexcope[Node],
-      touchedPaths: Set[Dig.Path],
-      emitted: Ref[Map[Lexcope[Node], Set[DeclParam]]]
-  ): Task[Set[DeclParam]] = {
-    def emit(lexcope: Lexcope[Node])(capturedParams: Set[DeclParam]) = {
-      emitted
-        .update { map =>
-          map.updated(lexcope, capturedParams)
-        }
-        .map(_ => capturedParams)
-    }
-    if (touchedPaths.contains(lexcope.path)) {
-      Task.succeed(Set.empty)
-    } else {
-      val newTouchedPaths = touchedPaths + lexcope.path
-      lexcope.widen match {
-        case WhenLet(lexcope) =>
-          walkDown(lexcope.body, newTouchedPaths, emitted)
-        case WhenFn(lexcope) =>
-          walkDown(lexcope.body, newTouchedPaths, emitted)
-            .map(_ diff lexcope.params)
-            .flatMap(emit(lexcope.widen))
-        case WhenApply(xcope) =>
-          Task
-            .collectAll(xcope.args.map(s => walkDown(s, newTouchedPaths, emitted)))
-            .map(_.reduce(_ ++ _))
-        case WhenRef(lexcope) =>
-          lexcope
-            .resolve(lexcope.node.to)
-            .map {
-              case Left(xcope) =>
-                walkDown(xcope, touchedPaths, emitted)
-                  .flatMap(emit(xcope))
-              case Right(param) => Task.succeed(Set(param))
-            }
-            .getOrElse(Task.fail(new Exception("WhASODASID")))
-        case _ => Task.succeed(Set.empty)
-      }
-    }
-  }
-
-  def choosePaths(node: Node): Task[Map[Lexcope[Node], Set[DeclParam]]] = {
-    for {
-      emit  <- Ref.make[Map[Lexcope[Node], Set[DeclParam]]](Map.empty)
-      root   = Root(node)
-      empty <- walkDown(root, Set.empty, emit)
-      _ <- if (empty.isEmpty) { Task.succeed(()) }
-          else Task.fail(new Exception("Never happens, i guess"))
-      paths <- emit.get
-    } yield paths.updated(root, Set.empty)
-  }
-  case class NodeBundle(
-      id: Int,
-      scope: Lexcope[Node],
-      capturedParamsSize: Int,
-      header: Seq[DeclParam],
-      pointer: PPointer
-  )
-  def headerOf(node: Lexcope[Node], capturedParams: Seq[DeclParam]): Seq[DeclParam] = {
-    capturedParams
-      .appendedAll(node match {
-        case WhenFn(scope) => scope.params.toSeq
-        case _             => Nil
-      })
-      .sortBy(p => p.path.length -> p.index)
-  }
-  def createInit(
-      namespace: String,
-      chosenNodes: Map[Lexcope[Node], Seq[DeclParam]]
-  ): IndexedSeq[Shifter] = {
-
-    val indexed: Seq[((Lexcope[Node], Seq[DeclParam]), Int)] = chosenNodes.toSeq.sortBy {
-      case (s, _) => s.path.length
-    }.zipWithIndex
-
-    val bundles: IndexedSeq[NodeBundle] = indexed.map {
-      case ((scope, params), id) =>
-        val header = headerOf(scope, params)
-        NodeBundle(id, scope, params.size, header, PPointer.Compiled(namespace, id))
-    }.toIndexedSeq
-
-    val indexedBundles = bundles.map(b => b.scope.path -> b).toMap
-
-    def invocationShift(scope: Lexcope[Node], enclosing: NodeBundle): Shift = {
-      indexedBundles
-        .get(scope.path)
-        .map { bundle =>
-          Shift.Apply(
-            Seq(Shift.Atom(Val.Lazy(bundle.pointer, Nil))).appendedAll(
-              bundle.header
-                .take(bundle.capturedParamsSize)
-                .map { usedParam =>
-                  val i = enclosing.header.indexOf(usedParam)
-                  i.ensuring(
-                    i >= 0, {
-                      println(enclosing)
-                      println(usedParam)
-                      "Assertion failed GONORREA"
-                    }
-                  )
-                  Shift.Arg(i)
-                }
-            )
-          )
-        }
-        .getOrElse(toShift(scope, enclosing))
-    }
-
-    def toShift(scope: Lexcope[Node], bundle: NodeBundle): Shift = {
-      scope match {
-        case WhenFn(xcope) =>
-          invocationShift(xcope.body, bundle)
-        case WhenApply(lexcope) =>
-          Shift.Apply(lexcope.args.map(x => invocationShift(x, bundle)))
-        case WhenLet(lexcope) =>
-          invocationShift(lexcope.body, bundle)
-        case WhenRef(lexcope) =>
-          lexcope.resolve(lexcope.node.to).get match {
-            case Left(refdLexcope) =>
-              invocationShift(refdLexcope, bundle)
-            case Right(param) =>
-              val i = bundle.header.indexOf(param)
-              i.ensuring(_ >= 0)
-              Shift.Arg(i)
-          }
-        case WhenQRef(lexcope)   => Shift.System(lexcope.node.module)
-        case WhenText(lexcope)  => Shift.Atom(Val.Atom(lexcope.node.value))
-        case WhenFloat(lexcope) => Shift.Atom(Val.Atom(lexcope.node.value))
-        case WhenInt(lexcope)   => Shift.Atom(Val.Atom(lexcope.node.value))
-        case WhenBool(lexcope)  => Shift.Atom(Val.Atom(lexcope.node.value))
-      }
-    }
-
-    bundles.map { bundle =>
-      Shifter(arity = bundle.header.length, toShift(bundle.scope, bundle))
-    }
-
-  }
-
-  def compile(namespace: String, node: Node): RIO[EloSystem, EloModule] = {
-    for {
-      paths <-
-        choosePaths(node).map(_.view.mapValues(_.toSeq.sortBy(p => p.path.length -> p.index)).toMap)
-      _       = println(paths.mkString("\n"))
-      init   <- Task.effect(createInit(namespace, paths))
-      module <- RIO.fail(new Exception())
-    } yield module
-  }
+trait ModuleCompiler {
+  def compile(script: Script): RIO[EloSystem, EloModule]
+}
+object ModuleCompiler {
+  def make: UIO[ModuleCompiler] = ???
+}
+final class DefaultModuleCompiler extends ModuleCompiler {
+  override def compile(script: Script): RIO[EloSystem, EloModule] = ???
 }

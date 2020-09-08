@@ -1,13 +1,14 @@
 package com.github.caeus.elodin.runtime
 
+import com.github.caeus.elodin.compiler.{DefaultModuleCompiler, ModuleCompiler}
 import com.github.caeus.elodin.modules.{EloFolder, EloModule, NativeModule, SrcModule}
-import com.github.caeus.elodin.compiler.{EloScript, ModuleCompiler}
+import com.github.caeus.elodin.nb.Script
 import com.github.caeus.elodin.runtime.Val.{Atomic, FnPointer}
 import com.typesafe.scalalogging.LazyLogging
-import zio.{RefM, Task}
+import zio.{RefM, Task, UIO}
 
 trait EloSystem extends LazyLogging {
-  def register(script: EloScript): Task[Unit]
+  def register(script: Script): Task[Unit]
 
   def folderOf(pointer: PPointer): Task[EloFolder]
 
@@ -50,7 +51,7 @@ trait EloSystem extends LazyLogging {
   }
 }
 object EloSystem {
-  def make: Task[EloSystem] = {
+  def make: UIO[EloSystem] = {
     RefM
       .make[Map[String, EloModule]](
         Map.empty
@@ -61,12 +62,12 @@ object EloSystem {
   }
 }
 final class DefaultEloSystem(modules: zio.RefM[Map[String, EloModule]]) extends EloSystem {
-  override def register(script: EloScript): Task[Unit] = {
+  override def register(script: Script): Task[Unit] = {
     modules.update {
       case modules if modules contains script.namespace =>
         Task.fail(new Exception("already defined"))
       case modules =>
-        val compiler = new ModuleCompiler()
+        val compiler = new DefaultModuleCompiler()
         compiler
           .compile(script)
           .map { module =>

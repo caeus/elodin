@@ -51,7 +51,7 @@ final class SrcModule(
   def folder(id: Int): Task[EloFolder] =
     Task.effect {
       val shifter = shifters(id)
-      modules.EloFolder(shifter.arity, shifter.shift.apply)
+      ???
     }
   override def apply(member: String): Task[Val] =
     members.flatMap { members =>

@@ -1,26 +1,26 @@
-package com.github.caeus.elodin.frontend
+package com.github.caeus.elodin.nb.compile
 
-import com.github.caeus.elodin.frontend.DoPart.{AssignmentPart, YieldPart}
-import com.github.caeus.elodin.frontend.ElodinToken._
 import com.github.caeus.elodin.lang.Node
 import com.github.caeus.elodin.lang.Node._
+import com.github.caeus.elodin.nb.compile.DoStep.{BindPart, YieldPart}
+import com.github.caeus.elodin.nb.compile.ElodinToken._
 import com.github.caeus.elodin.util.Splitting.{Branch, Leaf}
 import com.github.caeus.elodin.util.{SepEl, SepNel, SplitTree}
-import com.github.caeus.plutus.{Packer, PrettyPacker}
 import com.github.caeus.plutus.PackerSyntax.VectorPackerSyntax
+import com.github.caeus.plutus.{Packer, PrettyPacker}
 import zio.Task
 
 import scala.annotation.tailrec
 
-sealed trait DoPart
-object DoPart {
-  case class AssignmentPart(to: String, body: Node) extends DoPart
-  case class YieldPart(to: String, body: Node)      extends DoPart
+sealed trait DoStep
+object DoStep {
+  case class BindPart(to: String, body: Node)  extends DoStep
+  case class YieldPart(to: String, body: Node) extends DoStep
   @tailrec
-  private def reduceRec(revParts: List[DoPart], curr: Node): Node = {
+  private def reduceRec(revParts: List[DoStep], curr: Node): Node = {
     revParts match {
       case Nil => curr
-      case AssignmentPart(to, body) :: prevs =>
+      case BindPart(to, body) :: prevs =>
         val newCurr = curr match {
           case LetNode(bindings, letBody) =>
             //Check to not add an already defined binding
@@ -33,13 +33,18 @@ object DoPart {
         reduceRec(prevs, newCurr)
     }
   }
-  def reduce(parts: Seq[DoPart], last: Node): Node = {
+  def reduce(parts: Seq[DoStep], last: Node): Node = {
     reduceRec(parts.reverse.toList, ApplyNode(Seq(QRefNode("gen", "done"), last)))
   }
 
 }
-
-final class Parser {
+trait Parser {
+  def parse(tokens: Seq[ElodinToken]): Task[Node]
+}
+object Parser {
+  def make: Parser = new DefaultParser
+}
+final class DefaultParser extends Parser {
   type Pckr[Out] = Packer[Vector[ElodinToken], ElodinToken, Out]
 
   private val syntax = new VectorPackerSyntax[ElodinToken]
@@ -142,41 +147,42 @@ final class Parser {
 
   /**
     * let
-    *   x=5,
+    *   x=5;
     *   y=7;
     *   sum(x,y)
     *
     */
-  lazy val letExpr = P(Let) ~
-    ((refExpr ~ P(ElodinToken.Equals) ~ expr).rep(1, sep = P(ElodinToken.Comma)) ~
-      P(ElodinToken.Semicolon) ~
-      expr).map {
-      case (bindings, expr) =>
-        Node.LetNode(
-          bindings.map {
-            case (ref, to) => ref.to -> to
-          }.toMap,
-          expr
-        )
+  type Binding = (String, Node)
+  lazy val letBinding: Pckr[Binding] = (refExpr ~ P(Equals) ~ expr).map {
+    case (ref, body) => ref.to -> body
+  }
+  lazy val letStructure: Pckr[(List[Binding], Node)] =
+    expr.map(Nil -> _) | (letBinding ~ P(Semicolon) ~ letStructure).map {
+      case (to, expr, structure) =>
+        ((to, expr) :: structure._1) -> structure._2
+    }
+  lazy val letExpr = P(Let) ~ letStructure.map {
+    case (bindings, body) =>
+      Node.LetNode(
+        bindings.toMap,
+        body
+      )
+  }
+  lazy val doStructure: Pckr[(List[DoStep], Node)] =
+    expr.map { Nil -> _ } | (doStep ~ P(Semicolon) ~ doStructure).map {
+      case (step, body) => (step :: body._1) -> body._2
     }
 
-  lazy val doSteps = ((refExpr ~ (P(Yield).as(true) | P(Equals).as(false)))
-    .rep(max = Some(1))
-    .map(_.headOption) ~ expr)
-    .rep(sep = P(Comma))
-    .map(_.map {
-      case (binding, body) =>
-        binding
-          .map {
-            case (binding, true)  => YieldPart(binding.to, body)
-            case (binding, false) => AssignmentPart(binding.to, body)
-          }
-          .getOrElse(YieldPart("_", body))
-    })
+  lazy val doStep: Pckr[DoStep] = ((refExpr ~ P(Yield)).? ~ expr).map {
+    case (ref, body) => YieldPart(ref.map(_.to).getOrElse("_"), body)
+  } |
+    (refExpr ~ P(Equals) ~ expr).map {
+      case (ref, body) => BindPart(ref.to, body)
+    }
 
-  lazy val doExpr = (P(Do) ~ doSteps ~ P(Semicolon) ~ expr).map {
+  lazy val doExpr = (P(Do) ~ doStructure).map {
     case (parts, last) =>
-      DoPart.reduce(parts, last)
+      DoStep.reduce(parts, last)
   }
 
   lazy val dictExpr: Pckr[DictNode] =
@@ -226,7 +232,8 @@ final class Parser {
     textLiteral.named("DText")
 
   lazy val expr: Pckr[Node] = delimitedExpr.named("Delimited") | greedyExpr.named("Greedy")
-  lazy val prettyPacker     = PrettyPacker.version1(expr ~ End)
+  lazy val finalExpr        = expr ~ End
+  lazy val prettyPacker     = PrettyPacker.version1(finalExpr)
   def parse(seq: Seq[ElodinToken]): Task[Node] = {
     Task.effectSuspend {
       Task.fromEither(prettyPacker.process(seq.toVector))

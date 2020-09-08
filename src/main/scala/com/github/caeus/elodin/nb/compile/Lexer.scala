@@ -1,6 +1,6 @@
-package com.github.caeus.elodin.frontend
+package com.github.caeus.elodin.nb.compile
 
-import com.github.caeus.elodin.frontend.ElodinToken._
+import com.github.caeus.elodin.nb.compile.ElodinToken._
 import com.github.caeus.plutus.PackerSyntax.StringPackerSyntax
 import com.github.caeus.plutus.{Packer, PrettyPacker}
 import com.jsoniter.Jsoniter
@@ -38,8 +38,13 @@ object ElodinToken {
   case object Ignore                     extends ElodinToken
 
 }
-
-class Lexer {
+trait Lexer {
+  def lex(code: String): Task[Vector[ElodinToken]]
+}
+object Lexer {
+  def make: Lexer = new DefaultLexer
+}
+final class DefaultLexer extends Lexer {
   import StringPackerSyntax._
 
   private val opChars = """|^&=!<>:+-*/""".toSet

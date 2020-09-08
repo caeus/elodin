@@ -1,18 +1,18 @@
-package com.github.caeus.elodin
+package com.github.caeus.elodin.grammar
 
-import com.github.caeus.elodin.frontend.{ElodinToken, Lexer, Parser}
 import com.github.caeus.elodin.lang.Node
 import com.github.caeus.elodin.lang.Node.{ApplyNode, RefNode}
+import com.github.caeus.elodin.nb.compile.{DefaultLexer, DefaultParser, ElodinToken}
 import com.github.caeus.plutus.PackerSyntax.VectorPackerSyntax
 import com.github.caeus.plutus.{Packer, PrettyPacker}
-import zio.test.Assertion._
+import zio.test.Assertion.{anything, equalTo, isSubtype}
 import zio.test._
-import zio.test.environment.TestEnvironment
+import zio.test.environment._
 import zio.{Task, ZIO}
 
 object ElodinGrammarSuites extends DefaultRunnableSpec {
-  val lexer  = new Lexer
-  val parser = new Parser
+  val lexer  = new DefaultLexer
+  val parser = new DefaultParser
 
   def parse(code: String): Task[Node] =
     for {
@@ -34,21 +34,21 @@ object ElodinGrammarSuites extends DefaultRunnableSpec {
 
   def cprint(any: Any) = println(pprint.tokenize(any, indent = 2, width = 10).mkString(""))
   override def spec: ZSpec[TestEnvironment, Throwable] = {
-    suite("NTExperimentation")(
+    suite("Elodin Grammar")(
       testM("Full features") {
         assertM(parse("""
             |import "math"^{pepe,asd} Math{sin=seno};
             |import "qwe"^{};
             |{
             |  do
-            |    arbitraryList = [a,b,c,d],
+            |    arbitraryList = [a,b,c,d];
             |    firstActionR <- WhateverEffect;
             |    let
             |      sum = fun(list) = if (list >>> isEmpty) 0 { let
-            |       head = listHead(list),
+            |       head = listHead(list);
             |       tail = listTail(list);
             |       plus(head,sum(tail))
-            |      },
+            |      };
             |      (+++) = 5;
             |    sum [1,2,x]
             |} EffectChain
@@ -61,9 +61,9 @@ object ElodinGrammarSuites extends DefaultRunnableSpec {
           parseWith(
             """
               |do
-              | println("What's your name?"),
-              | name <- readline,
-              | (+++) = concat["Hello ", name, "! how are you?"],
+              | println("What's your name?");
+              | name <- readline;
+              | (+++) = concat["Hello ", name, "! how are you?"];
               | println((+++));
               | "eff".(***)
               |""".stripMargin,
@@ -135,7 +135,7 @@ object ElodinGrammarSuites extends DefaultRunnableSpec {
         assertM(
           parseWith(
             """fun(list) = (if (isEmpty(list)) 0 {let
-              |   head = listHead(list),
+              |   head = listHead(list);
               |   tail = listTail(list);
               |   plus(head,sum(tail))
               |  })""".stripMargin,
@@ -146,5 +146,6 @@ object ElodinGrammarSuites extends DefaultRunnableSpec {
         )
       }
     )
+
   }
 }
