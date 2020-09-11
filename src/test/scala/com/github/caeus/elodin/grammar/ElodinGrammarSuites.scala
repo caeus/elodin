@@ -44,7 +44,7 @@ object ElodinGrammarSuites extends DefaultRunnableSpec {
             |    arbitraryList = [a,b,c,d];
             |    firstActionR <- WhateverEffect;
             |    let
-            |      sum = fun(list) = if (list >>> isEmpty) 0 { let
+            |      sum = (list) => if (list >>> isEmpty) 0 { let
             |       head = listHead(list);
             |       tail = listTail(list);
             |       plus(head,sum(tail))
@@ -134,7 +134,7 @@ object ElodinGrammarSuites extends DefaultRunnableSpec {
       testM("complex") {
         assertM(
           parseWith(
-            """fun(list) = (if (isEmpty(list)) 0 {let
+            """(list) => (if (isEmpty(list)) 0 {let
               |   head = listHead(list);
               |   tail = listTail(list);
               |   plus(head,sum(tail))

@@ -79,7 +79,6 @@ final class DefaultEloSystem(modules: zio.RefM[Map[String, EloModule]]) extends 
 
   override def apply(cmd: String): Task[Val] = {
     val spliter = cmd.lastIndexOf(":")
-    println(cmd)
     if (spliter >= 0) {
       val (module, _member) = cmd.splitAt(spliter)
       val member            = _member.substring(1)

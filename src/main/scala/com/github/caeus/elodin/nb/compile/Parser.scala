@@ -29,7 +29,7 @@ object DoStep {
         }
         reduceRec(prevs, newCurr)
       case YieldPart(to, body) :: prevs =>
-        val newCurr = ApplyNode(Seq(QRefNode("gen", "chain"), body, FunNode(Seq(to), curr)))
+        val newCurr = ApplyNode(Seq(QRefNode("gen", "suspend"), body, FunNode(Seq(to), curr)))
         reduceRec(prevs, newCurr)
     }
   }
@@ -73,12 +73,12 @@ final class DefaultParser extends Parser {
       Node.ImportNode(to, selection, body)
   }
 
-  lazy val funExpr: Pckr[Node.FunNode] = (P(ElodinToken.Fun) ~
-    P(Parenthesis.Open) ~ refExpr.rep((1), sep = P(Comma)) ~ P(
-    Parenthesis.Close
-  ) ~ P(Equals) ~ expr).map {
-    case (args, body) => Node.FunNode(args.map(_.to), body)
-  }
+  lazy val funExpr: Pckr[Node.FunNode] =
+    (P(Parenthesis.Open) ~ refExpr.rep((1), sep = P(Comma)) ~ P(
+      Parenthesis.Close
+    ) ~ P(Fun) ~ expr).map {
+      case (args, body) => Node.FunNode(args.map(_.to), body)
+    }
 
   lazy val opExpr: Pckr[RefNode] = fromPartial {
     case Operator(to) => RefNode(to)
@@ -89,7 +89,13 @@ final class DefaultParser extends Parser {
   } | P(Parenthesis.Open) ~ opExpr ~ P(Parenthesis.Close)) ~
     (P(Dot) ~ refExpr).rep).map {
     case (to, rest) if rest.isEmpty => to
-    case (to, rest)                 => RefNode(rest.prepended(to).mkString("."))
+    case (to, rest) =>
+      RefNode(
+        rest
+          .prepended(to)
+          .map(_.to)
+          .mkString(".")
+      )
   }
 
   lazy val argsPart: Pckr[List[Node]] = ((P(ElodinToken.Parenthesis.Open) ~ expr ~

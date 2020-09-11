@@ -7,8 +7,8 @@ import com.github.caeus.elodin.nb.archive.ChapterBuilder.ChapterBuilderImpl
 import com.github.caeus.elodin.nb.archive.ChapterDraft.{IsAction, IsCalculation}
 import com.github.caeus.elodin.nb.archive.HArgs.{&:, Zot}
 import com.github.caeus.elodin.nb.runtime.Value.{Applicable, Atomic}
-import com.github.caeus.elodin.nb.runtime.{Atomizer, Effect, Value}
-import zio.{RIO, Task}
+import com.github.caeus.elodin.nb.runtime.{Atomizer, EffOp, Effect, Value}
+import zio.{RIO, Task, ZIO}
 
 import scala.reflect.ClassTag
 
@@ -30,14 +30,19 @@ object ArgAs {
   val atomic: ArgAs[Atomic] = new ArgAs[Atomic] {
     override def coerce(value: Value): RIO[Atomizer, Atomic] = RIO.accessM(_.atomize(value))
   }
+  val atom: ArgAs[Any] = atomic.mapM {
+    case Value.Atom(of) => Task(of)
+    case x              => Task.fail(new Exception(s"Expected atom, got ${x.getClass}"))
+  }
   val fun: ArgAs[Value.Fun] = atomic.mapM {
     case fun @ Value.Fun(_, _) => Task(fun)
-    case _                     => Task.fail(new Exception("Type error"))
+    case x                     => Task.fail(new Exception(s"Expected function, got ${x.getClass}"))
   }
   def is[T: ClassTag]: ArgAs[T] =
-    atomic.mapM {
-      case Value.Atom(atom: T) => Task(atom)
-      case _                   => Task.fail(new Exception("Type error"))
+    atom.mapM {
+      case el: T => Task(el)
+      case x =>
+        Task.fail(new Exception(s"Expected ${implicitly[ClassTag[T]]} got ${x.getClass} instead "))
     }
 
 }
@@ -89,10 +94,27 @@ sealed trait ChapterBuilder[+T <: HArgs] {
   def ctitle: String
   def btitle: String
   def argsBuilder: ArgsBuilder[T]
-  final def when[T0 <: HArgs](f: ArgsBuilder[T] => ArgsBuilder[T0]): ChapterBuilder[T0] =
+  final def at[T0 <: HArgs](f: ArgsBuilder[T] => ArgsBuilder[T0]): ChapterBuilder[T0] =
     new ChapterBuilderImpl[T0](btitle, ctitle, f(argsBuilder))
-  def safe(f: T => RIO[Atomizer, Value]): ChapterDraft
-  def unsafe(f: T => RIO[Atomizer, Either[Value, Value]]): ChapterDraft
+  def safeM(f: T => RIO[Atomizer, Value]): ChapterDraft
+  final def safeAtomM[X](f: T => RIO[Atomizer, X]): ChapterDraft = {
+    safeM { t =>
+      f(t)
+        .flatMap(a => ZIO.effect(Value.Atom(a)))
+    }
+  }
+  final def safeAtom[X](f: PartialFunction[T, X]): ChapterDraft = {
+    safeAtomM { t =>
+      ZIO
+        .effect(f.orElse[T, X]((_: T) => throw new Exception("Type error"))(t))
+    }
+  }
+  final def unsafeAtomM[E, X](f: T => RIO[Atomizer, Either[E, X]]): ChapterDraft = {
+    unsafeM { t =>
+      f(t).map(_.left.map(Value.Atom.apply).map(Value.Atom.apply))
+    }
+  }
+  def unsafeM(f: T => RIO[Atomizer, Either[Value, Value]]): ChapterDraft
 }
 object ChapterBuilder {
   private final class ChapterBuilderImpl[T <: HArgs](
@@ -100,18 +122,23 @@ object ChapterBuilder {
       val ctitle: String,
       val argsBuilder: ArgsBuilder[T]
   ) extends ChapterBuilder[T] {
-    override def safe(f: T => RIO[Atomizer, Value]): ChapterDraft = {
+    override def safeM(f: T => RIO[Atomizer, Value]): ChapterDraft = {
       IsCalculation(
         Calculate(
           arity = argsBuilder.arity,
           { args =>
-            argsBuilder.take(args).flatMap(f)
+            argsBuilder
+              .take(args)
+              .mapError { err =>
+                new Exception(s"typed error in $btitle $ctitle", err)
+              }
+              .flatMap(f)
           }
         )
       )
     }
 
-    override def unsafe(f: T => RIO[Atomizer, Either[Value, Value]]): ChapterDraft = {
+    override def unsafeM(f: T => RIO[Atomizer, Either[Value, Value]]): ChapterDraft = {
       IsAction(
         Perform(
           arity = argsBuilder.arity,
@@ -122,7 +149,7 @@ object ChapterBuilder {
         Calculate(
           arity = argsBuilder.arity,
           { args =>
-            RIO
+            val value = RIO
               .accessM[Atomizer] { atomizer =>
                 atomizer
                   .get("eff", "succeed")
@@ -133,12 +160,12 @@ object ChapterBuilder {
                       .flatMap(atomizer.atomize)
                   )
               }
+            value
               .map {
                 case (succ, fail) =>
                   Value.Atom(
                     Effect.Suspend(
-                      ActionRef(btitle, ctitle),
-                      args,
+                      EffOp(ActionRef(btitle, ctitle), args),
                       succ.asInstanceOf[Applicable],
                       fail.asInstanceOf[Applicable]
                     )
@@ -198,8 +225,8 @@ object MyModule {
 
   def asd: BookBuilder => Any = {
     _.chapter("alksdj")(
-      _.when(value &: _)
-        .safe { _ =>
+      _.at(value &: _)
+        .safeM { _ =>
           ???
         }
     )

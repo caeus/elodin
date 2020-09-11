@@ -1,6 +1,6 @@
 package com.github.caeus.elodin.nb.runtime
 
-import com.github.caeus.elodin.nb.archive.CalculationRef
+import com.github.caeus.elodin.nb.archive.{CalculationRef, HArgs}
 
 sealed trait Value {}
 object Value {
@@ -15,7 +15,10 @@ object Value {
       Lazy(pointer, this.args.appendedAll(args))
     }
   }
-  case class Atom(of: Any) extends Atomic
+  case class Atom(of: Any) extends Atomic{
+    require(!of.isInstanceOf[Atomic],of.toString)
+    require(!of.isInstanceOf[HArgs],of.toString)
+  }
   case class Fun(pointer: CalculationRef, args: Seq[Value]) extends Atomic with Applicable {
     override def applyTo(args: Seq[Value]): Applicable =
       Lazy(pointer, this.args.appendedAll(args))

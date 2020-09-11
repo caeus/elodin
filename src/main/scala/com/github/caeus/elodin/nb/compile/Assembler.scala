@@ -4,18 +4,28 @@ import com.github.caeus.elodin.compiler.RefResolution.{FunParam, LetBinding, Mod
 import com.github.caeus.elodin.compiler.{DeclParam, Dig, Shift, Shifter}
 import com.github.caeus.elodin.lang.Node
 import com.github.caeus.elodin.nb.archive.Book.CBook
-import com.github.caeus.elodin.nb.compile.Lexcope._
 import com.github.caeus.elodin.nb.archive.{Archive, Book, CalculationRef}
+import com.github.caeus.elodin.nb.compile.Lexcope._
 import com.github.caeus.elodin.nb.runtime.Value
-import com.github.caeus.elodin.runtime.{PPointer, Val}
+import com.typesafe.scalalogging.LazyLogging
 import zio.{Ref, Task, ZIO}
 
 trait Assembler {
   def assemble(name: String, node: Node): Task[Book]
 }
 
-final class DefaultAssembler(deps: Archive) extends Assembler {
+final class DefaultAssembler(deps: Archive) extends Assembler with LazyLogging {
 
+  def assemble(book: String, node: Node) = new AssemblerVisitor(deps, book, node).assemble
+}
+case class NodeBundle(
+    id: Int,
+    scope: Lexcope[Node],
+    capturedParamsSize: Int,
+    header: Seq[DeclParam],
+    page: CalculationRef
+)
+final class AssemblerVisitor(deps: Archive, book: String, root: Node) extends LazyLogging {
   def walkDown(
       lexcope: Lexcope[Node],
       touchedPaths: Set[Dig.Path],
@@ -52,7 +62,13 @@ final class DefaultAssembler(deps: Archive) extends Assembler {
                     walkDown(xcope, touchedPaths, emitted)
                   case Some(FunParam(param)) => Task.succeed(Set(param))
                   case Some(_)               => Task.succeed(Set.empty[DeclParam])
-                  case None                  => Task.fail(new Exception(s"Reference to $to is not defined"))
+                  case None =>
+                    Task.fail(
+                      new Exception(
+                        s"""Assembling book $book
+                       |Reference to $to is not defined""".stripMargin
+                      )
+                    )
                 }
           } yield r
         case _ => Task.succeed(Set.empty)
@@ -65,34 +81,19 @@ final class DefaultAssembler(deps: Archive) extends Assembler {
       case WhenImport(node) => exportedPaths(node.body.widen)
       case WhenLet(node)    => exportedPaths(node.body.widen)
       case WhenDict(node)   => node.items
-      case _                => throw new Exception("It's not a valid module expression")
+      case _                => throw new Exception(s"${root.node}It's not a valid module expression")
     }
   }
 
-  def choosePaths(node: Node): Task[Map[Lexcope[Node], Set[DeclParam]]] = {
+  def choosePaths(startingAt: Lexcope[Node], emit: Ref[Map[Lexcope[Node], Set[DeclParam]]]) = {
     for {
-      emit    <- Ref.make[Map[Lexcope[Node], Set[DeclParam]]](Map.empty)
-      root     = Root(node)
-      exported = exportedPaths(root)
-      empty <- ZIO
-                .collectAll(
-                  exported.map {
-                    case (name, node) => walkDown(node, Set.empty, emit)
-                  }
-                )
-                .map(_.flatten)
+      empty <- walkDown(startingAt, Set.empty, emit)
       _ <- if (empty.isEmpty) { Task.succeed(()) }
           else Task.fail(new Exception("Never happens, i guess"))
       paths <- emit.get
-    } yield paths.updated(root, Set.empty)
+    } yield paths.updated(startingAt, Set.empty)
   }
-  case class NodeBundle(
-      id: Int,
-      scope: Lexcope[Node],
-      capturedParamsSize: Int,
-      header: Seq[DeclParam],
-      page: CalculationRef
-  )
+
   def headerOf(node: Lexcope[Node], capturedParams: Seq[DeclParam]): Seq[DeclParam] = {
     capturedParams
       .appendedAll(node match {
@@ -104,7 +105,7 @@ final class DefaultAssembler(deps: Archive) extends Assembler {
   def calcShifters(
       namespace: String,
       chosenNodes: Map[Lexcope[Node], Seq[DeclParam]]
-  ): Task[IndexedSeq[Shifter]] = {
+  ): Task[IndexedSeq[(Dig.Path, Shifter)]] = {
     val indexed: Seq[((Lexcope[Node], Seq[DeclParam]), Int)] = chosenNodes.toSeq.sortBy {
       case (s, _) => s.path.length
     }.zipWithIndex
@@ -130,8 +131,6 @@ final class DefaultAssembler(deps: Archive) extends Assembler {
                     val i = enclosing.header.indexOf(usedParam)
                     i.ensuring(
                       i >= 0, {
-                        println(enclosing)
-                        println(usedParam)
                         "Assertion failed GONORREA"
                       }
                     )
@@ -218,23 +217,47 @@ final class DefaultAssembler(deps: Archive) extends Assembler {
     ZIO
       .collectAll(bundles.map { bundle =>
         toShift(bundle.scope, bundle).map { shift =>
-          Shifter(arity = bundle.header.length, shift)
+          bundle.scope.path -> Shifter(arity = bundle.header.length, shift)
         }
       })
       .map(_.toIndexedSeq)
   }
-
-  def assemble(namespace: String, node: Node) = {
+  def assemble = {
+    logger.info(s"Started assembling module $book")
     for {
-      exported: Map[String, Lexcope[Node]] <- Task.effect(exportedPaths(Root(node)))
-
-      paths <-
-        choosePaths(node).map(_.view.mapValues(_.toSeq.sortBy(p => p.path.length -> p.index)).toMap)
-      init <- calcShifters(namespace, paths)
-    } yield CBook(namespace, exported.view.mapValues(_ => 1).toMap, init)
+      exported: Map[String, Lexcope[Node]] <- Task.effect(exportedPaths(Root(root)))
+      emit: Ref[Map[Lexcope[Node], Set[DeclParam]]] <-
+        Ref.make[Map[Lexcope[Node], Set[DeclParam]]](Map.empty)
+      _ <- ZIO.collectAll_(exported.values.map { node =>
+            choosePaths(node, emit)
+          })
+      paths <- emit.get
+                .map(_.view.mapValues(_.toSeq.sortBy(p => p.path.length -> p.index)).toMap)
+                .map { paths: Map[Lexcope[Node], Seq[DeclParam]] =>
+                  val exportedOnes = exported.values.map(_ -> Seq.empty[DeclParam]).toSeq
+                  ((paths.toSeq ++ exportedOnes)).toMap
+                }
+      shifters <- calcShifters(book, paths)
+    } yield {
+      val namespace1 = CBook(
+        book,
+        exported.view
+          .mapValues(node => {
+            val i = shifters.indexWhere {
+              case (path, _) =>
+                path == node.path
+            }
+            if (i >= 0) i else ???
+          })
+          .toMap,
+        shifters.map(_._2)
+      )
+      logger.info(s"Finished assembling book $book")
+      namespace1
+    }
   }
-
 }
+
 object Assembler {
   def make(deps: Archive) = new DefaultAssembler(deps)
 }

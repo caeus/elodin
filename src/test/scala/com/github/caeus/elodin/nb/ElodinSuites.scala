@@ -1,5 +1,6 @@
 package com.github.caeus.elodin.nb
 
+import com.github.caeus.elodin.nb.archive.PredefArchive
 import com.github.caeus.elodin.nb.runtime.Value
 import com.github.caeus.elodin.nb.runtime.Value.Applicable
 import zio.ZIO
@@ -10,31 +11,55 @@ object ElodinSuites extends DefaultRunnableSpec {
   override def spec =
     suite(
       "Elodin"
-    )(testM("full happy flow") {
-      assertM(for {
-        elodinc <- ElodinC.make(Nil)
-        myModule <- elodinc.compile(
-                     "testM",
-                     """
+    )(
+      testM("predef") {
+        assertM(for {
+          elodinc <- ElodinC.default(Nil)
+          _        = println("Died at compile?")
+          myModule <- elodinc.compile(
+                       "testM",
+                       """
+                          |import "predef" ^{};
+                          |{
+                          |  procedure = gen.run {
+                          |   do
+                          |   println "Hola";
+                          |   println "Chao"
+                          |  } eff.chain
+                          |
+                          |}""".stripMargin
+                     )
+          elodin <- Elodin.default(List(myModule))
+          effect <- elodin
+                     .get("testM", "procedure")
+          _ <- elodin.run(effect)
+        } yield ())(anything)
+      },
+      testM("full happy flow") {
+        assertM(for {
+          elodinc <- ElodinC.default(Nil)
+          _        = println("Died at compile?")
+
+          myModule <- elodinc.compile(
+                       "testM",
+                       """
             |import "predef" ^{};
             |{
-            |procedure = do
+            |procedure =  gen.run {do
             |  println "What's your name?";
             |  name <- readline;
             |  println (concat ["Hello ", name, "!, how are you?"])
-            |}""".stripMargin
-                   )
-        elodin <- Elodin.make(List(myModule))
-        applicable <- elodin
-                       .get("testM", "procedure")
-                       .flatMap {
-                         case a: Applicable => ZIO.succeed(a)
-                         case _             => ZIO.fail(new Exception("That is not an applicable value"))
-                       }
-        myResult <- ZIO.fromEither(Value.fromJson(""" "Alejandro" """))
-        result   <- elodin.run(applicable(myResult))
-      } yield result) {
-        anything
-      }
-    })
+            |  } eff.chain
+            |} """.stripMargin
+                     )
+
+          elodin <- Elodin.default(List(myModule))
+          effect <- elodin
+                     .get("testM", "procedure")
+          result <- elodin.run(effect)
+        } yield result) {
+          anything
+        }
+      } @@ TestAspect.ignore
+    )
 }

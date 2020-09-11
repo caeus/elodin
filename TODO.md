@@ -8,14 +8,20 @@
 * Race parallel computations
 
 b
+```
+chain(eff,f)={
+    Effect(eff.data,{r=>
+      eff.onSuccess(r)
+    }, eff.onFail )
+}
+import "predef/eff" ^{};
+{
+ chain = fun(ma,f)
 
-f("chain") ++ fn ++ any >> {
- case 
-} 
-
-"chain".of(fn).of(fn.!).of(any).impl{
-case 
 }
 
 
+
+
+```
 

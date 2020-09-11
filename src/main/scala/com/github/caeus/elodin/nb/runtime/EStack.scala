@@ -2,9 +2,9 @@ package com.github.caeus.elodin.nb.runtime
 
 import com.github.caeus.elodin.nb.runtime.PopResult.{Complete, Incomplete}
 import zio._
-
+import zio.duration._
 sealed trait PopResult[+A] {
-  def els:List[A]
+  def els: List[A]
 }
 object PopResult {
   final case class Incomplete[+A](els: List[A]) extends PopResult[A]
@@ -21,14 +21,14 @@ object EStack {
 final class EStack[A](ref: zio.Ref[List[A]]) {
 
   def elements: UIO[List[A]] = ref.get
-  def push(el: A): UIO[Unit] =
-    ref.update(el :: _)
 
-  def pushAll(els: Iterable[A]) =
-    ref.update(els.toList ::: _)
+  def pushAll(els: Iterable[A]): IO[Nothing, Unit] = {
+    zio.clock.Clock.Service.live.sleep(0.milliseconds).flatMap { _ => ref.update(els.toList ::: _) }
+  }
 
   def pop(n: Int): UIO[PopResult[A]] =
     for {
+      _ <- zio.clock.Clock.Service.live.sleep(0.milliseconds)
       r <- ref.modify {
             case list if list.size >= n =>
               val asd = list.splitAt(n)

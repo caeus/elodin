@@ -1,0 +1,6 @@
+import "basis" ^{};
+
+{
+ cons = list.cons,
+ nil = list.nil
+}

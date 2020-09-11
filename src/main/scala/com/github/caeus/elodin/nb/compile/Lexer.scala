@@ -57,6 +57,9 @@ final class DefaultLexer extends Lexer {
 
   lazy val integral: Packer[String, Char, Unit] = ((P("0") | P("""[1-9]""".r)) ~ digits.?).as(())
 
+  lazy val _comment: Packer[String, Char, Unit] = P("*/") | (P(_ => true) ~ _comment).as(())
+  lazy val comment: Packer[String, Char, Unit]  = (P("/*") ~ _comment)
+
   lazy val booleanToken: Packer[String, Char, Bool] =
     P("""true|false""".r).map(_.toBoolean).map(Bool.apply)
 
@@ -72,12 +75,12 @@ final class DefaultLexer extends Lexer {
   lazy val opToken = P(c => opChars.contains(c)).rep.!.map(_.value).map(Operator.apply)
 
   lazy val refToken: Packer[String, Char, Reference] =
-    (P(_.isLetter).!.map(_.value) ~ fromPartial {
-      case char if char.isLetterOrDigit => char
+    (P(c => c.isLetter || c == '_').!.map(_.value) ~ fromPartial {
+      case char if char.isLetterOrDigit || char == '_' => char
     }.rep.!.map(_.value))
       .map {
         case (a: String, b: String) =>
-          Reference(a + b)
+          Reference(a ++ b)
       }
 
   lazy val hexDigit: Packer[String, Char, String] = P("[0-9a-fA-F]".r)
@@ -101,7 +104,7 @@ final class DefaultLexer extends Lexer {
   private val lexerPacker: Packer[String, Char, Vector[ElodinToken]] =
     (P("(").as(Some(Parenthesis.Open)) |
       P(")").as(Some(Parenthesis.Close)) |
-      P("fun").as(Some(Fun)) |
+      P("=>").as(Some(Fun)) |
       P("""\s+""".r).as(None) |
       P("[").as(Some(Bracket.Open)) |
       P("]").as(Some(Bracket.Close)) |
@@ -116,6 +119,7 @@ final class DefaultLexer extends Lexer {
       P(";").as(Some(Semicolon)) |
       P("_").as(Some(Ignore)) |
       P(".").as(Some(Dot)) |
+      comment.as(None) | comment.as(None) |
       opToken.map(Some.apply) |
       booleanToken.map(Some.apply) |
       refToken.map(Some.apply) |
