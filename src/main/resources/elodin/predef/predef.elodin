@@ -12,5 +12,6 @@ import "basis" ^{};
     readln = console.readln,
     readline = console.readln,
     concat = str.concat,
-    gen.run = "gen".run
+    gen.run = "gen".run,
+    job = job.emit
 }

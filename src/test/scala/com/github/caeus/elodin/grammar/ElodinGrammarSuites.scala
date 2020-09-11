@@ -1,8 +1,7 @@
 package com.github.caeus.elodin.grammar
 
-import com.github.caeus.elodin.lang.Node
-import com.github.caeus.elodin.lang.Node.{ApplyNode, RefNode}
-import com.github.caeus.elodin.nb.compile.{DefaultLexer, DefaultParser, ElodinToken}
+import com.github.caeus.elodin.compile.Node.{ApplyNode, RefNode}
+import com.github.caeus.elodin.compile.{DefaultLexer, DefaultParser, ElodinToken, Node}
 import com.github.caeus.plutus.PackerSyntax.VectorPackerSyntax
 import com.github.caeus.plutus.{Packer, PrettyPacker}
 import zio.test.Assertion.{anything, equalTo, isSubtype}
@@ -127,6 +126,12 @@ object ElodinGrammarSuites extends DefaultRunnableSpec {
       },
       testM("apply operands complex") {
         val value = parseWith("list(1,b,c)1 3 >>>: isEmpty >>>: whatever", parser.applyExpr)
+        assertM(value)(
+          anything
+        )
+      },
+      testM("negative integer") {
+        val value = parseWith("-123", parser.intLiteral)
         assertM(value)(
           anything
         )
