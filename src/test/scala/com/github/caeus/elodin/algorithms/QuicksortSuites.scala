@@ -1,15 +1,13 @@
-package com.github.caeus.elodin.compile
+package com.github.caeus.elodin.algorithms
 
-import com.github.caeus.elodin.archive.Book.CBook
-import com.github.caeus.elodin.{Elodin, ElodinC}
-import com.github.caeus.elodin.archive.{Archive, ArgAs, BookBuilder, Calculate}
+import com.github.caeus.elodin.ElodinC
 import com.github.caeus.elodin.archive.HArgs.#:
+import com.github.caeus.elodin.archive.{Archive, ArgAs, BookBuilder}
 import com.github.caeus.elodin.runtime.{PathdAtomizer, Value}
-import zio.ZIO
+import zio.test.Assertion.{equalTo, hasField, isSubtype}
 import zio.test._
-import zio.test.Assertion._
 
-object AssemblerSuites extends DefaultRunnableSpec {
+object QuicksortSuites extends DefaultRunnableSpec {
   import ArgAs._
 
   def fib(n: BigInt): BigInt = {
@@ -22,8 +20,8 @@ object AssemblerSuites extends DefaultRunnableSpec {
     }
   }
 
-  override def spec: ZSpec[_root_.zio.test.environment.TestEnvironment, Any] =
-    suite("Assembler")(
+  override def spec =
+    suite("Fibonacci")(
       testM("Fibonacci") {
         val book = BookBuilder
           .withTitle("deps")
