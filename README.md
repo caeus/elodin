@@ -15,11 +15,11 @@ I used to work for a company called Kiwibot. They do deliveries, and a delivery 
 life cycle. In this company, the life cycle was not clear... why? Because the code that described
 it lived among many projects, and even in each project, it was all scattered around.
 
-So I started thinking... how can I define workflows as code? And I honestly didn't check existing
+So I started thinking... how can I define workflows as code? And I honestly didn't check for existing
 solutions.
 
-Anyway, what came to mind for me was (given I have a small grasp on continuations and monads), was
-to define a monad like this (using scala notation)
+Anyway, what came to mind (given I have a small grasp on continuations and monads), was
+to define a monad like this (using scala notation):
 
 ````scala
 trait JobOp[+V]
@@ -48,11 +48,12 @@ case class Result[+T](value:T) extends Workflow[T] {
 }
 ````
 Of course, error handling is missing in this structure, but extending it to have one
-error channel is pretty easy. Anyway, in order to have a workflow be able to be described like thi
-I'd need to be able to persist a `Workflow`. Most specifically, persist a `Job`.
+error channel is pretty easy. Anyway, in order to have a workflow be able to be described like this
+I'd need to be able to persist a `Workflow` in disk. Most specifically, persist a `Job`.
 And to achieve that, I need to be able to serialize `JobOb` (easy peasy) and the continuation...
 which is a lambda. And that's it. It all comes down to serializing lambdas. Which I just couldn't
-do in any language I knew. (And maybe I did a poor research)
+do in any language I knew. (And maybe I did a poor research), so that's why I started a
+quest to define a language in which lambdas are natively serializable.
 
 Also, I've always wished there was something like Javascript (untyped), but pure.
 
