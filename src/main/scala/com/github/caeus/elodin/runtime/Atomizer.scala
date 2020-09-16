@@ -1,20 +1,22 @@
 package com.github.caeus.elodin.runtime
 
-import com.github.caeus.elodin.archive.Archive
+import com.github.caeus.elodin.archive.{Archive, CalculationRef}
 import PopResult.{Complete, Incomplete}
 import Value.{Atomic, Fun}
+import com.github.caeus.elodin.runtime.VPointer.{FunS, Strict}
 import com.github.caeus.elodin.runtime.Value.Atomic
 import zio.{Task, ZIO}
 
 sealed trait Atomizer {
   def get(book: String, chapter: String): Task[Value.Lazy]
   def atomize(value: Value): Task[Atomic]
+  def atomize2(page: CalculationRef, args: List[VPointer]): Task[Strict]
 }
-final class PathdAtomizer(dependencies: Archive, path: List[String]) extends Atomizer {
+final class PathdAtomizer(archive: Archive, path: List[String]) extends Atomizer {
 
-  def deeper(s: String): PathdAtomizer = new PathdAtomizer(dependencies, s :: path)
+  def deeper(s: String): PathdAtomizer = new PathdAtomizer(archive, s :: path)
   override def get(book: String, chapter: String): Task[Value.Lazy] =
-    dependencies
+    archive
       .chapterRef(book, chapter)
       .map { page =>
         Value.Lazy(page, Nil)
@@ -35,9 +37,9 @@ final class PathdAtomizer(dependencies: Archive, path: List[String]) extends Ato
       case Value.Lazy(pointer, args) =>
         for {
           _      <- stack.pushAll(args)
-          prname <- dependencies.realNameOf(pointer)
+          prname <- archive.realNameOf(pointer)
           //_       = println((prname :: path).reverse.mkString("[",",","]"))
-          folder <- dependencies.calculationAt(pointer)
+          folder <- archive.calculationAt(pointer)
           newVal <- stack
                      .pop(folder.arity)
                      .flatMap {
@@ -56,4 +58,14 @@ final class PathdAtomizer(dependencies: Archive, path: List[String]) extends Ato
       .flatMap(stack => _atomize(value, stack))
   }
 
+  private def _atomize(ref: CalculationRef, stack: EStack[VPointer]): Task[Strict] = {
+    for {
+      _         <- ZIO.unit
+      calculate <- archive.calculationAt(ref)
+    } yield ???
+  }
+  override def atomize2(page: CalculationRef, args: List[VPointer]): Task[Strict] = {
+
+    ???
+  }
 }
