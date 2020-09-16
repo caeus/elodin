@@ -1,0 +1,17 @@
+import "basis" ^{};
+
+{
+    (|) = ctrl.or,
+    (+) = math.plus,
+    (-) = math.minus,
+    (*) = math.times,
+    (/) = math.divide,
+    eff.chain = "eff".chain,
+    eff.fail = "eff".fail,
+    println = console.println,
+    readln = console.readln,
+    readline = console.readln,
+    concat = str.concat,
+    gen.run = "gen".run,
+    job = job.emit
+}

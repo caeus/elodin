@@ -1,0 +1,29 @@
+import "basis" ^{};
+let
+fold = (generator,when_suspend,when_done)=>
+    ctrl.or(
+        ctrl.unpack gen.un.suspend when_suspend generator,
+        ctrl.unpack gen.un.done when_done generator)
+;
+run = (generator,chainer)=>{
+    fold(generator,{
+        (suspend)=>
+            let
+                step = gen.suspend.step(suspend);
+                cont = gen.suspend.cont(suspend);
+                chainer(step){(v)=>
+                    run(cont(v),chainer)
+                }
+    },{
+        (done)=>
+            gen.done.result(done)
+    })
+ };
+{
+ suspend = gen.suspend,
+ done = gen.done,
+ suspend.step= gen.suspend.step,
+ suspend.cont = gen.suspend.cont,
+ done.result = gen.done.result,
+ run = run
+}
