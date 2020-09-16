@@ -21,11 +21,10 @@ object ElodinSuites extends DefaultRunnableSpec {
               |{
               |  procedure = gen.run {
               |   do
-              |   println "Hola";
+              |   makeFristInterview "Hola";
               |   printThis <- job("laskdj");
               |   println printThis
               |  } eff.chain
-              |
               |}""".stripMargin
                      )
           runnner <- Elodin.default(List(book))

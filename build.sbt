@@ -3,14 +3,22 @@ val CirceVersion   = "0.13.0"
 val Specs2Version  = "4.8.3"
 val LogbackVersion = "1.2.3"
 
-resolvers += "jitpack" at "https://jitpack.io"
-
 lazy val root = (project in file("."))
   .settings(
     organization := "com.github.caeus",
     name := "elodin",
     version := "0.0.1-SNAPSHOT",
     scalaVersion := "2.13.1",
+    homepage := Some(url("https://github.com/caeus/elodin")),
+    licenses := List("Apache-2.0" -> url("http://www.apache.org/licenses/LICENSE-2.0")),
+    developers := List(
+      Developer(
+        "caeus",
+        "Alejandro Navas",
+        "camilo.a.navas@gmail.com",
+        url("https://github.com/caeus")
+      )
+    ),
     libraryDependencies ++= Seq(
       "dev.zio"                    %% "zio-test"        % "1.0.0-RC21-2" % Test,
       "dev.zio"                    %% "zio-test-sbt"    % "1.0.0-RC21-2" % Test,
