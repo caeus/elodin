@@ -26,7 +26,7 @@ object PredefArchive extends LazyLogging {
       _        = logger.info("Started compiling basic books")
       books <- ZIO.collectAll(Seq("dict", "eff", "gen", "list").map { name =>
                 compileResource(name, elodinC)
-              })
+              }).map(_.toList)
       _           = logger.info("Finished compiling basic books")
       elodinC    <- ElodinC.make(BasisArchive.book :: books)
       predefBook <- compileResource("predef", elodinC)

@@ -1,43 +1,45 @@
-package io.github.caeus.elodin.archive
+package io.github.caeus.elodin.archive.asd
 
-import io.github.caeus.elodin.archive.SignatureBuilder.PrependArg
+import io.github.caeus.elodin.ElodinEval
 import io.github.caeus.elodin.archive.Book.NBook
-import io.github.caeus.elodin.archive.ChapterBuilder.ChapterBuilderImpl
-import io.github.caeus.elodin.archive.ChapterDraft.{IsAction, IsCalculation}
-import io.github.caeus.elodin.archive.HArgs.{#:, Zot}
+import io.github.caeus.elodin.archive.asd.ChapterBuilder.ChapterBuilderImpl
+import io.github.caeus.elodin.archive.asd.ChapterDraft.{IsAction, IsCalculation}
+import io.github.caeus.elodin.archive.asd.HArgs.{#:, Zot}
+import io.github.caeus.elodin.archive.asd.SignatureBuilder.PrependArg
+import io.github.caeus.elodin.archive.{ActionRef, Book, DepCalculate, DepPerform}
 import io.github.caeus.elodin.runtime.Value.{Applicable, Atomic}
-import io.github.caeus.elodin.runtime.{Atomizer, EffOp, Effect, Value}
+import io.github.caeus.elodin.runtime.{EffOp, Effect, Value}
 import zio.{RIO, Task, ZIO}
 
 import scala.reflect.ClassTag
 
-sealed trait ArgAs[+A] { self =>
-  def coerce(value: Value): RIO[Atomizer, A]
-  final def map[B](f: A => B): ArgAs[B] =
-    new ArgAs[B] {
-      override def coerce(value: Value): RIO[Atomizer, B] = self.coerce(value).map(f)
+sealed trait TypedArg[+A] { self =>
+  def coerce(value: Value): RIO[ElodinEval, A]
+  final def map[B](f: A => B): TypedArg[B] =
+    new TypedArg[B] {
+      override def coerce(value: Value): RIO[ElodinEval, B] = self.coerce(value).map(f)
     }
-  final def mapM[B](f: A => Task[B]): ArgAs[B] =
-    new ArgAs[B] {
-      override def coerce(value: Value): RIO[Atomizer, B] = self.coerce(value).flatMap(f)
+  final def mapM[B](f: A => Task[B]): TypedArg[B] =
+    new TypedArg[B] {
+      override def coerce(value: Value): RIO[ElodinEval, B] = self.coerce(value).flatMap(f)
     }
 }
-object ArgAs {
-  val value: ArgAs[Value] = new ArgAs[Value] {
+object TypedArg {
+  val value: TypedArg[Value] = new TypedArg[Value] {
     override def coerce(value: Value): Task[Value] = Task.succeed(value)
   }
-  val atomic: ArgAs[Atomic] = new ArgAs[Atomic] {
-    override def coerce(value: Value): RIO[Atomizer, Atomic] = RIO.accessM(_.atomize(value))
+  val atomic: TypedArg[Atomic] = new TypedArg[Atomic] {
+    override def coerce(value: Value): RIO[ElodinEval, Atomic] = RIO.accessM(_.atomize(value))
   }
-  val atom: ArgAs[Any] = atomic.mapM {
+  val atom: TypedArg[Any] = atomic.mapM {
     case Value.Atom(of) => Task(of)
     case x              => Task.fail(new Exception(s"Expected atom, got ${x.getClass}"))
   }
-  val fun: ArgAs[Value.Fun] = atomic.mapM {
+  val fun: TypedArg[Value.Fun] = atomic.mapM {
     case fun @ Value.Fun(_, _) => Task(fun)
     case x                     => Task.fail(new Exception(s"Expected function, got ${x.getClass}"))
   }
-  def is[T: ClassTag]: ArgAs[T] =
+  def is[T: ClassTag]: TypedArg[T] =
     atom.mapM {
       case el: T => Task(el)
       case x =>
@@ -71,16 +73,16 @@ object HArgs {
 
 sealed trait SignatureBuilder[+T <: HArgs] { self =>
   def arity: Int
-  final def #:[A](argAs: ArgAs[A]): SignatureBuilder[A #: T] = new PrependArg(argAs, self)
-  def take(stack: List[Value]): RIO[Atomizer, T]
+  final def #:[A](argAs: TypedArg[A]): SignatureBuilder[A #: T] = new PrependArg(argAs, self)
+  def take(stack: List[Value]): RIO[ElodinEval, T]
 }
 object SignatureBuilder extends SignatureBuilder[Zot] { self =>
   override def arity: Int                                         = 0
-  override def take(stack: List[Value]): RIO[Atomizer, HArgs.Zot] = RIO.succeed(Zot)
-  private final class PrependArg[H, T <: HArgs](forH: ArgAs[H], tail: SignatureBuilder[T])
+  override def take(stack: List[Value]): RIO[ElodinEval, HArgs.Zot] = RIO.succeed(Zot)
+  private final class PrependArg[H, T <: HArgs](forH: TypedArg[H], tail: SignatureBuilder[T])
       extends SignatureBuilder[H #: T] { prepSelf =>
     override lazy val arity: Int = tail.arity + 1
-    override def take(stack: List[Value]): RIO[Atomizer, H #: T] = {
+    override def take(stack: List[Value]): RIO[ElodinEval, H #: T] = {
       stack match {
         case h :: t =>
           forH.coerce(h).zipWithPar(tail.take(t))(_ #: _)
@@ -92,8 +94,8 @@ object SignatureBuilder extends SignatureBuilder[Zot] { self =>
 }
 sealed trait ChapterDraft
 object ChapterDraft {
-  case class IsCalculation(calculate: Calculate)              extends ChapterDraft
-  case class IsAction(perform: Perform, calculate: Calculate) extends ChapterDraft
+  case class IsCalculation(calculate: DepCalculate)              extends ChapterDraft
+  case class IsAction(perform: DepPerform, calculate: DepCalculate) extends ChapterDraft
 }
 sealed trait ChapterBuilder[+T <: HArgs] {
   def ctitle: String
@@ -101,11 +103,11 @@ sealed trait ChapterBuilder[+T <: HArgs] {
   def argsBuilder: SignatureBuilder[T]
   final def at[T0 <: HArgs](f: SignatureBuilder[T] => SignatureBuilder[T0]): ChapterBuilder[T0] =
     new ChapterBuilderImpl[T0](btitle, ctitle, f(argsBuilder))
-  def safeM(f: T => RIO[Atomizer, Value]): ChapterDraft
+  def safeM(f: T => RIO[ElodinEval, Value]): ChapterDraft
   final def safe(f: T => Value): ChapterDraft = {
     safeM(t => ZIO.succeed(f(t)))
   }
-  final def safeAtomM[X](f: T => RIO[Atomizer, X]): ChapterDraft = {
+  final def safeAtomM[X](f: T => RIO[ElodinEval, X]): ChapterDraft = {
     safeM { t =>
       f(t)
         .flatMap(a => ZIO.effect(Value.Atom(a)))
@@ -117,12 +119,12 @@ sealed trait ChapterBuilder[+T <: HArgs] {
         .effect(f.orElse[T, X]((_: T) => throw new Exception("Type error"))(t))
     }
   }
-  final def unsafeAtomM[E, X](f: T => RIO[Atomizer, Either[E, X]]): ChapterDraft = {
+  final def unsafeAtomM[E, X](f: T => RIO[ElodinEval, Either[E, X]]): ChapterDraft = {
     unsafeM { t =>
       f(t).map(_.left.map(Value.Atom.apply).map(Value.Atom.apply))
     }
   }
-  def unsafeM(f: T => RIO[Atomizer, Either[Value, Value]]): ChapterDraft
+  def unsafeM(f: T => RIO[ElodinEval, Either[Value, Value]]): ChapterDraft
 }
 object ChapterBuilder {
   private final class ChapterBuilderImpl[T <: HArgs](
@@ -130,9 +132,9 @@ object ChapterBuilder {
       val ctitle: String,
       val argsBuilder: SignatureBuilder[T]
   ) extends ChapterBuilder[T] {
-    override def safeM(f: T => RIO[Atomizer, Value]): ChapterDraft = {
+    override def safeM(f: T => RIO[ElodinEval, Value]): ChapterDraft = {
       IsCalculation(
-        Calculate(
+        DepCalculate(
           arity = argsBuilder.arity,
           { args =>
             argsBuilder
@@ -146,19 +148,19 @@ object ChapterBuilder {
       )
     }
 
-    override def unsafeM(f: T => RIO[Atomizer, Either[Value, Value]]): ChapterDraft = {
+    override def unsafeM(f: T => RIO[ElodinEval, Either[Value, Value]]): ChapterDraft = {
       IsAction(
-        Perform(
+        DepPerform(
           arity = argsBuilder.arity,
           { args =>
             argsBuilder.take(args).flatMap(f)
           }
         ),
-        Calculate(
+        DepCalculate(
           arity = argsBuilder.arity,
           { args =>
             val value = RIO
-              .accessM[Atomizer] { atomizer =>
+              .accessM[ElodinEval] { atomizer =>
                 atomizer
                   .get("eff", "succeed")
                   .flatMap(atomizer.atomize)
@@ -194,9 +196,9 @@ sealed trait BookBuilder {
 }
 object BookBuilder {
   final class BookBuilderImpl(
-      btitle: String,
-      calculations: Map[String, Calculate],
-      actions: Map[String, Perform]
+                               btitle: String,
+                               calculations: Map[String, DepCalculate],
+                               actions: Map[String, DepPerform]
   ) extends BookBuilder {
     override def chapter(ctitle: String)(b: ChapterBuilder[Zot] => ChapterDraft): BookBuilder = {
       b(ChapterBuilder.fromTitle(btitle, ctitle)) match {
@@ -228,17 +230,3 @@ object BookBuilder {
   def withTitle(title: String) = new BookBuilderImpl(title, Map.empty, Map.empty)
 }
 
-object MyModule {
-  import ArgAs._
-
-  def asd: BookBuilder => Any = {
-    _.chapter("alksdj")(
-      _.at(value #: _)
-        .safeM { _ =>
-          ???
-        }
-    )
-
-  }
-
-}

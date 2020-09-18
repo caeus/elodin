@@ -1,14 +1,15 @@
-package io.github.caeus.elodin.algorithms
+package io.github.caeus.elodin.eval
 
-import io.github.caeus.elodin.ElodinC
-import io.github.caeus.elodin.archive.HArgs.#:
-import io.github.caeus.elodin.archive.{Archive, ArgAs, BookBuilder}
-import io.github.caeus.elodin.runtime.{PathdAtomizer, Value}
+import io.github.caeus.elodin.{ElodinC, CtxEval}
+import io.github.caeus.elodin.archive.asd.HArgs.#:
+import io.github.caeus.elodin.archive.Archive
+import io.github.caeus.elodin.archive.asd.BookBuilder
+import io.github.caeus.elodin.runtime.Value
 import zio.test.Assertion.{equalTo, hasField, isSubtype}
 import zio.test._
 
-object FibonacciSuites extends DefaultRunnableSpec {
-  import ArgAs._
+object QuicksortSuites extends DefaultRunnableSpec {
+  import io.github.caeus.elodin.archive.asd.TypedArg._
 
   def fib(n: BigInt): BigInt = {
     if (n.equals(BigInt(0))) {
@@ -66,7 +67,7 @@ object FibonacciSuites extends DefaultRunnableSpec {
               |""".stripMargin
                   )
           archive <- Archive.make(Seq(book, book1))
-          atomizer = new PathdAtomizer(archive, Nil)
+          atomizer = new CtxEval(archive, Nil)
           fibC <- atomizer
                    .get("test", "fib")
                    .flatMap(atomizer.atomize)

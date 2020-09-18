@@ -87,14 +87,14 @@ final class DefaultParser extends Parser {
   lazy val refExpr: Pckr[Node.RefNode] = ((fromPartial {
     case Reference(to) => RefNode(to)
   } | P(Parenthesis.Open) ~ opExpr ~ P(Parenthesis.Close)) ~
-    (P(Dot) ~ refExpr).rep).map {
+    (P(Backslash) ~ refExpr).rep).map {
     case (to, rest) if rest.isEmpty => to
     case (to, rest) =>
       RefNode(
         rest
           .prepended(to)
           .map(_.to)
-          .mkString(".")
+          .mkString("\\")
       )
   }
 
@@ -218,7 +218,7 @@ final class DefaultParser extends Parser {
   lazy val textLiteral: Pckr[Node.TextNode] = P {
     case Text(value) => TextNode(value)
   }
-  lazy val qRefExpr: Pckr[Node.QRefNode] = (textLiteral ~ P(Dot) ~ refExpr).map {
+  lazy val qRefExpr: Pckr[Node.QRefNode] = (textLiteral ~ P(Backslash) ~ refExpr).map {
     case (text, ref) => QRefNode(text.value, ref.to)
   }
 

@@ -1,24 +1,21 @@
-package io.github.caeus.elodin.runtime
+package io.github.caeus.elodin
 
-import io.github.caeus.elodin.archive.{Archive, CalculationRef}
-import PopResult.{Complete, Incomplete}
-import Value.{Atomic, Fun}
-import io.github.caeus.elodin.runtime.VPointer.{FunS, Strict}
-import io.github.caeus.elodin.runtime.Value.Atomic
-import io.github.caeus.elodin.archive.CalculationRef
-import zio.{Task, ZIO}
+import io.github.caeus.elodin.archive.{Archive, BookPageRef}
+import io.github.caeus.elodin.runtime.PopResult.{Complete, Incomplete}
+import io.github.caeus.elodin.runtime.Value.{Atomic, Fun}
+import io.github.caeus.elodin.runtime.{EStack, Link, Piece, Value}
+import zio.{IO, Task, UIO, ZIO}
 
-sealed trait Atomizer {
+sealed trait ElodinEval {
   def get(book: String, chapter: String): Task[Value.Lazy]
   def atomize(value: Value): Task[Atomic]
-  def atomize2(page: CalculationRef, args: List[VPointer]): Task[Strict]
+  def atomize2(page: BookPageRef, args: List[Link]): IO[Unit, Piece]
 }
-final class PathdAtomizer(archive: Archive, path: List[String]) extends Atomizer {
-
-  def deeper(s: String): PathdAtomizer = new PathdAtomizer(archive, s :: path)
+final class CtxEval(archive: Archive, path: List[String]) extends ElodinEval {
+  def deeper(s: String): CtxEval = new CtxEval(archive, s :: path)
   override def get(book: String, chapter: String): Task[Value.Lazy] =
     archive
-      .chapterRef(book, chapter)
+      .bookPageOf(book, chapter)
       .map { page =>
         Value.Lazy(page, Nil)
       }
@@ -59,14 +56,11 @@ final class PathdAtomizer(archive: Archive, path: List[String]) extends Atomizer
       .flatMap(stack => _atomize(value, stack))
   }
 
-  private def _atomize(ref: CalculationRef, stack: EStack[VPointer]): Task[Strict] = {
-    for {
-      _         <- ZIO.unit
-      calculate <- archive.calculationAt(ref)
-    } yield ???
-  }
-  override def atomize2(page: CalculationRef, args: List[VPointer]): Task[Strict] = {
-
+  def _atomize2(page: BookPageRef, stack: EStack[Link]): IO[Unit, Piece] = {
     ???
   }
+  override def atomize2(page: BookPageRef, args: List[Link]): IO[Unit, Piece] = ???
+}
+object ElodinEval {
+  def make(archive: Archive): UIO[ElodinEval] = UIO.succeed(new CtxEval(archive, Nil))
 }

@@ -1,7 +1,8 @@
 package io.github.caeus.elodin.runtime
 
-import io.github.caeus.elodin.archive.{CalculationRef, HArgs}
+import io.github.caeus.elodin.archive.BookPageRef
 import io.circe.{Json, JsonNumber, JsonObject}
+import io.github.caeus.elodin.archive.asd.HArgs
 
 sealed trait Value {}
 object Value {
@@ -10,7 +11,7 @@ object Value {
     final def apply(args: Value*): Value = applyTo(args)
   }
   sealed trait Atomic extends Value
-  case class Lazy(pointer: CalculationRef, args: Seq[Value]) extends Applicable {
+  case class Lazy(pointer: BookPageRef, args: Seq[Value]) extends Applicable {
     require(args != null)
     override def applyTo(args: Seq[Value]): Applicable = {
       Lazy(pointer, this.args.appendedAll(args))
@@ -20,7 +21,7 @@ object Value {
     require(!of.isInstanceOf[Atomic], of.toString)
     require(!of.isInstanceOf[HArgs], of.toString)
   }
-  case class Fun(pointer: CalculationRef, args: Seq[Value]) extends Atomic with Applicable {
+  case class Fun(pointer: BookPageRef, args: Seq[Value]) extends Atomic with Applicable {
     override def applyTo(args: Seq[Value]): Applicable =
       Lazy(pointer, this.args.appendedAll(args))
   }

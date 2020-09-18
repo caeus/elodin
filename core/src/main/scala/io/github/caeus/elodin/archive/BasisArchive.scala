@@ -1,11 +1,13 @@
 package io.github.caeus.elodin.archive
 
-import io.github.caeus.elodin.archive.HArgs.{#:, Zot}
+import io.github.caeus.elodin.ElodinEval
+import io.github.caeus.elodin.archive.asd.{BookBuilder, ChapterBuilder, ChapterDraft}
+import io.github.caeus.elodin.archive.asd.HArgs.{#:, Zot}
 import io.github.caeus.elodin.runtime._
 import zio.{RIO, Task, ZIO}
 
 object BasisArchive {
-  import ArgAs._
+  import io.github.caeus.elodin.archive.asd.TypedArg._
 
   private def nonImplemented(marker: String): ChapterBuilder[Zot] => ChapterDraft =
     _.safeM { _ =>
@@ -16,29 +18,29 @@ object BasisArchive {
     .chapter("error")(_.safeM { _ =>
       ZIO.fail(new Exception("MUAHAHA"))
     })
-    .chapter("str.concat")(
+    .chapter("str\\concat")(
       _.at(is[String] #: is[String] #: _)
         .safeAtom {
           case value1 #: value2 #: _ =>
             value1 ++ value2
         }
     )
-    .chapter("ctrl.unpack")(
+    .chapter("ctrl\\unpack")(
       _.at(fun #: fun #: value #: _)
         .safeM {
           case unpacker #: pipe #: arg #: _ =>
             RIO
-              .accessM[Atomizer] {
+              .accessM[ElodinEval] {
                 _.atomize(unpacker.apply(arg))
               }
               .map(r => pipe.apply(r))
         }
     )
-    .chapter("ctrl.or")(
+    .chapter("ctrl\\or")(
       _.at(value #: value #: _)
         .safeM {
           case value1 #: value2 #: _ =>
-            RIO.accessM[Atomizer](
+            RIO.accessM[ElodinEval](
               _.atomize(value1)
                 .fold(
                   _ => {
@@ -49,147 +51,147 @@ object BasisArchive {
             )
         }
     )
-    .chapter("gen.done")(
+    .chapter("gen\\done")(
       _.at(atomic #: _)
         .safeAtom {
           case result #: _ =>
             Generator.Done(result)
         }
     )
-    .chapter("gen.suspend")(
+    .chapter("gen\\suspend")(
       _.at(atomic #: fun #: _)
         .safeAtom {
           case atomic #: fun #: _ => Generator.Suspend(atomic, fun)
         }
     )
-    .chapter("gen.un.suspend")(
+    .chapter("gen\\un\\suspend")(
       _.at(is[Generator.Suspend] #: _)
         .safeM {
           case (sus @ Generator.Suspend(step, _)) #: _ =>
             ZIO.succeed(Value.Atom(sus))
         }
     )
-    .chapter("gen.un.done")(
+    .chapter("gen\\un\\done")(
       _.at(is[Generator.Done] #: _)
         .safeM {
           case (done @ Generator.Done(_)) #: _ =>
             ZIO.succeed(Value.Atom(done))
         }
     )
-    .chapter("gen.done.result")(
+    .chapter("gen\\done\\result")(
       _.at(is[Generator.Done] #: _)
         .safeM {
           case Generator.Done(result: Value.Atomic) #: _ =>
             ZIO.succeed(result)
         }
     )
-    .chapter("gen.suspend.step")(
+    .chapter("gen\\suspend\\step")(
       _.at(is[Generator.Suspend] #: _)
         .safeM {
           case Generator.Suspend(step, _) #: _ =>
             ZIO.succeed(step)
         }
     )
-    .chapter("gen.suspend.cont")(
+    .chapter("gen\\suspend\\cont")(
       _.at(is[Generator.Suspend] #: _)
         safeM {
           case Generator.Suspend(_, cont) #: _ =>
             ZIO.succeed(cont)
         }
     )
-    .chapter("eff.suspend")(
+    .chapter("eff\\suspend")(
       _.at(is[EffOp] #: fun #: fun #: _)
         .safeAtom {
           case op #: onSuc #: onFail #: _ =>
             Effect.Suspend(op, onSuc, onFail)
         }
     )
-    .chapter("eff.succeed")(
+    .chapter("eff\\succeed")(
       _.at(atomic #: _)
         .safeAtom {
           case atomic #: _ => Effect.Done(Right(atomic))
         }
     )
-    .chapter("eff.fail")(
+    .chapter("eff\\fail")(
       _.at(atomic #: _)
         .safeAtom {
           case atomic #: _ => Effect.Done(Left(atomic))
         }
     )
-    .chapter("eff.un.suspend")(
+    .chapter("eff\\un\\suspend")(
       _.at(is[Effect.Suspend] #: _)
         .safeM {
           case (sus @ Effect.Suspend(_, _, _)) #: _ =>
             ZIO.succeed(Value.Atom(sus))
         }
     )
-    .chapter("eff.un.done")(
+    .chapter("eff\\un\\done")(
       _.at(is[Effect.Done] #: _)
         .safeM {
           case (sus @ Effect.Done(_)) #: _ =>
             ZIO.succeed(Value.Atom(sus))
         }
     )
-    .chapter("eff.suspend.op")(
+    .chapter("eff\\suspend\\op")(
       _.at(is[Effect.Suspend] #: _)
         .safeM {
           case Effect.Suspend(op, _, _) #: _ =>
             ZIO.succeed(Value.Atom(op))
         }
     )
-    .chapter("eff.suspend.scont")(
+    .chapter("eff\\suspend\\scont")(
       _.at(is[Effect.Suspend] #: _)
         .safeM {
           case Effect.Suspend(_, scont, _) #: _ =>
             ZIO.succeed(scont)
         }
     )
-    .chapter("eff.suspend.fcont")(
+    .chapter("eff\\suspend\\fcont")(
       _.at(is[Effect.Suspend] #: _)
         .safeM {
           case Effect.Suspend(_, _, fcont) #: _ =>
             ZIO.succeed(fcont)
         }
     )
-    .chapter("eff.done.failure")(
+    .chapter("eff\\done\\failure")(
       _.at(is[Effect.Done] #: _)
         .safeM {
           case Effect.Done(Left(r: Value)) #: _ =>
             ZIO.succeed(r)
         }
     )
-    .chapter("eff.done.success")(
+    .chapter("eff\\done\\success")(
       _.at(is[Effect.Done] #: _)
         .safeM {
           case Effect.Done(Right(r: Value)) #: _ =>
             ZIO.succeed(r)
         }
     )
-    .chapter("list.nil")(
+    .chapter("list\\nil")(
       _.safeAtom { _ =>
         Nil
       }
     )
-    .chapter("list.cons")(
+    .chapter("list\\cons")(
       _.at(value #: is[List[Value]] #: _)
         .safeAtom[List[Value]] {
           case head #: tail #: _ =>
             head :: tail
         }
     )
-    .chapter("dict.empty")(
+    .chapter("dict\\empty")(
       _.safeAtom[Map[String, Value]] { _ =>
         Map.empty
       }
     )
-    .chapter("dict.update")(
+    .chapter("dict\\update")(
       _.at(is[String] #: value #: is[Map[String, Value]] #: _)
         .safeAtom[Map[String, Value]] {
           case key #: value #: map #: _ =>
             map.updated(key, value)
         }
     )
-    .chapter("math.plus")(
+    .chapter("math\\plus")(
       _.at(atom #: atom #: _)
         .safeAtom {
           case (s1: BigInt) #: (s2: BigInt) #: _         => s1 + s2
@@ -198,7 +200,7 @@ object BasisArchive {
           case (s1: BigDecimal) #: (s2: BigDecimal) #: _ => s1 + s2
         }
     )
-    .chapter("math.times")(
+    .chapter("math\\times")(
       _.at(atom #: atom #: _)
         .safeAtom {
           case (s1: BigInt) #: (s2: BigInt) #: _         => s1 * s2
@@ -207,7 +209,7 @@ object BasisArchive {
           case (s1: BigDecimal) #: (s2: BigDecimal) #: _ => s1 * s2
         }
     )
-    .chapter("math.minus")(
+    .chapter("math\\minus")(
       _.at(atom #: atom #: _)
         .safeAtom {
           case (s1: BigInt) #: (s2: BigInt) #: _         => s1 - s2
@@ -216,7 +218,7 @@ object BasisArchive {
           case (s1: BigDecimal) #: (s2: BigDecimal) #: _ => s1 - s2
         }
     )
-    .chapter("math.divide")(
+    .chapter("math\\divide")(
       _.at(atom #: atom #: _)
         .safeAtom {
           case (s1: BigInt) #: (s2: BigInt) #: _         => s1 / s2
@@ -225,13 +227,13 @@ object BasisArchive {
           case (s1: BigDecimal) #: (s2: BigDecimal) #: _ => s1 / s2
         }
     )
-    .chapter("job.emit")(
+    .chapter("job\\emit")(
       _.at(value #: _)
         .unsafeM { _ =>
           ???
         }
     )
-    .chapter("console.println")(
+    .chapter("console\\println")(
       _.at(is[String] #: _)
         .unsafeAtomM {
           case msg #: _ =>
@@ -240,7 +242,7 @@ object BasisArchive {
               .map(_ => Right(()))
         }
     )
-    .chapter("console.readln")(
+    .chapter("console\\readln")(
       _.unsafeAtomM { _ =>
         zio.console.Console.Service.live.getStrLn.map(s => Right(s))
       }

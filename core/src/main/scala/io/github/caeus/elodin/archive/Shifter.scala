@@ -1,8 +1,9 @@
 package io.github.caeus.elodin.archive
 
+import io.github.caeus.elodin.ElodinEval
 import io.github.caeus.elodin.compile.{Lexcope, Node}
 import io.github.caeus.elodin.runtime.Value.Applicable
-import io.github.caeus.elodin.runtime.{Atomizer, Value}
+import io.github.caeus.elodin.runtime.Value
 import zio.RIO
 
 case class Shifter(arity: Int, shift: Shift) {}
@@ -34,7 +35,7 @@ object RefResolution {
 
 case class DeclParam(path: Dig.Path, index: Int)
 sealed trait Shift {
-  private final def applyRec(values: Seq[Value])(shift: Shift): RIO[Atomizer, Value] = {
+  private final def applyRec(values: Seq[Value])(shift: Shift): RIO[ElodinEval, Value] = {
     shift match {
       case Shift.Of(to)     => RIO.succeed(to)
       case Shift.Arg(index) => RIO.effect(values(index))
@@ -51,7 +52,7 @@ sealed trait Shift {
         RIO.succeed(Value.Lazy(page, Nil))
     }
   }
-  final def apply(values: Seq[Value]): RIO[Atomizer, Value] = {
+  final def apply(values: Seq[Value]): RIO[ElodinEval, Value] = {
     applyRec(values)(this)
   }
 }
@@ -59,8 +60,8 @@ object Shift {
   case class Of(value: Value)              extends Shift
   case class Apply(args: Seq[Shift])       extends Shift
   case class Arg(index: Int)               extends Shift
-  case class Archive(page: CalculationRef) extends Shift
+  case class Archive(page: BookPageRef) extends Shift
   object Archive {
-    def apply(module: String, id: Int): Archive = Archive(CalculationRef(module, id))
+    def apply(module: String, id: Int): Archive = Archive(BookPageRef(module, id))
   }
 }

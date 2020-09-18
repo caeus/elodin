@@ -42,6 +42,6 @@ object JsonPackerSuites extends DefaultRunnableSpec {
           )
         )
       }
-    ) @@ TestAspect.ignore
+    )
   }
 }

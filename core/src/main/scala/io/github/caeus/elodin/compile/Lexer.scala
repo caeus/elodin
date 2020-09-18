@@ -22,7 +22,7 @@ object ElodinToken {
   case object Parenthesis                extends Delimiter
   case object Bracket                    extends Delimiter
   case object Yield                      extends ElodinToken
-  case object Dot                        extends ElodinToken
+  case object Backslash                  extends ElodinToken
   case class Reference(to: String)       extends ElodinToken
   case class Operator(to: String)        extends ElodinToken
   case object Do                         extends ElodinToken
@@ -120,7 +120,7 @@ final class DefaultLexer extends Lexer {
       P(",").as(Some(Comma)) |
       P(";").as(Some(Semicolon)) |
       P("unit").as(Some(Unit_)) |
-      P(".").as(Some(Dot)) |
+      P("\\").as(Some(Backslash)) |
       comment.as(None) | comment.as(None) |
       opToken.map(Some.apply) |
       booleanToken.map(Some.apply) |

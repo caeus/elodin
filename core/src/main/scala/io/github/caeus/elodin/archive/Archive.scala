@@ -3,11 +3,11 @@ package io.github.caeus.elodin.archive
 import zio.{Task, ZIO}
 
 sealed trait Archive {
-  def realNameOf(pointer: CalculationRef): Task[String]
+  def realNameOf(pointer: BookPageRef): Task[String]
   def chaptersOf(book: String): Task[Set[String]]
-  def chapterRef(book: String, chapter: String): Task[CalculationRef]
-  def calculationAt(pointer: CalculationRef): Task[Calculate]
-  def actionAt(pointer: ActionRef): Task[Perform]
+  def bookPageOf(book: String, chapter: String): Task[BookPageRef]
+  def calculationAt(pointer: BookPageRef): Task[DepCalculate]
+  def actionAt(pointer: ActionRef): Task[DepPerform]
   def enrichedWith(archive: Seq[Book]): Archive
 }
 final class FromBooksArchive(deps: Seq[Book]) extends Archive {
@@ -18,10 +18,10 @@ final class FromBooksArchive(deps: Seq[Book]) extends Archive {
       .mapValues(_.head)
       .toMap
 
-  override def chapterRef(book: String, chapter: String): Task[CalculationRef] = {
+  override def bookPageOf(book: String, chapter: String): Task[BookPageRef] = {
     ZIO
       .fromOption(modules.get(book).flatMap(_.exported.get(chapter)).map { id =>
-        CalculationRef(book, id)
+        BookPageRef(book, id)
       })
       .mapError(_ => new Exception(s""""$book".$chapter not found"""))
   }
@@ -32,7 +32,7 @@ final class FromBooksArchive(deps: Seq[Book]) extends Archive {
       .mapError(_ => new Exception(s"module $book not found"))
   }
 
-  override def calculationAt(page: CalculationRef): Task[Calculate] =
+  override def calculationAt(page: BookPageRef): Task[DepCalculate] =
     ZIO
       .fromOption(modules.get(page.book))
       .flatMap(book =>
@@ -41,7 +41,7 @@ final class FromBooksArchive(deps: Seq[Book]) extends Archive {
       )
       .mapError(_ => new Exception(s"calculation not found: ${page}"))
 
-  override def actionAt(page: ActionRef): Task[Perform] =
+  override def actionAt(page: ActionRef): Task[DepPerform] =
     ZIO
       .fromOption(modules.get(page.book))
       .flatMap { book =>
@@ -52,7 +52,7 @@ final class FromBooksArchive(deps: Seq[Book]) extends Archive {
   override def enrichedWith(archive: Seq[Book]): Archive =
     new FromBooksArchive(archive.prependedAll(modules.values))
 
-  override def realNameOf(pointer: CalculationRef): Task[String] = {
+  def realNameOf(pointer: BookPageRef): Task[String] = {
     ZIO
       .fromOption(modules.get(pointer.book).map { asd: Book =>
         asd.exported

@@ -1,22 +1,26 @@
 package io.github.caeus.elodin.archive
 
-import io.github.caeus.elodin.archive
-import io.github.caeus.elodin.runtime.{Atomizer, Value}
-import zio.RIO
+import io.github.caeus.elodin.{ElodinEval, archive}
+import io.github.caeus.elodin.runtime.{Link, Value}
+import zio.{RIO, ZIO}
 
-final case class Calculate(arity: Int, form: List[Value] => RIO[Atomizer, Value]) {
-  def cast(args: List[Value]): RIO[Atomizer, Value] = form(args)
+final case class DepCalculate(arity: Int, form: List[Value] => RIO[ElodinEval, Value]) {
+  def cast(args: List[Value]): RIO[ElodinEval, Value] = form(args)
 }
-final case class Perform(arity: Int, form: List[Value] => RIO[Atomizer, Either[Value, Value]])
+final case class Calculate(arity: Int, form: List[Link] => ZIO[ElodinEval, Unit, Link]) {
+  def cast(args: List[Link]): ZIO[ElodinEval, Unit, Link] = form(args)
+}
+final case class DepPerform(arity: Int, form: List[Value] => RIO[ElodinEval, Either[Value, Value]])
+final case class Perform(arity: Int, form: List[Link] => ZIO[ElodinEval, Unit, Either[Link, Link]])
 
 trait Book {
   def name: String
   def exported: Map[String, Int]
-  def calculation(id: Int): Option[Calculate]
-  def action(by: String): Option[Perform]
+  def calculation(id: Int): Option[DepCalculate]
+  def action(by: String): Option[DepPerform]
 }
 
-final case class CalculationRef(book: String, page: Int)
+final case class BookPageRef(book: String, page: Int)
 final case class ActionRef(book: String, name: String)
 object Book {
 
@@ -26,22 +30,22 @@ object Book {
   case class NBook(
       name: String,
       export: Map[String, Int],
-      calculations: IndexedSeq[Calculate],
-      actions: Map[String, Perform]
+      calculations: IndexedSeq[DepCalculate],
+      actions: Map[String, DepPerform]
   ) extends Book {
     override def exported: Map[String, Int] = export
 
-    override def calculation(page: Int): Option[Calculate] = calculations.lift(page)
+    override def calculation(page: Int): Option[DepCalculate] = calculations.lift(page)
 
-    override def action(named: String): Option[Perform] = actions.get(named)
+    override def action(named: String): Option[DepPerform] = actions.get(named)
   }
   case class CBook(name: String, export: Map[String, Int], shifts: IndexedSeq[Shifter])
       extends Book {
     override lazy val exported = export
 
-    override def calculation(id: Int): Option[Calculate] = {
+    override def calculation(id: Int): Option[DepCalculate] = {
       shifts.lift(id).map { shift =>
-        archive.Calculate(
+        archive.DepCalculate(
           shift.arity,
           { args =>
             shift.shift.apply(args)
@@ -57,7 +61,7 @@ object Book {
          |${shifts.mkString("\n")}
          |""".stripMargin
 
-    override def action(by: String): Option[Perform] = None
+    override def action(by: String): Option[DepPerform] = None
   }
 
 }

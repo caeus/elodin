@@ -1,17 +1,18 @@
 package io.github.caeus.elodin.archive
 
-import io.github.caeus.elodin.archive.HArgs.Zot
-import io.github.caeus.elodin.runtime.{Atomizer, PathdAtomizer, Value}
+import io.github.caeus.elodin.{ElodinEval, CtxEval}
+import io.github.caeus.elodin.archive.asd.HArgs.Zot
+import io.github.caeus.elodin.runtime.Value
 import zio.ZIO
 import zio.test._
 import zio.test.Assertion._
 
 object SignatureBuilderSuite extends DefaultRunnableSpec {
-  import ArgAs._
+  import io.github.caeus.elodin.archive.asd.TypedArg._
 
-  def testSignature[R, E](label: String)(f: Atomizer => ZIO[R, E, TestResult]) = {
+  def testSignature[R, E](label: String)(f: ElodinEval => ZIO[R, E, TestResult]) = {
     testM(label) {
-      Archive.make(Nil).map(new PathdAtomizer(_, Nil)).flatMap(f)
+      Archive.make(Nil).map(new CtxEval(_, Nil)).flatMap(f)
     }
   }
   override def spec =

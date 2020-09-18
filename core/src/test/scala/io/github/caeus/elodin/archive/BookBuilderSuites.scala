@@ -1,24 +1,25 @@
 package io.github.caeus.elodin.archive
 
-import io.github.caeus.elodin.runtime.{Atomizer, PathdAtomizer, Value}
-import io.github.caeus.elodin.runtime.Atomizer
+import io.github.caeus.elodin.{ElodinEval, CtxEval}
+import io.github.caeus.elodin.archive.asd.BookBuilder
+import io.github.caeus.elodin.runtime.Value
 import io.github.caeus.elodin.runtime.Value.Atom
 import zio.ZIO
 import zio.test._
 import zio.test.Assertion._
 
 object BookBuilderSuites extends DefaultRunnableSpec {
-  import ArgAs._
+  import io.github.caeus.elodin.archive.asd.TypedArg._
   case class TestKit(
-      atomizer: Atomizer,
-      book: Book
+                      atomizer: ElodinEval,
+                      book: Book
   )
 
   def testBook[R, E](label: String)(book: Book)(f: TestKit => ZIO[R, E, TestResult]) = {
     testM(label) {
       for {
         archive <- Archive.make(Seq(book))
-        atomizer = new PathdAtomizer(archive, Nil)
+        atomizer = new CtxEval(archive, Nil)
         r       <- f(TestKit(atomizer, book))
       } yield r
     }
@@ -38,7 +39,7 @@ object BookBuilderSuites extends DefaultRunnableSpec {
           result    <- calculate.form(Nil).provide(kit.atomizer)
         } yield {
           assert(calculate)(
-            hasField("arity", (_: Calculate).arity, equalTo(0))
+            hasField("arity", (_: DepCalculate).arity, equalTo(0))
           ) && assert(result) {
             isSubtype[Atom](
               hasField("of", _.of, equalTo[Any, Any](BigInt(3)))
@@ -60,7 +61,7 @@ object BookBuilderSuites extends DefaultRunnableSpec {
           result2   <- calculate.form(List(Value.Atom(()))).provide(kit.atomizer).either
         } yield {
           assert(calculate)(
-            hasField("arity", (_: Calculate).arity, equalTo(1))
+            hasField("arity", (_: DepCalculate).arity, equalTo(1))
           ) && assert(result1) {
             isLeft(
               anything
@@ -86,7 +87,7 @@ object BookBuilderSuites extends DefaultRunnableSpec {
           result2   <- calculate.form(List(Value.Atom(()))).provide(kit.atomizer).either
         } yield {
           assert(calculate)(
-            hasField("arity", (_: Calculate).arity, equalTo(1))
+            hasField("arity", (_: DepCalculate).arity, equalTo(1))
           ) && assert(result1) {
             isLeft(
               anything

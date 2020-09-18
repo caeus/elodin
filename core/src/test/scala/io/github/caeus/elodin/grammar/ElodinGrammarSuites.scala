@@ -64,7 +64,7 @@ object ElodinGrammarSuites extends DefaultRunnableSpec {
               | name <- readline;
               | (+++) = concat["Hello ", name, "! how are you?"];
               | println((+++));
-              | "eff".(***)
+              | "eff"\(***)
               |""".stripMargin,
             parser.doExpr
           )

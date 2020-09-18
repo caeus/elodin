@@ -5,7 +5,7 @@
 * define naming and idioms
 * make basis book robust
 * hardening of "value" (and renaming)
-* caching
+* automatic cashing like Haskell
 * testing of atomization/calculation/evaluation
 * BookBuilder testing
 * Assembling testing (CBook testing)

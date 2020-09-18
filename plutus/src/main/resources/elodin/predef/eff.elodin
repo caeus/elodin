@@ -2,18 +2,18 @@ import "basis" ^{};
 let
 fold = {
     (effect,when_suspend,when_done)=>
-        ctrl.or
-        (ctrl.unpack eff.un.suspend when_suspend effect)
-        (ctrl.unpack eff.un.done when_done effect)
+        ctrl\or
+        (ctrl\unpack eff\un\suspend when_suspend effect)
+        (ctrl\unpack eff\un\done when_done effect)
 };
 chain = (effect,chainer)=>{
     fold(effect,{
         (suspend)=>
             let
-                op = eff.suspend.op(suspend);
-                scont = eff.suspend.scont(suspend);
-                fcont = eff.suspend.fcont(suspend);
-                eff.suspend(op,{
+                op = eff\suspend\op(suspend);
+                scont = eff\suspend\scont(suspend);
+                fcont = eff\suspend\fcont(suspend);
+                eff\suspend(op,{
                     (result)=>
                         chain(scont(result),chainer)
 
@@ -24,14 +24,14 @@ chain = (effect,chainer)=>{
     },{
         (done)=>
             let
-                result = eff.done.success(done);
-                failure = eff.done.failure(done);
-                ctrl.or(chainer(result),done)
+                result = eff\done\success(done);
+                failure = eff\done\failure(done);
+                ctrl\or(chainer(result),done)
     })
 };
 {
-  fail = eff.fail,
-  succeed = eff.succeed,
+  fail = eff\fail,
+  succeed = eff\succeed,
   chain = chain,
   fold = fold
 }

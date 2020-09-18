@@ -1,16 +1,12 @@
 package io.github.caeus.plutus
 
+import com.typesafe.scalalogging.StrictLogging
 import io.github.caeus.plutus.Packer._
 import io.github.caeus.plutus.PackerResult.{Done, Failed}
 import io.github.caeus.plutus.PackerSyntax.RichPacker
 import io.github.caeus.plutus.PrettyPacker.PackerException
 import io.github.caeus.plutus.Slicer.{StringSlicer, VectorSlicer}
 import io.github.caeus.plutus.ToCursor.{StringToCursor, VectorToCursor}
-import com.typesafe.scalalogging.StrictLogging
-import io.github.caeus.plutus.PrettyPacker.PackerException
-import io.github.caeus.plutus.Slicer.{StringSlicer, VectorSlicer}
-import io.github.caeus.plutus.ToCursor.{StringToCursor, VectorToCursor}
-import zio.ZIO
 
 import scala.language.implicitConversions
 import scala.util.Random

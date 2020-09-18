@@ -1,7 +1,9 @@
 package io.github.caeus.elodin.runtime
 
-import io.github.caeus.elodin.archive.{Archive, BookBuilder, HArgs}
-import io.github.caeus.elodin.archive.HArgs._
+import io.github.caeus.elodin.CtxEval
+import io.github.caeus.elodin.archive.Archive
+import io.github.caeus.elodin.archive.asd.BookBuilder
+import io.github.caeus.elodin.archive.asd.HArgs._
 import zio.ZIO
 import zio.test.{DefaultRunnableSpec, ZSpec}
 import zio.test._
@@ -9,7 +11,7 @@ import zio.test.Assertion._
 
 object AtomizerSuites extends DefaultRunnableSpec {
   val testBook = {
-    import io.github.caeus.elodin.archive.ArgAs._
+    import io.github.caeus.elodin.archive.asd.TypedArg._
     BookBuilder
       .withTitle("test_book")
       .chapter("sum")(
@@ -26,7 +28,7 @@ object AtomizerSuites extends DefaultRunnableSpec {
       testM("application") {
         for {
           archive <- ZIO.service[Archive]
-          atomizer = new PathdAtomizer(archive, Nil)
+          atomizer = new CtxEval(archive, Nil)
           _1      <- ZIO.fromEither(Value.fromJson("1"))
           _2      <- ZIO.fromEither(Value.fromJson("2"))
           sum     <- atomizer.get("test_book", "sum")

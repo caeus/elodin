@@ -23,7 +23,7 @@ case class NodeBundle(
     scope: Lexcope[Node],
     capturedParamsSize: Int,
     header: Seq[DeclParam],
-    page: CalculationRef
+    page: BookPageRef
 )
 final class AssemblerVisitor(deps: Archive, book: String, root: Node) extends LazyLogging {
   def walkDown(
@@ -113,7 +113,7 @@ final class AssemblerVisitor(deps: Archive, book: String, root: Node) extends La
     val bundles: IndexedSeq[NodeBundle] = indexed.map {
       case ((scope, params), id) =>
         val header = headerOf(scope, params)
-        NodeBundle(id, scope, params.size, header, CalculationRef(namespace, id))
+        NodeBundle(id, scope, params.size, header, BookPageRef(namespace, id))
     }.toIndexedSeq
 
     val indexedBundles = bundles.map(b => b.scope.path -> b).toMap
@@ -194,13 +194,13 @@ final class AssemblerVisitor(deps: Archive, book: String, root: Node) extends La
                       Shift.Arg(i)
                     }
                   case ModuleMember(module, member) =>
-                    deps.chapterRef(module, member).map { pointer =>
+                    deps.bookPageOf(module, member).map { pointer =>
                       Shift.Archive(pointer)
                     }
                 }
           } yield r
         case WhenQRef(lexcope) =>
-          deps.chapterRef(lexcope.node.module, lexcope.node.member).map { pointer =>
+          deps.bookPageOf(lexcope.node.module, lexcope.node.member).map { pointer =>
             Shift.Archive(
               pointer.book,
               pointer.page
