@@ -1,25 +1,23 @@
 package io.github.caeus.elodin.archive
 
-import io.github.caeus.elodin.{ElodinEval, CtxEval}
-import io.github.caeus.elodin.archive.asd.HArgs.Zot
-import io.github.caeus.elodin.runtime.Value
+import io.github.caeus.elodin.basis.{Archive, Val, ValRef}
+import io.github.caeus.elodin.{ContextElodinEval, ElodinEval}
 import zio.ZIO
-import zio.test._
 import zio.test.Assertion._
+import zio.test._
 
 object SignatureBuilderSuite extends DefaultRunnableSpec {
-  import io.github.caeus.elodin.archive.asd.TypedArg._
-
+  import TypedArg._
   def testSignature[R, E](label: String)(f: ElodinEval => ZIO[R, E, TestResult]) = {
     testM(label) {
-      Archive.make(Nil).map(new CtxEval(_, Nil)).flatMap(f)
+      ZIO(Archive.make(Nil)).map(new ContextElodinEval(_, Nil)).flatMap(f)
     }
   }
   override def spec =
     suite("BookBuilder")(
       testSignature("asd") { atomizer =>
-        assertM(value.coerce(Value.Atom(()))) {
-          equalTo(Value.Atom(()))
+        assertM(value.coerce(ValRef(()))) {
+          equalTo(Val(()))
         }.provide(atomizer)
       }
     )

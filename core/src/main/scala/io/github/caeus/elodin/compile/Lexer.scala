@@ -6,7 +6,7 @@ import io.github.caeus.plutus.PackerSyntax.StringPackerSyntax
 import io.github.caeus.plutus.{Packer, PrettyPacker}
 import com.jsoniter.Jsoniter
 import jdk.nashorn.internal.ir.annotations.Ignore
-import zio.Task
+import zio.{IO, Task, ZIO}
 
 //import io.github.caeus.plutus.syntax._
 sealed trait ElodinToken
@@ -41,7 +41,7 @@ object ElodinToken {
 
 }
 trait Lexer {
-  def lex(code: String): Task[Vector[ElodinToken]]
+  def lex(code: String): IO[CompileError, Vector[ElodinToken]]
 }
 object Lexer {
   def make: Lexer = new DefaultLexer
@@ -66,12 +66,12 @@ final class DefaultLexer extends Lexer {
     P("""true|false""".r).map(_.toBoolean).map(Bool.apply)
 
   lazy val integralToken: Packer[String, Char, IntNum] =
-    (P("""[+\-]""".r).? ~ integral).!.map(_.value).map { num =>
+    (P("""[\-]""".r).? ~ integral).!.map(_.value).map { num =>
       IntNum(BigInt(num))
     }
 
   lazy val floatingToken: Packer[String, Char, FloatNum] =
-    (P("""[+\-]""".r).? ~ integral ~ fractional.?.as(()) ~ exponent.?.as(())).!.map(_.value)
+    (P("""[\-]""".r).? ~ integral ~ fractional.?.as(()) ~ exponent.?.as(())).!.map(_.value)
       .map(num => FloatNum(BigDecimal(num)))
 
   lazy val opToken = P(c => opChars.contains(c)).rep.!.map(_.value).map(Operator.apply)
@@ -133,7 +133,9 @@ final class DefaultLexer extends Lexer {
       }) ~ End
   lazy val prettyPacker = PrettyPacker.version1(lexerPacker)
 
-  def lex(source: String): Task[Vector[ElodinToken]] =
-    Task.effectSuspend(Task.fromEither(prettyPacker.process(source)))
+  def lex(source: String): IO[CompileError, Vector[ElodinToken]] =
+    ZIO
+      .effectSuspend(ZIO.fromEither(prettyPacker.process(source)))
+      .mapError(e => CompileError(e.getMessage, None))
 
 }

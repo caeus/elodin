@@ -1,36 +1,33 @@
 package io.github.caeus.elodin.compile
 
-import io.github.caeus.elodin.archive
-import io.github.caeus.elodin.archive.Book.CBook
-import io.github.caeus.elodin.archive.RefResolution.{FunParam, LetBinding, ModuleMember}
-import io.github.caeus.elodin.archive._
-import io.github.caeus.elodin.compile.Lexcope._
-import io.github.caeus.elodin.runtime.Value
 import com.typesafe.scalalogging.LazyLogging
-import io.github.caeus.elodin.archive.Archive
-import zio.{Ref, Task, ZIO}
+import RefResolution.{FunParam, LetBinding, ModuleMember}
+import io.github.caeus.elodin.archive._
+import io.github.caeus.elodin.basis.{Archive, Book, ThunkRef, Val}
+import io.github.caeus.elodin.compile.Lexcope._
+import zio.{IO, Ref, Task, ZIO}
 
 trait Assembler {
-  def assemble(name: String, node: Node): Task[Book]
+  def assemble(name: String, node: Node): IO[CompileError, Book]
 }
 
 final class DefaultAssembler(deps: Archive) extends Assembler with LazyLogging {
-
-  def assemble(book: String, node: Node) = new AssemblerVisitor(deps, book, node).assemble
+  def assemble(book: String, node: Node): IO[CompileError, CBook] =
+    new AssemblerVisitor(deps, book, node).assemble
 }
 case class NodeBundle(
-    id: Int,
+    id: String,
     scope: Lexcope[Node],
     capturedParamsSize: Int,
     header: Seq[DeclParam],
-    page: BookPageRef
+    page: ThunkRef
 )
-final class AssemblerVisitor(deps: Archive, book: String, root: Node) extends LazyLogging {
+final class AssemblerVisitor(archive: Archive, book: String, root: Node) extends LazyLogging {
   def walkDown(
       lexcope: Lexcope[Node],
       touchedPaths: Set[Dig.Path],
       emitted: Ref[Map[Lexcope[Node], Set[DeclParam]]]
-  ): Task[Set[DeclParam]] = {
+  ): IO[CompileError, Set[DeclParam]] = {
     def emit(lexcope: Lexcope[Node])(capturedParams: Set[DeclParam]) = {
       emitted
         .update { map =>
@@ -39,7 +36,7 @@ final class AssemblerVisitor(deps: Archive, book: String, root: Node) extends La
         .map(_ => capturedParams)
     }
     if (touchedPaths.contains(lexcope.path)) {
-      Task.succeed(Set.empty)
+      ZIO.succeed(Set.empty)
     } else {
       val newTouchedPaths = touchedPaths + lexcope.path
       lexcope.widen match {
@@ -56,17 +53,18 @@ final class AssemblerVisitor(deps: Archive, book: String, root: Node) extends La
         case WhenRef(lexcope) =>
           val to = lexcope.node.to
           for {
-            resolution <- lexcope.resolve(to).provide(deps)
+            resolution <- lexcope.resolve(to).provide(archive)
             r <- resolution match {
                   case Some(LetBinding(_, xcope)) =>
                     walkDown(xcope, touchedPaths, emitted)
-                  case Some(FunParam(param)) => Task.succeed(Set(param))
-                  case Some(_)               => Task.succeed(Set.empty[DeclParam])
+                  case Some(FunParam(param)) => ZIO.succeed(Set(param))
+                  case Some(_)               => ZIO.succeed(Set.empty[DeclParam])
                   case None =>
-                    Task.fail(
-                      new Exception(
+                    ZIO.fail(
+                      CompileError(
                         s"""Assembling book $book
-                       |Reference to $to is not defined""".stripMargin
+                       |Reference to $to is not defined""".stripMargin,
+                        None
                       )
                     )
                 }
@@ -85,11 +83,14 @@ final class AssemblerVisitor(deps: Archive, book: String, root: Node) extends La
     }
   }
 
-  def choosePaths(startingAt: Lexcope[Node], emit: Ref[Map[Lexcope[Node], Set[DeclParam]]]) = {
+  def choosePaths(
+      startingAt: Lexcope[Node],
+      emit: Ref[Map[Lexcope[Node], Set[DeclParam]]]
+  ): IO[CompileError, Map[Lexcope[Node], Set[DeclParam]]] = {
     for {
       empty <- walkDown(startingAt, Set.empty, emit)
       _ <- if (empty.isEmpty) { Task.succeed(()) }
-          else Task.fail(new Exception("Never happens, i guess"))
+          else ZIO.die(new Exception("Never happens, i guess"))
       paths <- emit.get
     } yield paths.updated(startingAt, Set.empty)
   }
@@ -105,45 +106,49 @@ final class AssemblerVisitor(deps: Archive, book: String, root: Node) extends La
   def calcShifters(
       namespace: String,
       chosenNodes: Map[Lexcope[Node], Seq[DeclParam]]
-  ): Task[IndexedSeq[(Dig.Path, Shifter)]] = {
-    val indexed: Seq[((Lexcope[Node], Seq[DeclParam]), Int)] = chosenNodes.toSeq.sortBy {
+  ): IO[CompileError, Map[Dig.Path, (String, Shifter)]] = {
+    val indexed: Seq[(Lexcope[Node], Seq[DeclParam])] = chosenNodes.toSeq.sortBy {
       case (s, _) => s.path.length
-    }.zipWithIndex
+    }
 
     val bundles: IndexedSeq[NodeBundle] = indexed.map {
-      case ((scope, params), id) =>
+      case (scope, params) =>
         val header = headerOf(scope, params)
-        NodeBundle(id, scope, params.size, header, BookPageRef(namespace, id))
+        val str    = scope.path.toString()
+        NodeBundle(str, scope, params.size, header, ThunkRef(namespace, str))
     }.toIndexedSeq
 
-    val indexedBundles = bundles.map(b => b.scope.path -> b).toMap
+    val indexedBundles: Map[Dig.Path, NodeBundle] = bundles.map(b => b.scope.path -> b).toMap
 
-    def invocationShift(scope: Lexcope[Node], enclosing: NodeBundle): Task[Shift] = {
+    def invocationShift(scope: Lexcope[Node], enclosing: NodeBundle): IO[CompileError, Shift] = {
       indexedBundles
         .get(scope.path)
         .map { bundle =>
-          Task.effect {
-            Shift.Apply(
-              Seq(Shift.Of(Value.Lazy(bundle.page, Nil))).appendedAll(
-                bundle.header
-                  .take(bundle.capturedParamsSize)
-                  .map { usedParam =>
-                    val i = enclosing.header.indexOf(usedParam)
-                    i.ensuring(
-                      i >= 0, {
-                        "Assertion failed GONORREA"
-                      }
-                    )
-                    Shift.Arg(i)
-                  }
+          ZIO
+            .effect {
+              Shift.Apply(
+                Seq(Shift.Archive(bundle.page)).appendedAll(
+                  bundle.header
+                    .take(bundle.capturedParamsSize)
+                    .map { usedParam =>
+                      val i = enclosing.header.indexOf(usedParam)
+                      i.ensuring(
+                        i >= 0, {
+                          "Assertion failed GONORREA"
+                        }
+                      )
+                      Shift.Arg(i)
+                    }
+                )
               )
-            )
-          }
+            }
+            .mapError(e => CompileError(s" oops2 ${e.getMessage}", None))
         }
         .getOrElse(toShift(scope, enclosing))
+
     }
 
-    def toShift(scope: Lexcope[Node], bundle: NodeBundle): Task[Shift] = {
+    def toShift(scope: Lexcope[Node], bundle: NodeBundle): IO[CompileError, Shift] = {
       scope match {
         case WhenFn(xcope) =>
           invocationShift(xcope.body, bundle)
@@ -155,10 +160,10 @@ final class AssemblerVisitor(deps: Archive, book: String, root: Node) extends La
               case (key, task) => task.map(key -> _)
             }
             .map { items =>
-              items.foldLeft(Shift.Archive("predef", 0): Shift) {
+              items.foldLeft(Shift.Archive("predef", "dict\\empty"): Shift) {
                 case (accum, (key, shift)) =>
                   Shift.Apply(
-                    Seq(Shift.Archive("predef", 0), accum, Shift.Of(Value.Atom(key)), shift)
+                    Seq(Shift.Archive("predef", "dict\\updated"), accum, Shift.Of(???), shift)
                   )
               }
             }
@@ -166,10 +171,10 @@ final class AssemblerVisitor(deps: Archive, book: String, root: Node) extends La
           ZIO
             .collectAll(lexcope.items.map(x => invocationShift(x, bundle)).toList)
             .map { items =>
-              items.foldLeft(Shift.Archive("predef", 0): Shift) {
+              items.foldLeft(Shift.Archive("predef", "list\\empty"): Shift) {
                 case (accum, shift) =>
                   Shift.Apply(
-                    Seq(Shift.Archive("predef", 0), accum, shift)
+                    Seq(Shift.Archive("predef", "list\\prepend"), accum, shift)
                   )
               }
             }
@@ -183,50 +188,59 @@ final class AssemblerVisitor(deps: Archive, book: String, root: Node) extends La
           invocationShift(lexcope.body, bundle)
         case WhenRef(lexcope) =>
           for {
-            resolution <- lexcope.resolve(lexcope.node.to).map(_.get).provide(deps)
+            resolution <- lexcope.resolve(lexcope.node.to).map(_.get).provide(archive)
             r <- resolution match {
                   case LetBinding(_, refdLexcope) =>
                     invocationShift(refdLexcope, bundle)
                   case FunParam(param) =>
-                    Task.effect {
-                      val i = bundle.header.indexOf(param)
-                      i.ensuring(_ >= 0)
-                      Shift.Arg(i)
+                    ZIO
+                      .effect {
+                        val i = bundle.header.indexOf(param)
+                        i.ensuring(_ >= 0)
+                        Shift.Arg(i)
+                      }
+                      .mapError(e => CompileError(s"Opps, ${e.getMessage}", None))
+                  case ModuleMember(ref) =>
+                    if (archive.contains(ref)) {
+                      ZIO.succeed(Shift.Archive(ref))
+                    } else {
+                      ZIO.fail(CompileError(s"Member not found  $ref!", None))
                     }
-                  case ModuleMember(module, member) =>
-                    deps.bookPageOf(module, member).map { pointer =>
-                      Shift.Archive(pointer)
-                    }
+
                 }
           } yield r
         case WhenQRef(lexcope) =>
-          deps.bookPageOf(lexcope.node.module, lexcope.node.member).map { pointer =>
-            Shift.Archive(
-              pointer.book,
-              pointer.page
-            )
+          val book   = lexcope.node.book
+          val member = lexcope.node.member
+          if (archive.contains(ThunkRef(book, member))) {
+            ZIO.fail(CompileError(s"Thunk of ${book} and $member not found", None))
+          } else {
+            ZIO.succeed(Shift.Archive(book, member))
           }
-        case WhenText(lexcope) => Task.succeed(Shift.Of(Value.Atom(lexcope.node.value)))
+        case WhenText(lexcope) => ZIO.succeed(Shift.Of(Val.TextS(lexcope.node.value)))
         case WhenFloat(lexcope) =>
-          Task.succeed(Shift.Of(Value.Atom(lexcope.node.value)))
-        case WhenInt(lexcope)  => Task.succeed(Shift.Of(Value.Atom(lexcope.node.value)))
-        case WhenBool(lexcope) => Task.succeed(Shift.Of(Value.Atom(lexcope.node.value)))
-        case lexcope           => Task.fail(new Exception(s"We are not handling yet this: ${lexcope.node}"))
+          ZIO.succeed(Shift.Of(Val.FloatS(lexcope.node.value)))
+        case WhenInt(lexcope)  => ZIO.succeed(Shift.Of(Val.IntS(lexcope.node.value)))
+        case WhenBool(lexcope) => ZIO.succeed(Shift.Of(Val.BoolS(lexcope.node.value)))
+        case lexcope =>
+          ZIO.fail(CompileError(s"We are not handling yet this: ${lexcope.node}", None))
       }
     }
 
     ZIO
       .collectAll(bundles.map { bundle =>
         toShift(bundle.scope, bundle).map { shift =>
-          bundle.scope.path -> archive.Shifter(arity = bundle.header.length, shift)
+          bundle.scope.path -> (bundle.id, Shifter(arity = bundle.header.length, shift))
         }
       })
-      .map(_.toIndexedSeq)
+      .map(_.toMap)
   }
-  def assemble = {
+  def assemble: IO[CompileError, CBook] = {
     logger.info(s"Started assembling module $book")
     for {
-      exported: Map[String, Lexcope[Node]] <- Task.effect(exportedPaths(Root(root)))
+      exported: Map[String, Lexcope[Node]] <- IO
+                                               .effect(exportedPaths(Root(root)))
+                                               .mapError(e => CompileError(e.getMessage, None))
       emit: Ref[Map[Lexcope[Node], Set[DeclParam]]] <-
         Ref.make[Map[Lexcope[Node], Set[DeclParam]]](Map.empty)
       _ <- ZIO.collectAll_(exported.values.map { node =>
@@ -238,23 +252,16 @@ final class AssemblerVisitor(deps: Archive, book: String, root: Node) extends La
                   val exportedOnes = exported.values.map(_ -> Seq.empty[DeclParam]).toSeq
                   ((paths.toSeq ++ exportedOnes)).toMap
                 }
-      shifters <- calcShifters(book, paths)
+      shifters: Map[Dig.Path, (String, Shifter)] <- calcShifters(book, paths)
     } yield {
-      val namespace1 = CBook(
+      CBook(
         book,
-        exported.view
-          .mapValues(node => {
-            val i = shifters.indexWhere {
-              case (path, _) =>
-                path == node.path
-            }
-            if (i >= 0) i else ???
-          })
-          .toMap,
-        shifters.map(_._2)
+        exported.map {
+          case (member: String, lexcope: Lexcope[Node]) =>
+            member -> shifters(lexcope.path)._1
+        },
+        shifters.values.toMap
       )
-      logger.info(s"Finished assembling book $book")
-      namespace1
     }
   }
 }

@@ -1,10 +1,10 @@
 package io.github.caeus.elodin.compile
 
-import io.github.caeus.elodin.archive.Dig.Path
-import io.github.caeus.elodin.archive.RefResolution.{FunParam, LetBinding, ModuleMember}
-import io.github.caeus.elodin.archive.{Archive, DeclParam, Dig, RefResolution}
+import io.github.caeus.elodin.basis.{Archive, ThunkRef}
+import io.github.caeus.elodin.compile.Dig.Path
 import io.github.caeus.elodin.compile.Lexcope._
 import io.github.caeus.elodin.compile.Node._
+import io.github.caeus.elodin.compile.RefResolution.{FunParam, LetBinding, ModuleMember}
 import zio.{RIO, ZIO}
 
 sealed trait Lexcope[N <: Node] {
@@ -16,16 +16,16 @@ sealed trait Lexcope[N <: Node] {
       .map(_.resolve(ref))
       .getOrElse(RIO.succeed(None))
   }
-  final def resolve(ref: String): RIO[Archive, Option[RefResolution]] = {
+  final def resolve(ref: String): ZIO[Archive, CompileError, Option[RefResolution]] = {
     this.widen match {
       case WhenFn(lexcope) if lexcope.node.params.contains(ref) =>
-        RIO.succeed(Some(FunParam(DeclParam(path, lexcope.node.params.lastIndexOf(ref)))))
+        ZIO.succeed(Some(FunParam(DeclParam(path, lexcope.node.params.lastIndexOf(ref)))))
       case WhenLet(lexcope) if lexcope.node.bindings.contains(ref) =>
-        RIO.succeed(Some(LetBinding(ref, lexcope.binding(ref).get)))
+        ZIO.succeed(Some(LetBinding(ref, lexcope.binding(ref).get)))
       case WhenImport(lexcope) =>
         lexcope.members.flatMap {
           case mems if mems contains ref =>
-            ZIO.succeed(Some(ModuleMember(lexcope.node.module, ref)))
+            ZIO.succeed(Some(ModuleMember(ThunkRef(lexcope.node.module, ref))))
           case _ => continue(ref)
         }
       case _ =>
@@ -84,11 +84,15 @@ object Lexcope {
     def body: Lexcope[Node] = {
       Child(value.node.body, Dig.Down, value.widen)
     }
-    def members: RIO[Archive, Set[String]] =
+    def members: ZIO[Archive, CompileError, Set[String]] =
       for {
         dependencies <- RIO.environment[Archive]
-        members <- dependencies
-                    .chaptersOf(value.node.module)
+        members <- ZIO
+                    .succeed(
+                      dependencies
+                        .membersOf(value.node.module)
+                    )
+                    .someOrFail(CompileError("NOT FFOUND!2", None))
         //TODO
       } yield members
   }

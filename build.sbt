@@ -1,6 +1,4 @@
-val Http4sVersion  = "0.21.1"
 val CirceVersion   = "0.13.0"
-val Specs2Version  = "4.8.3"
 val LogbackVersion = "1.2.3"
 
 inThisBuild(
@@ -25,7 +23,7 @@ lazy val root = project
     name := "elodin",
     skip in publish := true
   )
-  .aggregate(core, plutus)
+  .aggregate(basis, core, plutus)
 
 lazy val plutus = (project in file("plutus"))
   .settings(
@@ -44,13 +42,36 @@ lazy val plutus = (project in file("plutus"))
     addCompilerPlugin("com.olegpy"    %% "better-monadic-for" % "0.3.0")
   )
 lazy val core = (project in file("core"))
-  .dependsOn(plutus)
+  .dependsOn(plutus, basis)
   .settings(
     name := "elodin-core",
     version := "0.0.1-SNAPSHOT",
     scalaVersion := "2.13.1",
     homepage := Some(url("https://github.com/caeus/elodin")),
     libraryDependencies ++= Seq(
+      "dev.zio"                    %% "zio-test-sbt"    % "1.0.0" % Test,
+      "dev.zio"                    %% "zio"             % "1.0.0",
+      "io.circe"                   %% "circe-parser"    % "0.13.0",
+      "ch.qos.logback"              % "logback-classic" % LogbackVersion,
+      "com.typesafe.scala-logging" %% "scala-logging"   % "3.9.2",
+      "com.lihaoyi"                %% "pprint"          % "0.5.6" % Test
+    ),
+    testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework")),
+    addCompilerPlugin("org.typelevel" %% "kind-projector"     % "0.10.3"),
+    addCompilerPlugin("com.olegpy"    %% "better-monadic-for" % "0.3.0")
+  )
+
+lazy val basis = project
+  .in(file("basis"))
+  .settings(
+    name := "elodin-basis",
+    version := "0.0.1-SNAPSHOT",
+    scalaVersion := "2.13.1",
+    homepage := Some(url("https://github.com/caeus/elodin")),
+    libraryDependencies ++= Seq(
+      "com.propensive"    %% "magnolia"  % "0.17.0",
+      "com.typesafe.play" %% "play-json" % "2.9.1",
+// "org.scala-lang"              % "scala-reflect"   % scalaVersion.value % Provided,
       "dev.zio"                    %% "zio-test-sbt"    % "1.0.0" % Test,
       "dev.zio"                    %% "zio"             % "1.0.0",
       "io.circe"                   %% "circe-parser"    % "0.13.0",

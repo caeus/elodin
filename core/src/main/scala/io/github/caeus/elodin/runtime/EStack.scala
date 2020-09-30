@@ -20,6 +20,7 @@ object EStack {
 }
 final class EStack[A](ref: zio.Ref[List[A]]) {
 
+  def isEmpty:UIO[Boolean] = ref.get.map(_.isEmpty)
   def elements: UIO[List[A]] = ref.get
 
   def pushAll(els: Iterable[A]): IO[Nothing, Unit] = {

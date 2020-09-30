@@ -8,9 +8,10 @@ import io.github.caeus.elodin.util.{SepEl, SepNel, SplitTree}
 import io.github.caeus.plutus.PackerSyntax.VectorPackerSyntax
 import io.github.caeus.plutus.{Packer, PrettyPacker}
 import io.github.caeus.elodin.util.SplitTree
-import zio.Task
+import zio.{IO, Task, ZIO}
 
 import scala.annotation.tailrec
+import scala.util.chaining
 
 sealed trait DoStep
 object DoStep {
@@ -39,7 +40,7 @@ object DoStep {
 
 }
 trait Parser {
-  def parse(tokens: Seq[ElodinToken]): Task[Node]
+  def parse(tokens: Seq[ElodinToken]): IO[CompileError, Node]
 }
 object Parser {
   def make: Parser = new DefaultParser
@@ -103,6 +104,8 @@ final class DefaultParser extends Parser {
     P(ElodinToken.Parenthesis.Close)).map {
     case (node, nodes) => node :: nodes.toList
   } | delimitedExpr.map(el => List(el))).rep(1).map(_.flatten.toList)
+
+  import chaining._
 
   /**
     * sum3(3,4,6)
@@ -240,9 +243,11 @@ final class DefaultParser extends Parser {
   lazy val expr: Pckr[Node] = delimitedExpr.named("Delimited") | greedyExpr.named("Greedy")
   lazy val finalExpr        = expr ~ End
   lazy val prettyPacker     = PrettyPacker.version1(finalExpr)
-  def parse(seq: Seq[ElodinToken]): Task[Node] = {
-    Task.effectSuspend {
-      Task.fromEither(prettyPacker.process(seq.toVector))
+  def parse(seq: Seq[ElodinToken]): IO[CompileError, Node] = {
+    ZIO.effectSuspendTotal {
+      ZIO
+        .fromEither(prettyPacker.process(seq.toVector))
+        .mapError(e => CompileError(e.getMessage, None))
     }
   }
 }

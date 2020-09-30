@@ -1,9 +1,9 @@
-package io.github.caeus.elodin.runtime
+package io.github.caeus.elodin.eval
 
-import PopResult.{Complete, Incomplete}
-import zio.ZIO
+import io.github.caeus.elodin.runtime.EStack
+import io.github.caeus.elodin.runtime.PopResult.{Complete, Incomplete}
+import zio.test.Assertion.{equalTo, hasField, isSubtype}
 import zio.test._
-import zio.test.Assertion._
 
 object EStackSuites extends DefaultRunnableSpec {
   override def spec =

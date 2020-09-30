@@ -50,6 +50,6 @@ object Node {
   case class DictNode(items: Map[String, Node])                           extends Node
   case class RefNode(to: String)                                          extends Node
   case class ImportNode(module: String, selection: Selection, body: Node) extends Node
-  case class QRefNode(module: String, member: String)                     extends Node
+  case class QRefNode(book: String, member: String)                     extends Node
   case class SpecialNode(body: Node)                                      extends Node
 }
