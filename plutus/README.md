@@ -2,7 +2,7 @@
 
 Look, I'm not an expert in algorithms for parsing Text. I just read a little bit and tried some other libraries (Scala Parser Combinators and Fastparse) and none gave me what I was looking for. The main problem I faced was this:
 
-Imagine I have a language with the keyword `switch` and a rule for Identifiers with the following regex `[a-zA-Z]+`. With the libraries I mentioned before I will run into the problem of correctly processing the identifier `switcheroo`, why? Because it either recognize the keyword `switch` followed by the identifier `eroo` or it doen't recognize `switch` as a keyword but an identifier.
+Imagine I have a language with the keyword `switch` and a rule for Identifiers with the following regex `[a-zA-Z]+`. With the libraries I mentioned before I will run into the problem of correctly processing the identifier `switcheroo`, why? Because it either recognize the keyword `switch` followed by the identifier `eroo` or it doesn't recognize `switch` as a keyword but an identifier.
 
 Another problem is: When to conclude the current rule and proceed to the next? Easy, when there's a whitespace, right? (well, at least in most languages). But what if you have this `max(1,2)`? There's no spaces in this expression and still you'd want it to be a valid expression if you were creating a Java-ish grammar.
 
