@@ -4,8 +4,8 @@ import io.github.caeus.elodin.ElodinEval
 import io.github.caeus.elodin.archive.HArgs.{#:, Zot}
 import io.github.caeus.elodin.archive.SignatureBuilder.PrependArg
 import io.github.caeus.elodin.archive.ThunkBuilder.ThunkBuilderImpl
-import io.github.caeus.elodin.basis.Val._
-import io.github.caeus.elodin.basis._
+import io.github.caeus.elodin.core.Val._
+import io.github.caeus.elodin.core._
 import zio.{RIO, ZIO}
 
 sealed trait TypedArg[+A] { self =>

@@ -35,13 +35,13 @@ sealed trait Node
 object Node {
   case class Selection(
       complement: Boolean,
-      named: Set[String],
+      selected: Set[String],
       prefix: Option[String],
       renamed: Map[String, String]
   )
   case class LetNode(bindings: Map[String, Node], body: Node)             extends Node
   case class FunNode(params: Seq[String], body: Node)                     extends Node
-  case class ApplyNode(args: Seq[Node])                                   extends Node
+  case class AppNode(args: Seq[Node])                                     extends Node
   case class TextNode(value: String)                                      extends Node
   case class IntNode(value: BigInt)                                       extends Node
   case class FloatNode(value: BigDecimal)                                 extends Node
@@ -50,6 +50,6 @@ object Node {
   case class DictNode(items: Map[String, Node])                           extends Node
   case class RefNode(to: String)                                          extends Node
   case class ImportNode(module: String, selection: Selection, body: Node) extends Node
-  case class QRefNode(book: String, member: String)                     extends Node
-  case class SpecialNode(body: Node)                                      extends Node
+  case class QRefNode(book: String, member: String)                       extends Node
+  //case class SpecialNode(body: Node)                                      extends Node
 }

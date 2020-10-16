@@ -1,6 +1,6 @@
 package io.github.caeus.elodin.grammar
 
-import io.github.caeus.elodin.compile.Node.{ApplyNode, RefNode}
+import io.github.caeus.elodin.compile.Node.{AppNode, RefNode}
 import io.github.caeus.elodin.compile.{CompileError, DefaultLexer, DefaultParser, ElodinToken, Node}
 import io.github.caeus.plutus.PackerSyntax.VectorPackerSyntax
 import io.github.caeus.plutus.{Packer, PrettyPacker}
@@ -79,18 +79,18 @@ object ElodinGrammarSuites extends DefaultRunnableSpec {
       },
       testM("apply simple") {
         assertM(parseWith("sum [1,2,3]", parser.applyExpr)) {
-          isSubtype[Node.ApplyNode](anything)
+          isSubtype[Node.AppNode](anything)
         }
       },
       testM("apply operands (left associative)") {
         val value = parseWith("list >>> isEmpty >>> whatever", parser.applyExpr)
         assertM(value)(
-          isSubtype[ApplyNode](
+          isSubtype[AppNode](
             equalTo(
-              ApplyNode(
+              AppNode(
                 Seq(
                   RefNode(">>>"),
-                  ApplyNode(
+                  AppNode(
                     Seq(
                       RefNode(">>>"),
                       RefNode("list"),
@@ -107,13 +107,13 @@ object ElodinGrammarSuites extends DefaultRunnableSpec {
       testM("apply operands (right associative)") {
         val value = parseWith("list >>>: isEmpty >>>: whatever", parser.applyExpr)
         assertM(value)(
-          isSubtype[ApplyNode](
+          isSubtype[AppNode](
             equalTo(
-              ApplyNode(
+              AppNode(
                 Seq(
                   RefNode(">>>:"),
                   RefNode("list"),
-                  ApplyNode(
+                  AppNode(
                     Seq(
                       RefNode(">>>:"),
                       RefNode("isEmpty"),

@@ -1,3 +1,4 @@
 package io.github.caeus.elodin.compile
 
-case class CompileError(msg: String, parent: Option[CompileError])
+final case class LocalizedError(path: Vector[String], msg: String)
+final case class CompileError(of: Seq[LocalizedError], parent: Option[CompileError])

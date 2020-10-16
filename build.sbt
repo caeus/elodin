@@ -24,6 +24,24 @@ lazy val root = project
     skip in publish := true
   )
   .aggregate(basis, core, plutus)
+lazy val chusky = (project in file("chusky"))
+  .settings(
+    name := "chusky",
+    version := "0.0.1-SNAPSHOT",
+    scalaVersion := "2.13.1",
+    homepage := Some(url("https://github.com/caeus/elodin")),
+    libraryDependencies ++= Seq(
+      "dev.zio"                    %% "zio-test-sbt"  % "1.0.0" % Test,
+      "dev.zio"                    %% "zio-test"      % "1.0.0",
+      "io.circe"                   %% "circe-core"    % "0.13.0",
+      "com.jsoniter"                % "jsoniter"      % "0.9.1",
+      "com.typesafe.scala-logging" %% "scala-logging" % "3.9.2"
+    ),
+    testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework")),
+    addCompilerPlugin("org.typelevel" %% "kind-projector"     % "0.10.3"),
+    addCompilerPlugin("com.olegpy"    %% "better-monadic-for" % "0.3.0")
+  )
+  .dependsOn(plutus)
 
 lazy val plutus = (project in file("plutus"))
   .settings(

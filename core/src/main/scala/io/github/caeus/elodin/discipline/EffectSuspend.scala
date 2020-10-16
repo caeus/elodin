@@ -1,9 +1,9 @@
 package io.github.caeus.elodin.discipline
 
-import io.github.caeus.elodin.basis.{FromVal, ToVal, Val}
-import io.github.caeus.elodin.generic._
+import io.github.caeus.elodin.core.{Closure, FromVal, ToVal, Val}
 import io.github.caeus.elodin.discipline.XXX._
-case class EffectInput(book: String, technique: String, args: Seq[Val])
+import io.github.caeus.elodin.generic._
+case class EffectInput(book: String, technique: String, args: List[Val])
 
 object XXX {
   implicit class AnyOptToVal[+T](private val value: T) extends AnyVal {
@@ -33,22 +33,24 @@ object EffectVal {
 }
 case class EffectSucceed(value: Val) extends EffectVal
 object EffectSucceed {
-  implicit val toVal: ToVal[EffectSucceed] = auto_to.gen[EffectSucceed].tagged("eff", "succeed")
+  implicit val toVal: ToVal[EffectSucceed] = auto.to.gen[EffectSucceed].tagged("eff", "succeed")
   implicit val fromVal: FromVal[EffectSucceed] =
-    auto_from.gen[EffectSucceed].tagged("eff", "succeed")
+    auto.from.gen[EffectSucceed].tagged("eff", "succeed")
 }
 case class EffectFail(value: Val) extends EffectVal
 object EffectFail {
-  implicit val toVal: ToVal[EffectFail]     = auto_to.gen[EffectFail].tagged("eff", "fail")
-  implicit val fromVal: FromVal[EffectFail] = auto_from.gen[EffectFail].tagged("eff", "fail")
+  implicit val toVal: ToVal[EffectFail]     = auto.to.gen[EffectFail].tagged("eff", "fail")
+  implicit val fromVal: FromVal[EffectFail] = auto.from.gen[EffectFail].tagged("eff", "fail")
 }
 case class EffectSuspend(
     input: EffectInput,
-    whenSuccess: Val.FunS,
-    whenFailure: Val.FunS
+    whenSuccess: Closure,
+    whenFailure: Closure
 ) extends EffectVal
 object EffectSuspend {
-  implicit val toVal: ToVal[EffectSuspend] = auto_to.gen[EffectSuspend].tagged("eff", "suspend")
+
+  implicit val toVal: ToVal[EffectSuspend] = auto.to.gen[EffectSuspend].tagged("eff", "suspend")
+
   implicit val fromVal: FromVal[EffectSuspend] =
-    auto_from.gen[EffectSuspend].tagged("eff", "suspend")
+    auto.from.gen[EffectSuspend].tagged("eff", "suspend")
 }

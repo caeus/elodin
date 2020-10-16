@@ -3,7 +3,7 @@ package io.github.caeus.elodin.runtime
 import io.github.caeus.elodin.ContextElodinEval
 import io.github.caeus.elodin.archive.BookBuilder
 import io.github.caeus.elodin.archive.HArgs._
-import io.github.caeus.elodin.basis.{Archive, ThunkRef, Val, ValRef}
+import io.github.caeus.elodin.core.{Archive, ThunkRef, Val, ValRef}
 import zio.test.Assertion._
 import zio.test.{DefaultRunnableSpec, _}
 import zio.{Has, ZIO, ZLayer}

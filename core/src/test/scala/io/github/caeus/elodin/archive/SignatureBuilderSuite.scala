@@ -1,6 +1,6 @@
 package io.github.caeus.elodin.archive
 
-import io.github.caeus.elodin.basis.{Archive, Val, ValRef}
+import io.github.caeus.elodin.core.{Archive, Val, ValRef}
 import io.github.caeus.elodin.{ContextElodinEval, ElodinEval}
 import zio.ZIO
 import zio.test.Assertion._

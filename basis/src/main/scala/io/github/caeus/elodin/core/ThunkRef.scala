@@ -1,3 +1,3 @@
-package io.github.caeus.elodin.basis
+package io.github.caeus.elodin.core
 
 case class ThunkRef(book: String, id: String)

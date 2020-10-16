@@ -1,7 +1,7 @@
 package io.github.caeus.elodin
 
 import com.typesafe.scalalogging.LazyLogging
-import io.github.caeus.elodin.basis.{Archive, Book}
+import io.github.caeus.elodin.core.{Archive, Book}
 import io.github.caeus.elodin.compile.{Assembler, CompileError, Lexer, Parser}
 import zio.{IO, UIO, ZIO}
 

@@ -30,12 +30,12 @@ object DoStep {
         }
         reduceRec(prevs, newCurr)
       case YieldPart(to, body) :: prevs =>
-        val newCurr = ApplyNode(Seq(QRefNode("gen", "suspend"), body, FunNode(Seq(to), curr)))
+        val newCurr = AppNode(Seq(QRefNode("gen", "suspend"), body, FunNode(Seq(to), curr)))
         reduceRec(prevs, newCurr)
     }
   }
   def reduce(parts: Seq[DoStep], last: Node): Node = {
-    reduceRec(parts.reverse.toList, ApplyNode(Seq(QRefNode("gen", "done"), last)))
+    reduceRec(parts.reverse.toList, AppNode(Seq(QRefNode("gen", "done"), last)))
   }
 
 }
@@ -118,7 +118,7 @@ final class DefaultParser extends Parser {
         SepNel(
           args_?
             .map { r =>
-              ApplyNode(node :: r)
+              AppNode(node :: r)
             }
             .getOrElse(node),
           postfixes.map {
@@ -127,7 +127,7 @@ final class DefaultParser extends Parser {
                 op.to,
                 args_?
                   .map { r =>
-                    ApplyNode(node :: r)
+                    AppNode(node :: r)
                   }
                   .getOrElse(node)
               )
@@ -143,11 +143,11 @@ final class DefaultParser extends Parser {
         val nodes = parts.map(splitTreeToApply)
         if (isLeftAssociative(sep)) {
           nodes.reduceLeft { (nodeL, nodeR) =>
-            ApplyNode(Seq(RefNode(sep), nodeL, nodeR))
+            AppNode(Seq(RefNode(sep), nodeL, nodeR))
           }
         } else {
           nodes.reduceRight { (nodeL, nodeR) =>
-            ApplyNode(Seq(RefNode(sep), nodeL, nodeR))
+            AppNode(Seq(RefNode(sep), nodeL, nodeR))
           }
         }
       case Leaf(el) => el

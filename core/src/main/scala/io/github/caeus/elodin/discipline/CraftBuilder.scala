@@ -2,8 +2,8 @@ package io.github.caeus.elodin.discipline
 
 import io.github.caeus.elodin.archive.HArgs.Zot
 import io.github.caeus.elodin.archive._
-import io.github.caeus.elodin.basis.Val.{FunS, TaggedS}
-import io.github.caeus.elodin.basis._
+import io.github.caeus.elodin.core.Val.{FunS, TaggedS}
+import io.github.caeus.elodin.core._
 import io.github.caeus.elodin.discipline.Craft.NCraft
 import io.github.caeus.elodin.discipline.EffectBuilder.EffectBuilderImpl
 import io.github.caeus.elodin.runtime.RTError
@@ -48,7 +48,7 @@ object EffectBuilder {
       eval <- ZIO.environment[ElodinEval]
       (succeed, fail) <- cont(eval, "succeed") <&>
                           cont(eval, "fail")
-    } yield TaggedS("eff", "suspend", EffectSuspend(input, succeed, fail).toVal)
+    } yield TaggedS("eff", "suspend", EffectSuspend(input, Closure(succeed), Closure(fail)).toVal)
   }
   private final class EffectBuilderImpl[T <: HArgs](
       val btitle: String,

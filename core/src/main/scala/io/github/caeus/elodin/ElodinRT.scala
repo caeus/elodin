@@ -1,6 +1,6 @@
 package io.github.caeus.elodin
 
-import io.github.caeus.elodin.basis.{Archive, EvalError, FromVal, ToVal, Val, ValRefWrapper}
+import io.github.caeus.elodin.core.{Archive, EvalError, FromVal, ToVal, Val, ValRefWrapper}
 import io.github.caeus.elodin.discipline.{
   Discipline,
   EffectFail,

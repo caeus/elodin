@@ -1,10 +1,10 @@
 package io.github.caeus.elodin.generic
 
-import io.github.caeus.elodin.basis.{ToVal, Val}
+import io.github.caeus.elodin.core.{ToVal, Val}
 
 import scala.language.experimental.macros
 
-trait ToStrictValDerivation {
+trait ToValDerivation {
   import magnolia._
   type Typeclass[T] = ToVal[T]
   def combine[T](caseClass: CaseClass[Typeclass, T]): Typeclass[T] = { (t: T) =>

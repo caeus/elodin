@@ -3,8 +3,8 @@ package io.github.caeus.elodin.compile
 import com.typesafe.scalalogging.LazyLogging
 import RefResolution.{FunParam, LetBinding, ModuleMember}
 import io.github.caeus.elodin.archive._
-import io.github.caeus.elodin.basis.{Archive, Book, ThunkRef, Val}
-import io.github.caeus.elodin.compile.Lexcope._
+import io.github.caeus.elodin.core.{Archive, Book, ThunkRef, Val}
+import io.github.caeus.elodin.compile.Lexcope2._
 import zio.{IO, Ref, Task, ZIO}
 
 trait Assembler {
@@ -16,19 +16,19 @@ final class DefaultAssembler(deps: Archive) extends Assembler with LazyLogging {
     new AssemblerVisitor(deps, book, node).assemble
 }
 case class NodeBundle(
-    id: String,
-    scope: Lexcope[Node],
-    capturedParamsSize: Int,
-    header: Seq[DeclParam],
-    page: ThunkRef
+                       id: String,
+                       scope: Lexcope2[Node],
+                       capturedParamsSize: Int,
+                       header: Seq[DeclParam],
+                       page: ThunkRef
 )
 final class AssemblerVisitor(archive: Archive, book: String, root: Node) extends LazyLogging {
   def walkDown(
-      lexcope: Lexcope[Node],
-      touchedPaths: Set[Dig.Path],
-      emitted: Ref[Map[Lexcope[Node], Set[DeclParam]]]
+                lexcope: Lexcope2[Node],
+                touchedPaths: Set[Dig.Path],
+                emitted: Ref[Map[Lexcope2[Node], Set[DeclParam]]]
   ): IO[CompileError, Set[DeclParam]] = {
-    def emit(lexcope: Lexcope[Node])(capturedParams: Set[DeclParam]) = {
+    def emit(lexcope: Lexcope2[Node])(capturedParams: Set[DeclParam]) = {
       emitted
         .update { map =>
           map.updated(lexcope, capturedParams)
@@ -74,7 +74,7 @@ final class AssemblerVisitor(archive: Archive, book: String, root: Node) extends
     }
   }
 
-  def exportedPaths(root: Lexcope[Node]): Map[String, Lexcope[Node]] = {
+  def exportedPaths(root: Lexcope2[Node]): Map[String, Lexcope2[Node]] = {
     root match {
       case WhenImport(node) => exportedPaths(node.body.widen)
       case WhenLet(node)    => exportedPaths(node.body.widen)
@@ -84,9 +84,9 @@ final class AssemblerVisitor(archive: Archive, book: String, root: Node) extends
   }
 
   def choosePaths(
-      startingAt: Lexcope[Node],
-      emit: Ref[Map[Lexcope[Node], Set[DeclParam]]]
-  ): IO[CompileError, Map[Lexcope[Node], Set[DeclParam]]] = {
+                   startingAt: Lexcope2[Node],
+                   emit: Ref[Map[Lexcope2[Node], Set[DeclParam]]]
+  ): IO[CompileError, Map[Lexcope2[Node], Set[DeclParam]]] = {
     for {
       empty <- walkDown(startingAt, Set.empty, emit)
       _ <- if (empty.isEmpty) { Task.succeed(()) }
@@ -95,7 +95,7 @@ final class AssemblerVisitor(archive: Archive, book: String, root: Node) extends
     } yield paths.updated(startingAt, Set.empty)
   }
 
-  def headerOf(node: Lexcope[Node], capturedParams: Seq[DeclParam]): Seq[DeclParam] = {
+  def headerOf(node: Lexcope2[Node], capturedParams: Seq[DeclParam]): Seq[DeclParam] = {
     capturedParams
       .appendedAll(node match {
         case WhenFn(scope) => scope.params.toSeq
@@ -105,9 +105,9 @@ final class AssemblerVisitor(archive: Archive, book: String, root: Node) extends
   }
   def calcShifters(
       namespace: String,
-      chosenNodes: Map[Lexcope[Node], Seq[DeclParam]]
+      chosenNodes: Map[Lexcope2[Node], Seq[DeclParam]]
   ): IO[CompileError, Map[Dig.Path, (String, Shifter)]] = {
-    val indexed: Seq[(Lexcope[Node], Seq[DeclParam])] = chosenNodes.toSeq.sortBy {
+    val indexed: Seq[(Lexcope2[Node], Seq[DeclParam])] = chosenNodes.toSeq.sortBy {
       case (s, _) => s.path.length
     }
 
@@ -120,7 +120,7 @@ final class AssemblerVisitor(archive: Archive, book: String, root: Node) extends
 
     val indexedBundles: Map[Dig.Path, NodeBundle] = bundles.map(b => b.scope.path -> b).toMap
 
-    def invocationShift(scope: Lexcope[Node], enclosing: NodeBundle): IO[CompileError, Shift] = {
+    def invocationShift(scope: Lexcope2[Node], enclosing: NodeBundle): IO[CompileError, Shift] = {
       indexedBundles
         .get(scope.path)
         .map { bundle =>
@@ -148,7 +148,7 @@ final class AssemblerVisitor(archive: Archive, book: String, root: Node) extends
 
     }
 
-    def toShift(scope: Lexcope[Node], bundle: NodeBundle): IO[CompileError, Shift] = {
+    def toShift(scope: Lexcope2[Node], bundle: NodeBundle): IO[CompileError, Shift] = {
       scope match {
         case WhenFn(xcope) =>
           invocationShift(xcope.body, bundle)
@@ -238,17 +238,17 @@ final class AssemblerVisitor(archive: Archive, book: String, root: Node) extends
   def assemble: IO[CompileError, CBook] = {
     logger.info(s"Started assembling module $book")
     for {
-      exported: Map[String, Lexcope[Node]] <- IO
+      exported: Map[String, Lexcope2[Node]] <- IO
                                                .effect(exportedPaths(Root(root)))
                                                .mapError(e => CompileError(e.getMessage, None))
-      emit: Ref[Map[Lexcope[Node], Set[DeclParam]]] <-
-        Ref.make[Map[Lexcope[Node], Set[DeclParam]]](Map.empty)
+      emit: Ref[Map[Lexcope2[Node], Set[DeclParam]]] <-
+        Ref.make[Map[Lexcope2[Node], Set[DeclParam]]](Map.empty)
       _ <- ZIO.collectAll_(exported.values.map { node =>
             choosePaths(node, emit)
           })
       paths <- emit.get
                 .map(_.view.mapValues(_.toSeq.sortBy(p => p.path.length -> p.index)).toMap)
-                .map { paths: Map[Lexcope[Node], Seq[DeclParam]] =>
+                .map { paths: Map[Lexcope2[Node], Seq[DeclParam]] =>
                   val exportedOnes = exported.values.map(_ -> Seq.empty[DeclParam]).toSeq
                   ((paths.toSeq ++ exportedOnes)).toMap
                 }
@@ -257,7 +257,7 @@ final class AssemblerVisitor(archive: Archive, book: String, root: Node) extends
       CBook(
         book,
         exported.map {
-          case (member: String, lexcope: Lexcope[Node]) =>
+          case (member: String, lexcope: Lexcope2[Node]) =>
             member -> shifters(lexcope.path)._1
         },
         shifters.values.toMap

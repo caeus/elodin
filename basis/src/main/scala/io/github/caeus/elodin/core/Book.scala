@@ -1,4 +1,4 @@
-package io.github.caeus.elodin.basis
+package io.github.caeus.elodin.core
 
 trait Book {
   def title: String

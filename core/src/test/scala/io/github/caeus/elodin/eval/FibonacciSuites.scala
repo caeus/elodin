@@ -2,8 +2,8 @@ package io.github.caeus.elodin.eval
 
 import io.github.caeus.elodin.archive.HArgs.#:
 import io.github.caeus.elodin.archive.{BookBuilder, TypedArg}
-import io.github.caeus.elodin.basis.{Archive, ThunkRef, Val, ValRef}
-import io.github.caeus.elodin.generic.auto_to._
+import io.github.caeus.elodin.core.{Archive, ThunkRef, ToVal, Val, ValRef}
+import io.github.caeus.elodin.generic.auto.to._
 import io.github.caeus.elodin.{ContextElodinEval, ElodinC, ElodinEval}
 import zio.ZIO
 import zio.test.Assertion._
@@ -23,7 +23,7 @@ object FibonacciSuites extends DefaultRunnableSpec {
 
   val book = BookBuilder
     .withTitle("deps")
-    .thunk("alskdj")(_.calculate(_ => User("Hola", 4)))
+    .thunk("alskdj")(_.calculate[User](_ => User("Hola", 4)))
     .thunk("if")(
       _.at(bool #: any #: any #: _)
         .calculateM {

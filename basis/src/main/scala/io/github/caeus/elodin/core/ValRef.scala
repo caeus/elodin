@@ -1,9 +1,9 @@
-package io.github.caeus.elodin.basis
+package io.github.caeus.elodin.core
 
 import java.util.concurrent.atomic.AtomicReference
 
 import io.github.caeus.elodin.ElodinEval
-import io.github.caeus.elodin.basis.Val.{FunS, TaggedS}
+import io.github.caeus.elodin.core.Val.{FunS, TaggedS}
 import zio.{IO, Semaphore, ZIO}
 
 trait ToValRef[-T] {
@@ -26,7 +26,7 @@ trait FromValRef[+T] { outer =>
         value <- ref.memoEval(eval).flatMap {
                   case TaggedS(`book`, `tag`, value) => ZIO.succeed(value)
                   case p =>
-                    ZIO.fail(EvalError(s"Expected a tagged($book,$tag) value, got a $p instead"))
+                    ZIO.fail(EvalError(s"Expected a tagged($book,$tag) value, got a $p instead",None))
                 }
         result <- outer.accept(ValRef.fromVal(value))
       } yield result

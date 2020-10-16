@@ -1,6 +1,6 @@
 package io.github.caeus.elodin.archive
 
-import io.github.caeus.elodin.basis.{Book, EvalError, Thunk, Val, ValRef}
+import io.github.caeus.elodin.core.{Book, EvalError, Thunk, Val, ValRef}
 import io.github.caeus.elodin.compile.Shifter
 import io.github.caeus.elodin.runtime.RTError
 import io.github.caeus.elodin.{ElodinEval, ElodinRT, archive}

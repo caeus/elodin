@@ -71,6 +71,8 @@ object Packer {
     final def map[Out1](func: Out => Out1): Packer[Src, El, Out1] =
       flatMap(out => Packer.succeed(func(out)))
 
+    final def asSome: Packer[Src, El, Option[Out]] = map(out=> Some(out))
+
   }
 
   def failed[Src, El, T](msg: String): Packer[Src, El, T] =
@@ -216,7 +218,7 @@ object Packer {
     }
 
   private val _end: Packer[_, _, Unit] =
-    make[Any,Any,Unit] {
+    make[Any, Any, Unit] {
       case c @ UnfinishedCursor(_, next) =>
         c.failed(s"EOI expected but got ${c.sample} ", next): PackerResult[Unit]
       case c => c.done((), c)

@@ -1,7 +1,9 @@
-package io.github.caeus.elodin.basis
+package io.github.caeus.elodin.core
 
-import io.github.caeus.elodin.basis.Val._
-import zio.UIO
+import io.github.caeus.elodin.core.Val._
+import zio.{=!=, UIO}
+
+import scala.reflect.ClassTag
 
 sealed trait Val {
 
@@ -28,6 +30,13 @@ object Val {
   def apply[T: ToVal](t: T): Val = ToVal[T].cast(t)
 }
 
+/**
+  * Removed covariance as FromVal[FunS] while a subclass of `FromVal[Val]`,
+  * In this very specific case, it represent more actually a `cotramap`
+  * Why? `FromVal[FunS]` is an alias for `Val=>FunS`
+  * FromVal[FunS]` is a little bit more like contramapping over the input Val`
+  * @tparam A
+  */
 trait FromVal[+A] { outer =>
 
   def accept(value: Val): Either[List[String], A]
@@ -52,12 +61,28 @@ trait FromVal[+A] { outer =>
           .map(Right.apply)
       else asA.map(Left.apply)
     }
-
 }
+
 object FromVal {
   @inline
   def apply[T: FromVal]: FromVal[T]     = implicitly[FromVal[T]]
   implicit val toValFromV: FromVal[Val] = value => Right(value)
+
+  implicit val toClosureFromV: FromVal[Closure] = {
+    case f: FunS => Right(Closure(f))
+    case o       => Left(List(s"Tried to get a Function, got $o instead"))
+  }
+
+  /**
+    * Double implicit to avoid existance of FromVal[X] when X is subclass of Val
+    */
+  implicit def toSubValFromV1[SubVal <: Val](implicit
+      ev: SubVal =!= Val
+  ): FromVal[SubVal] = ???
+  implicit def toSubValFromV2[SubVal <: Val](implicit
+      ev: SubVal =!= Val
+  ): FromVal[SubVal] = ???
+
   implicit val toBigIntFromSV: FromVal[BigInt] = {
     case IntS(value) => Right(value)
     case o           => Left(List(s"Tried to get a BigInt, got $o instead"))
@@ -133,6 +158,7 @@ object ToVal {
   implicit val boolToVal: ToVal[Boolean]          = (t: Boolean) => Val.BoolS(t)
   implicit val unitToVal: ToVal[Unit]             = _ => Val.UnitS
   implicit val valToVal: ToVal[Val]               = (t: Val) => t
+  implicit val closureToVal: ToVal[Closure]       = (t: Closure) => t.fold(identity)
   implicit def seqToVal[El: ToVal]: ToVal[Seq[El]] =
     (seq: Seq[El]) => Val.ListS(seq.map(ToVal[El].cast))
   implicit def mapToVal[El: ToVal]: ToVal[Map[String, El]] =

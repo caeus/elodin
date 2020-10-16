@@ -1,7 +1,7 @@
 package io.github.caeus.elodin.compile
 
 import io.github.caeus.elodin.ElodinEval
-import io.github.caeus.elodin.basis._
+import io.github.caeus.elodin.core._
 import zio.{RIO, URIO, ZIO}
 
 case class Shifter(arity: Int, shift: Shift) {}
@@ -27,7 +27,7 @@ object Dig {
 sealed trait RefResolution
 object RefResolution {
   case class FunParam(declParam: DeclParam)              extends RefResolution
-  case class LetBinding(name: String, to: Lexcope[Node]) extends RefResolution
+  case class LetBinding(name: String, to: Lexcope2[Node]) extends RefResolution
   case class ModuleMember(ref: ThunkRef)                 extends RefResolution
 }
 

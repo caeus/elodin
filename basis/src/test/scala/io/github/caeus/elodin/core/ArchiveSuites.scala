@@ -1,4 +1,4 @@
-package io.github.caeus.elodin.basis
+package io.github.caeus.elodin.core
 
 import zio.test._
 

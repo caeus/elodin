@@ -1,6 +1,6 @@
 package io.github.caeus.elodin
 
-import io.github.caeus.elodin.basis._
+import io.github.caeus.elodin.core._
 import zio.{IO, UIO}
 
 trait ElodinEval {

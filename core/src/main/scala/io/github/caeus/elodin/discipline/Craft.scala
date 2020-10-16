@@ -1,7 +1,7 @@
 package io.github.caeus.elodin.discipline
 
 import io.github.caeus.elodin.archive.{Effect, NBook}
-import io.github.caeus.elodin.basis.{Book, Thunk}
+import io.github.caeus.elodin.core.{Book, Thunk}
 
 sealed trait Craft {
   def title: String
