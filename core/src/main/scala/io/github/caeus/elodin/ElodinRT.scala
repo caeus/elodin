@@ -12,7 +12,6 @@ import io.github.caeus.elodin.runtime.RTError
 import zio.{IO, ZIO}
 
 trait ElodinRT {
-
   def eval: ElodinEval
   def archive: Archive
   def run(book: String, member: String, args: ValRefWrapper*): IO[RTError, Val]
@@ -46,6 +45,4 @@ final class DefaultElodinRT(discipline: Discipline, val eval: ElodinEval) extend
 }
 
 object ElodinRT {
-  val qwe: ElodinRT = ???
-  qwe.run("test", "procedure", 1, 234, 3456)
 }

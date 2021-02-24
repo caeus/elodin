@@ -1,17 +1,16 @@
 package io.github.caeus.elodin.compile
 
-import Node._
-import DoStep.{BindPart, YieldPart}
-import ElodinToken._
+import io.github.caeus.elodin.compile.DoStep.{BindPart, YieldPart}
+import io.github.caeus.elodin.compile.ElodinToken._
+import io.github.caeus.elodin.compile.Node.Selection.{Hiding, Only}
+import io.github.caeus.elodin.compile.Node._
 import io.github.caeus.elodin.util.Splitting.{Branch, Leaf}
 import io.github.caeus.elodin.util.{SepEl, SepNel, SplitTree}
 import io.github.caeus.plutus.PackerSyntax.VectorPackerSyntax
 import io.github.caeus.plutus.{Packer, PrettyPacker}
-import io.github.caeus.elodin.util.SplitTree
-import zio.{IO, Task, ZIO}
+import zio.{IO, ZIO}
 
 import scala.annotation.tailrec
-import scala.util.chaining
 
 sealed trait DoStep
 object DoStep {
@@ -59,25 +58,39 @@ final class DefaultParser extends Parser {
       .map {
         _.map(r => r._1.to -> r._2.to).toMap
       }
+
   lazy val selectionPart: Pckr[Selection] = (fromPartial {
-    case Operator("^") => ()
-  }.? ~ refSet ~ refExpr.? ~ refMap.?).map {
-    case (complement, named, prefix_?, renamed) =>
-      Selection(complement.nonEmpty, named, prefix_?.map(_.to), renamed.getOrElse(Map.empty))
+    case Reference("only") => ()
+  } ~ P(Curly.Open) ~ (refExpr.map(_.to) ~ (P(ElodinToken.Arrow) ~ refExpr.map(_.to)).?)
+    .rep(sep = P(Comma)) ~ P(Curly.Close))
+    .map { only =>
+      Only(
+        only.map {
+          case (key, value) => value.getOrElse(key) -> key
+        }.toMap
+      )
+    } | (fromPartial {
+    case Reference("hiding") => ()
+  } ~ P(Curly.Open) ~ refExpr.map(_.to).rep(sep = P(Comma)) ~ P(Curly.Close)).map { hiding =>
+    Hiding(hiding.toSet)
   }
+
+  lazy val prefixPart = fromPartial {
+    case Reference("prefixed") => ()
+  } ~ refExpr.map(_.to)
 
   lazy val importExpr: Pckr[Node.ImportNode] = (P(ElodinToken.Import) ~
     fromPartial {
       case ElodinToken.Text(to) => to
-    } ~ selectionPart ~ P(Semicolon) ~ expr).map {
-    case (to, selection, body) =>
-      Node.ImportNode(to, selection, body)
+    } ~ selectionPart ~ prefixPart.? ~ P(Semicolon) ~ expr).map {
+    case (to, selection, prefix, body) =>
+      Node.ImportNode(to, selection, prefix, body)
   }
 
   lazy val funExpr: Pckr[Node.FunNode] =
     (P(Parenthesis.Open) ~ refExpr.rep((1), sep = P(Comma)) ~ P(
       Parenthesis.Close
-    ) ~ P(Fun) ~ expr).map {
+    ) ~ P(Arrow) ~ expr).map {
       case (args, body) => Node.FunNode(args.map(_.to), body)
     }
 
@@ -104,8 +117,6 @@ final class DefaultParser extends Parser {
     P(ElodinToken.Parenthesis.Close)).map {
     case (node, nodes) => node :: nodes.toList
   } | delimitedExpr.map(el => List(el))).rep(1).map(_.flatten.toList)
-
-  import chaining._
 
   /**
     * sum3(3,4,6)
@@ -247,7 +258,7 @@ final class DefaultParser extends Parser {
     ZIO.effectSuspendTotal {
       ZIO
         .fromEither(prettyPacker.process(seq.toVector))
-        .mapError(e => CompileError(e.getMessage, None))
+        .mapError(e => CompileError.ParsingError(e.getMessage, None))
     }
   }
 }

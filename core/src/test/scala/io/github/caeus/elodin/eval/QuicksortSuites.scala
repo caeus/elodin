@@ -1,8 +1,8 @@
 package io.github.caeus.elodin.eval
 
 import io.github.caeus.elodin.archive.HArgs.#:
-import io.github.caeus.elodin.archive.{BookBuilder, TypedArg}
-import io.github.caeus.elodin.core.{Archive, ThunkRef, Val, ValRef}
+import io.github.caeus.elodin.archive.{DraftBuilder, TypedArg}
+import io.github.caeus.elodin.core.{Archive, Val, ValRef}
 import io.github.caeus.elodin.{ContextElodinEval, ElodinC, ElodinEval}
 import zio.ZIO
 import zio.test.Assertion.{equalTo, hasField, isSubtype}
@@ -21,9 +21,9 @@ object QuicksortSuites extends DefaultRunnableSpec {
   }
 
   override def spec =
-    suite("Fibonacci")(
+    suite("Quicksort")(
       testM("Fibonacci") {
-        val book = BookBuilder
+        val book = DraftBuilder
           .withTitle("deps")
           .thunk("alskdj")(_.calculate(_ => ??? : Int))
           .thunk("if")(
@@ -52,7 +52,7 @@ object QuicksortSuites extends DefaultRunnableSpec {
               }
           )
           .build
-        val archive = Archive.make(Seq(book))
+        val archive: Archive = ???
 
         for {
           compiler <- ElodinC.make(archive)
@@ -71,18 +71,18 @@ object QuicksortSuites extends DefaultRunnableSpec {
               |{fib=fib}
               |""".stripMargin
                   )
-          archive = Archive.make(Seq(book, book1))
-          eval = new ContextElodinEval(archive, Nil)
+          archive: Archive = ???
+          eval             = new ContextElodinEval(archive, Nil)
           fibC: Val.FunS <- eval
-                             .get(ThunkRef("test", "fib"))
-                             .flatMap(ref=> ref.memoEval(eval))
+                             .get("test", "fib")
+                             .flatMap(ref => ref.memoEval(eval))
                              .map(_.asInstanceOf[Val.FunS])
-          _0  <- fibC(ValRef(0)).flatMap(ref=> ref.memoEval(eval))
-          _1  <- fibC(ValRef(1)).flatMap(ref=> ref.memoEval(eval))
-          _2  <- fibC(ValRef(2)).flatMap(ref=> ref.memoEval(eval))
-          _3  <- fibC(ValRef(3)).flatMap(ref=> ref.memoEval(eval))
-          _4  <- fibC(ValRef(4)).flatMap(ref=> ref.memoEval(eval))
-          _11 <- fibC(ValRef(11)).flatMap(ref=> ref.memoEval(eval))
+          _0  <- fibC(ValRef(0)).flatMap(ref => ref.memoEval(eval))
+          _1  <- fibC(ValRef(1)).flatMap(ref => ref.memoEval(eval))
+          _2  <- fibC(ValRef(2)).flatMap(ref => ref.memoEval(eval))
+          _3  <- fibC(ValRef(3)).flatMap(ref => ref.memoEval(eval))
+          _4  <- fibC(ValRef(4)).flatMap(ref => ref.memoEval(eval))
+          _11 <- fibC(ValRef(11)).flatMap(ref => ref.memoEval(eval))
 
         } yield {
           assert(_0)(

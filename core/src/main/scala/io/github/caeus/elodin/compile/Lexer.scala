@@ -27,7 +27,7 @@ object ElodinToken {
   case class Operator(to: String)        extends ElodinToken
   case object Do                         extends ElodinToken
   case object Let                        extends ElodinToken
-  case object Fun                        extends ElodinToken
+  case object Arrow                        extends ElodinToken
   case object Curly                      extends Delimiter
   case object Equals                     extends ElodinToken
   case object Import                     extends ElodinToken
@@ -106,7 +106,7 @@ final class DefaultLexer extends Lexer {
   private val lexerPacker: Packer[String, Char, Vector[ElodinToken]] =
     (P("(").as(Some(Parenthesis.Open)) |
       P(")").as(Some(Parenthesis.Close)) |
-      P("=>").as(Some(Fun)) |
+      P("=>").as(Some(Arrow)) |
       P("""\s+""".r).as(None) |
       P("[").as(Some(Bracket.Open)) |
       P("]").as(Some(Bracket.Close)) |
@@ -136,6 +136,6 @@ final class DefaultLexer extends Lexer {
   def lex(source: String): IO[CompileError, Vector[ElodinToken]] =
     ZIO
       .effectSuspend(ZIO.fromEither(prettyPacker.process(source)))
-      .mapError(e => CompileError(e.getMessage, None))
+      .mapError(e => CompileError.ParsingError(e.getMessage, None))
 
 }

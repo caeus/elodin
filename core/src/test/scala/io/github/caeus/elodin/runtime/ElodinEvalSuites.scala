@@ -1,9 +1,9 @@
 package io.github.caeus.elodin.runtime
 
 import io.github.caeus.elodin.ContextElodinEval
-import io.github.caeus.elodin.archive.BookBuilder
+import io.github.caeus.elodin.archive.DraftBuilder
 import io.github.caeus.elodin.archive.HArgs._
-import io.github.caeus.elodin.core.{Archive, ThunkRef, Val, ValRef}
+import io.github.caeus.elodin.core.{Archive, Val, ValRef}
 import zio.test.Assertion._
 import zio.test.{DefaultRunnableSpec, _}
 import zio.{Has, ZIO, ZLayer}
@@ -11,7 +11,7 @@ import zio.{Has, ZIO, ZLayer}
 object ElodinEvalSuites extends DefaultRunnableSpec {
   val testBook = {
     import io.github.caeus.elodin.archive.TypedArg._
-    BookBuilder
+    DraftBuilder
       .withTitle("test_book")
       .thunk("sum")(
         _.at(is[BigInt] #: is[BigInt] #: _)
@@ -32,7 +32,7 @@ object ElodinEvalSuites extends DefaultRunnableSpec {
           _1       = ValRef(1)
           _2       = ValRef(2)
           sum <- eval
-                  .get(ThunkRef("test_book", "sum"))
+                  .get("test_book", "sum")
                   .flatMap(_.memoEval(eval))
                   .map(_.asInstanceOf[Val.FunS])
           result <- sum(_1, _2).flatMap(ref => ref.memoEval(eval))

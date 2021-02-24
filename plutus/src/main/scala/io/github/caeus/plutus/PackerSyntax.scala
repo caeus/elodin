@@ -146,6 +146,10 @@ object PackerSyntax extends StrictLogging {
 
     final def named(name: String): Packer[Src, El, Out] =
       make { input =>
+        logger.error(s"""
+          |parser: $name
+          |pos: ${input.pos}
+          |""".stripMargin)
         packer.take(input) match {
           case Failed(errors) =>
             Failed(errors.map { err =>

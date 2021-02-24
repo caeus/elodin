@@ -29,7 +29,7 @@ object ElodinGrammarSuites extends DefaultRunnableSpec {
       tokens <- lexer.lex(code)
       node <- ZIO
                .fromEither(PrettyPacker.version1(packer).process(tokens))
-               .mapError(e => CompileError(e.getMessage, None))
+               .mapError(e => CompileError.ParsingError(e.getMessage, None))
     } yield node
   }
 
@@ -38,8 +38,8 @@ object ElodinGrammarSuites extends DefaultRunnableSpec {
     suite("Elodin Grammar")(
       testM("Full features") {
         assertM(parse("""
-            |import "math"^{pepe,asd} Math{sin=seno};
-            |import "qwe"^{};
+            |import "math" hiding {pepe,asd} prefixed Math;
+            |import "qwe" hiding {};
             |{
             |  do
             |    arbitraryList = [a,b,c,d];
@@ -55,6 +55,25 @@ object ElodinGrammarSuites extends DefaultRunnableSpec {
             |} EffectChain
             |""".stripMargin)) {
           anything
+        }
+      },
+      testM("import expression simple"){
+        assertM(
+          parseWith(
+            """
+              |import "alksdj" hiding {};
+              |import "qoiweu" only {asad => qwe,asd};
+              |import "alksdj" hiding {a,b,c} prefixed ASD;
+              |import "lakjds" only {a,b,c} prefixed QWE;
+              |"whatever"
+              |""".stripMargin,
+            parser.importExpr
+          )
+        ) {
+          Assertion
+            .assertion("whatever")() { node =>
+              true
+            }
         }
       },
       testM("do expression simple") {

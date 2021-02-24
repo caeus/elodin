@@ -32,11 +32,11 @@ final class ContextElodinEval(val archive: Archive, path: List[ThunkRef]) extend
                 case true => ZIO.succeed(value)
                 case false =>
                   value match {
-                    case Val.FunS(page, args) =>
+                    case Val.FunS(ref, args) =>
                       stack
                         .pushAll(args)
                         .flatMap { _ =>
-                          evalStack(page, stack)
+                          evalStack(ref, stack)
                         }
                     case p => ZIO.fail(EvalError(s"Trying to use $p as applicant", None))
                   }

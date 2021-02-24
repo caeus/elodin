@@ -24,7 +24,7 @@ object BookBuilderSuites extends DefaultRunnableSpec {
   override def spec =
     suite("BookBuilder")(
       testBook("Zero arity Chapter")(
-        BookBuilder
+        DraftBuilder
           .withTitle("test_book")
           .thunk("test1")(
             _.calculate(_ => 3)
@@ -45,7 +45,7 @@ object BookBuilderSuites extends DefaultRunnableSpec {
         }
       },
       testBook("1 arity Chapter")(
-        BookBuilder
+        DraftBuilder
           .withTitle("test_book")
           .thunk("test2")(
             _.at(value #: _).calculate(_ => 3)
@@ -72,7 +72,7 @@ object BookBuilderSuites extends DefaultRunnableSpec {
         }
       },
       testBook("2 arity Chapter")(
-        BookBuilder
+        DraftBuilder
           .withTitle("test_book")
           .thunk("test2")(
             _.at(value #: _) calculate (_ => BigInt(3))

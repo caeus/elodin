@@ -8,30 +8,7 @@ case class Shifter(arity: Int, shift: Shift) {}
 
 case class ModuleInit(name: String, shifters: IndexedSeq[Shifter])
 
-sealed trait Dig {
-  override def toString: String =
-    this match {
-      case Dig.Down         => "_"
-      case Dig.Key(value)   => value
-      case Dig.Index(value) => s"[$value]"
-    }
-}
-object Dig {
-  type Path = Seq[Dig]
-  case object Down              extends Dig
-  case class Key(value: String) extends Dig
-  case class Index(value: Int)  extends Dig
-
-}
-
-sealed trait RefResolution
-object RefResolution {
-  case class FunParam(declParam: DeclParam)              extends RefResolution
-  case class LetBinding(name: String, to: Lexcope2[Node]) extends RefResolution
-  case class ModuleMember(ref: ThunkRef)                 extends RefResolution
-}
-
-case class DeclParam(path: Dig.Path, index: Int)
+case class DeclParam(path: Vector[String], index: Int)
 sealed trait Shift {
   private final def applyRec(values: Seq[ValRef])(shift: Shift): URIO[ElodinEval, ValRef] = {
     shift match {
@@ -71,7 +48,8 @@ object Shift {
   case class Arg(index: Int)          extends Shift
   case class Archive(thunk: ThunkRef) extends Shift
   object Archive {
-    def apply(module: String, id: String): Archive = Archive(ThunkRef(module, id))
+    def apply(foreign: Boolean, module: String, id: String): Archive =
+      Archive(ThunkRef(foreign, module, id))
   }
   def of[T: ToVal](t: T): Shift = Of(ToVal[T].cast(t))
 }

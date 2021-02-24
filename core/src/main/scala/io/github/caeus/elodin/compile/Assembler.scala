@@ -1,92 +1,87 @@
 package io.github.caeus.elodin.compile
 
 import com.typesafe.scalalogging.LazyLogging
-import RefResolution.{FunParam, LetBinding, ModuleMember}
-import io.github.caeus.elodin.archive._
-import io.github.caeus.elodin.core.{Archive, Book, ThunkRef, Val}
-import io.github.caeus.elodin.compile.Lexcope2._
+import io.github.caeus.elodin.compile.Ctx.BaseCtx
+import io.github.caeus.elodin.core.{Archive, ThunkRef, Val}
 import zio.{IO, Ref, Task, ZIO}
 
+import scala.annotation.tailrec
+
 trait Assembler {
-  def assemble(name: String, node: Node): IO[CompileError, Book]
+  def assemble(name: String, node: Node): IO[CompileError, Draft]
 }
 
 final class DefaultAssembler(deps: Archive) extends Assembler with LazyLogging {
-  def assemble(book: String, node: Node): IO[CompileError, CBook] =
+  def assemble(book: String, node: Node): IO[CompileError, Draft] = {
     new AssemblerVisitor(deps, book, node).assemble
+  }
 }
 case class NodeBundle(
-                       id: String,
-                       scope: Lexcope2[Node],
-                       capturedParamsSize: Int,
-                       header: Seq[DeclParam],
-                       page: ThunkRef
+    id: String,
+    ctx: Ctx,
+    capturedParamsSize: Int,
+    header: Seq[DeclParam],
+    page: ThunkRef
 )
 final class AssemblerVisitor(archive: Archive, book: String, root: Node) extends LazyLogging {
   def walkDown(
-                lexcope: Lexcope2[Node],
-                touchedPaths: Set[Dig.Path],
-                emitted: Ref[Map[Lexcope2[Node], Set[DeclParam]]]
+      ctx: Ctx,
+      trace: Set[Vector[String]],
+      emitted: Ref[Map[Ctx, Set[DeclParam]]]
   ): IO[CompileError, Set[DeclParam]] = {
-    def emit(lexcope: Lexcope2[Node])(capturedParams: Set[DeclParam]) = {
+    def emit(ctx: Ctx)(capturedParams: Set[DeclParam]) = {
       emitted
         .update { map =>
-          map.updated(lexcope, capturedParams)
+          map.updated(ctx, capturedParams)
         }
         .map(_ => capturedParams)
     }
-    if (touchedPaths.contains(lexcope.path)) {
+    if (trace contains ctx.path) {
       ZIO.succeed(Set.empty)
     } else {
-      val newTouchedPaths = touchedPaths + lexcope.path
-      lexcope.widen match {
-        case WhenLet(lexcope) =>
-          walkDown(lexcope.body, newTouchedPaths, emitted)
-        case WhenFn(lexcope) =>
-          walkDown(lexcope.body, newTouchedPaths, emitted)
-            .map(_ diff lexcope.params)
-            .flatMap(emit(lexcope.widen))
-        case WhenApply(xcope) =>
+      val newTrace = trace + ctx.path
+      ctx match {
+        case ctx: Ctx.LetCtx =>
+          walkDown(ctx.body, newTrace, emitted)
+        case ctx: Ctx.FunCtx =>
+          walkDown(ctx.body, newTrace, emitted)
+            .map(_ diff ctx.params.toSet)
+            .flatMap(emit(ctx))
+        case ctx: Ctx.AppCtx =>
           ZIO
-            .collectAll(xcope.args.map(s => walkDown(s, newTouchedPaths, emitted)))
+            .collectAll(ctx.args.map(s => walkDown(s, newTrace, emitted)))
             .map(_.reduce(_ ++ _))
-        case WhenRef(lexcope) =>
-          val to = lexcope.node.to
-          for {
-            resolution <- lexcope.resolve(to).provide(archive)
-            r <- resolution match {
-                  case Some(LetBinding(_, xcope)) =>
-                    walkDown(xcope, touchedPaths, emitted)
-                  case Some(FunParam(param)) => ZIO.succeed(Set(param))
-                  case Some(_)               => ZIO.succeed(Set.empty[DeclParam])
-                  case None =>
-                    ZIO.fail(
-                      CompileError(
-                        s"""Assembling book $book
-                       |Reference to $to is not defined""".stripMargin,
-                        None
-                      )
-                    )
-                }
-          } yield r
-        case _ => Task.succeed(Set.empty)
+        case ctx: Ctx.RefCtx =>
+          val to = ctx.to
+          ctx.resolveRef(archive)(to) match {
+            case Some(ResolvedRef.IsCtx(xcope)) =>
+              walkDown(xcope, newTrace, emitted)
+            case Some(ResolvedRef.IsParam(_, param)) => ZIO.succeed(Set(param))
+            case Some(_)                             => ZIO.succeed(Set.empty[DeclParam])
+            case None =>
+              ctx.failM(s"""Assembling book $book
+                           |Reference to $to is not defined""".stripMargin)
+          }
+        case _ =>
+          Task.succeed(Set.empty)
       }
     }
   }
 
-  def exportedPaths(root: Lexcope2[Node]): Map[String, Lexcope2[Node]] = {
-    root match {
-      case WhenImport(node) => exportedPaths(node.body.widen)
-      case WhenLet(node)    => exportedPaths(node.body.widen)
-      case WhenDict(node)   => node.items
-      case _                => throw new Exception(s"${root.node}It's not a valid module expression")
+  @tailrec
+  def exportedPaths(root: Ctx): Map[String, Ctx] = {
+    root.asInstanceOf[BaseCtx[_]] match {
+      case ctx: Ctx.ImportCtx => exportedPaths(ctx.body)
+      case ctx: Ctx.LetCtx    => exportedPaths(ctx.body)
+      case ctx: Ctx.DictCtx   => ctx.items
+      case _                  => throw new Exception(s"${root}It's not a valid module expression")
     }
   }
 
   def choosePaths(
-                   startingAt: Lexcope2[Node],
-                   emit: Ref[Map[Lexcope2[Node], Set[DeclParam]]]
-  ): IO[CompileError, Map[Lexcope2[Node], Set[DeclParam]]] = {
+      startingAt: Ctx,
+      emit: zio.Ref[Map[Ctx, Set[DeclParam]]]
+  ): IO[CompileError, Map[Ctx, Set[DeclParam]]] = {
     for {
       empty <- walkDown(startingAt, Set.empty, emit)
       _ <- if (empty.isEmpty) { Task.succeed(()) }
@@ -95,32 +90,38 @@ final class AssemblerVisitor(archive: Archive, book: String, root: Node) extends
     } yield paths.updated(startingAt, Set.empty)
   }
 
-  def headerOf(node: Lexcope2[Node], capturedParams: Seq[DeclParam]): Seq[DeclParam] = {
+  def headerOf(node: Ctx, capturedParams: Seq[DeclParam]): Seq[DeclParam] = {
     capturedParams
       .appendedAll(node match {
-        case WhenFn(scope) => scope.params.toSeq
-        case _             => Nil
+        case scope: Ctx.FunCtx => scope.params
+        case _                 => Nil
       })
       .sortBy(p => p.path.length -> p.index)
   }
   def calcShifters(
       namespace: String,
-      chosenNodes: Map[Lexcope2[Node], Seq[DeclParam]]
-  ): IO[CompileError, Map[Dig.Path, (String, Shifter)]] = {
-    val indexed: Seq[(Lexcope2[Node], Seq[DeclParam])] = chosenNodes.toSeq.sortBy {
+      chosenNodes: Map[Ctx, Seq[DeclParam]]
+  ): IO[CompileError, Map[Vector[String], Shifter]] = {
+    val indexed: Seq[(Ctx, Seq[DeclParam])] = chosenNodes.toSeq.sortBy {
       case (s, _) => s.path.length
     }
 
     val bundles: IndexedSeq[NodeBundle] = indexed.map {
-      case (scope, params) =>
-        val header = headerOf(scope, params)
-        val str    = scope.path.toString()
-        NodeBundle(str, scope, params.size, header, ThunkRef(namespace, str))
+      case (ctx, params) =>
+        val header  = headerOf(ctx, params)
+        val idThunk = ctx.path.mkString(" ")
+        NodeBundle(
+          id = idThunk,
+          ctx = ctx,
+          capturedParamsSize = params.size,
+          header = header,
+          page = ThunkRef(foreign = false, book = namespace, id = idThunk)
+        )
     }.toIndexedSeq
 
-    val indexedBundles: Map[Dig.Path, NodeBundle] = bundles.map(b => b.scope.path -> b).toMap
+    val indexedBundles: Map[Vector[String], NodeBundle] = bundles.map(b => b.ctx.path -> b).toMap
 
-    def invocationShift(scope: Lexcope2[Node], enclosing: NodeBundle): IO[CompileError, Shift] = {
+    def invocationShift(scope: Ctx, enclosing: NodeBundle): IO[CompileError, Shift] = {
       indexedBundles
         .get(scope.path)
         .map { bundle =>
@@ -142,125 +143,129 @@ final class AssemblerVisitor(archive: Archive, book: String, root: Node) extends
                 )
               )
             }
-            .mapError(e => CompileError(s" oops2 ${e.getMessage}", None))
+            .mapError(e => CompileError.ParsingError(s" oops2 ${e.getMessage}", None))
         }
         .getOrElse(toShift(scope, enclosing))
 
     }
 
-    def toShift(scope: Lexcope2[Node], bundle: NodeBundle): IO[CompileError, Shift] = {
+    def toShift(scope: Ctx, bundle: NodeBundle): IO[CompileError, Shift] = {
       scope match {
-        case WhenFn(xcope) =>
+        case xcope: Ctx.FunCtx =>
           invocationShift(xcope.body, bundle)
-        case WhenImport(lexcope) =>
+        case lexcope: Ctx.ImportCtx =>
           invocationShift(lexcope.body, bundle)
-        case WhenDict(lexcope) =>
+        case lexcope: Ctx.DictCtx =>
           ZIO
             .foreach(lexcope.items.view.mapValues(x => invocationShift(x, bundle)).toList) {
               case (key, task) => task.map(key -> _)
             }
             .map { items =>
-              items.foldLeft(Shift.Archive("predef", "dict\\empty"): Shift) {
+              items.foldLeft(
+                Shift.Archive(foreign = true, module = "dicts", id = "empty"): Shift
+              ) {
                 case (accum, (key, shift)) =>
                   Shift.Apply(
-                    Seq(Shift.Archive("predef", "dict\\updated"), accum, Shift.Of(???), shift)
+                    Seq(
+                      Shift.Archive(foreign = true, "dicts", "updated"),
+                      accum,
+                      Shift.Of(???),
+                      shift
+                    )
                   )
               }
             }
-        case WhenArr(lexcope) =>
+        case lexcope: Ctx.ArrCtx =>
           ZIO
             .collectAll(lexcope.items.map(x => invocationShift(x, bundle)).toList)
             .map { items =>
-              items.foldLeft(Shift.Archive("predef", "list\\empty"): Shift) {
+              items.foldLeft(Shift.Archive(foreign = true, "lists", "empty"): Shift) {
                 case (accum, shift) =>
                   Shift.Apply(
-                    Seq(Shift.Archive("predef", "list\\prepend"), accum, shift)
+                    Seq(Shift.Archive(foreign = true, "lists", "prepended"), accum, shift)
                   )
               }
             }
-        case WhenApply(lexcope) =>
+        case lexcope: Ctx.AppCtx =>
           ZIO
             .collectAll(lexcope.args.map(x => invocationShift(x, bundle)))
             .map { rrr =>
               Shift.Apply(rrr)
             }
-        case WhenLet(lexcope) =>
+        case lexcope: Ctx.LetCtx =>
           invocationShift(lexcope.body, bundle)
-        case WhenRef(lexcope) =>
-          for {
-            resolution <- lexcope.resolve(lexcope.node.to).map(_.get).provide(archive)
-            r <- resolution match {
-                  case LetBinding(_, refdLexcope) =>
-                    invocationShift(refdLexcope, bundle)
-                  case FunParam(param) =>
-                    ZIO
-                      .effect {
-                        val i = bundle.header.indexOf(param)
-                        i.ensuring(_ >= 0)
-                        Shift.Arg(i)
-                      }
-                      .mapError(e => CompileError(s"Opps, ${e.getMessage}", None))
-                  case ModuleMember(ref) =>
-                    if (archive.contains(ref)) {
-                      ZIO.succeed(Shift.Archive(ref))
-                    } else {
-                      ZIO.fail(CompileError(s"Member not found  $ref!", None))
-                    }
-
+        case lexcope: Ctx.RefCtx =>
+          lexcope.resolveRef(archive)(lexcope.to) match {
+            case Some(ResolvedRef.IsCtx(refdLexcope)) =>
+              invocationShift(refdLexcope, bundle)
+            case Some(ResolvedRef.IsParam(_, param)) =>
+              ZIO
+                .effect {
+                  val i = bundle.header.indexOf(param)
+                  i.ensuring(_ >= 0)
+                  Shift.Arg(i)
                 }
-          } yield r
-        case WhenQRef(lexcope) =>
-          val book   = lexcope.node.book
-          val member = lexcope.node.member
-          if (archive.contains(ThunkRef(book, member))) {
-            ZIO.fail(CompileError(s"Thunk of ${book} and $member not found", None))
-          } else {
-            ZIO.succeed(Shift.Archive(book, member))
+                .mapError(e => CompileError.ParsingError(s"Opps, ${e.getMessage}", None))
+            case Some(ResolvedRef.IsImported(ref)) =>
+              ZIO.succeed(Shift.Archive(ref))
+            case None => lexcope.failM("alksjd")
           }
-        case WhenText(lexcope) => ZIO.succeed(Shift.Of(Val.TextS(lexcope.node.value)))
-        case WhenFloat(lexcope) =>
-          ZIO.succeed(Shift.Of(Val.FloatS(lexcope.node.value)))
-        case WhenInt(lexcope)  => ZIO.succeed(Shift.Of(Val.IntS(lexcope.node.value)))
-        case WhenBool(lexcope) => ZIO.succeed(Shift.Of(Val.BoolS(lexcope.node.value)))
+        case lexcope: Ctx.QRefCtx =>
+          val book   = lexcope.book
+          val member = lexcope.member
+          archive
+            .thunkRefTo(book, member)
+            .map { ref =>
+              ZIO.succeed(Shift.Archive(ref))
+            }
+            .getOrElse(
+              ZIO.fail(CompileError.ParsingError(s"Thunk of ${book} and $member not found", None))
+            )
+        case lexcope: Ctx.TextCtx => ZIO.succeed(Shift.Of(Val.TextS(lexcope.value)))
+        case lexcope: Ctx.FloatCtx =>
+          ZIO.succeed(Shift.Of(Val.FloatS(lexcope.value)))
+        case lexcope: Ctx.IntCtx  => ZIO.succeed(Shift.Of(Val.IntS(lexcope.value)))
+        case lexcope: Ctx.BoolCtx => ZIO.succeed(Shift.Of(Val.BoolS(lexcope.value)))
         case lexcope =>
-          ZIO.fail(CompileError(s"We are not handling yet this: ${lexcope.node}", None))
+          ZIO.fail(CompileError.ParsingError(s"We are not handling yet this: ${lexcope}", None))
       }
     }
 
     ZIO
       .collectAll(bundles.map { bundle =>
-        toShift(bundle.scope, bundle).map { shift =>
-          bundle.scope.path -> (bundle.id, Shifter(arity = bundle.header.length, shift))
+        toShift(bundle.ctx, bundle).map { shift =>
+          bundle.ctx.path -> Shifter(arity = bundle.header.length, shift)
         }
       })
       .map(_.toMap)
   }
-  def assemble: IO[CompileError, CBook] = {
+  def assemble: IO[CompileError, Draft] = {
     logger.info(s"Started assembling module $book")
     for {
-      exported: Map[String, Lexcope2[Node]] <- IO
-                                               .effect(exportedPaths(Root(root)))
-                                               .mapError(e => CompileError(e.getMessage, None))
-      emit: Ref[Map[Lexcope2[Node], Set[DeclParam]]] <-
-        Ref.make[Map[Lexcope2[Node], Set[DeclParam]]](Map.empty)
+      exported: Map[String, Ctx] <- IO
+                                     .effect(exportedPaths(Ctx.fromNode(root)))
+                                     .mapError(e => CompileError.ParsingError(e.getMessage, None))
+      emit: Ref[Map[Ctx, Set[DeclParam]]] <- Ref.make[Map[Ctx, Set[DeclParam]]](Map.empty)
       _ <- ZIO.collectAll_(exported.values.map { node =>
             choosePaths(node, emit)
           })
       paths <- emit.get
                 .map(_.view.mapValues(_.toSeq.sortBy(p => p.path.length -> p.index)).toMap)
-                .map { paths: Map[Lexcope2[Node], Seq[DeclParam]] =>
+                .map { paths: Map[Ctx, Seq[DeclParam]] =>
                   val exportedOnes = exported.values.map(_ -> Seq.empty[DeclParam]).toSeq
-                  ((paths.toSeq ++ exportedOnes)).toMap
+                  (paths.toSeq ++ exportedOnes).toMap
                 }
-      shifters: Map[Dig.Path, (String, Shifter)] <- calcShifters(book, paths)
+      shifters: Map[Vector[String], Shifter] <- calcShifters(book, paths)
     } yield {
-      CBook(
+      Draft(
         book,
         exported.map {
-          case (member: String, lexcope: Lexcope2[Node]) =>
-            member -> shifters(lexcope.path)._1
+          case (member: String, ctx: Ctx) =>
+            member -> ctx.path.mkString(" ")
         },
-        shifters.values.toMap
+        shifters.map {
+          case (key, value) => key.mkString(" ") -> value
+        }
       )
     }
   }

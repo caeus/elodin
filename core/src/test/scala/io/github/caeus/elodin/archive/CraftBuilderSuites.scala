@@ -1,8 +1,8 @@
 package io.github.caeus.elodin.archive
 
 import io.github.caeus.elodin.archive.HArgs.#:
-import io.github.caeus.elodin.core.{Archive, Book, Thunk}
 import io.github.caeus.elodin.core.Val.TaggedS
+import io.github.caeus.elodin.core.{Archive, Thunk}
 import io.github.caeus.elodin.discipline.{Craft, CraftBuilder, EffectFail, EffectSucceed}
 import io.github.caeus.elodin.{ContextElodinEval, ElodinEval}
 import zio.ZIO
@@ -15,7 +15,7 @@ object CraftBuilderSuites extends DefaultRunnableSpec {
       craft: Craft
   )
   import TypedArg._
-  val effBook = BookBuilder
+  val effBook = DraftBuilder
     .withTitle("eff")
     .thunk("succeed")(
       _.at(value #: _).calculate {

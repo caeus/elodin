@@ -42,8 +42,8 @@ object PackerResult {
   }
 }
 
-case class Packer[Src, El, +Out](run: Cursor[Src, El] => PackerResult[Out]) {
-  def take(input: Cursor[Src, El]) = run(input)
+final case class Packer[Src, El, +Out](run: Cursor[Src, El] => PackerResult[Out]) {
+  def take(input: Cursor[Src, El]): PackerResult[Out] = run(input)
 }
 
 object Packer {

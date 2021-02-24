@@ -33,23 +33,23 @@ object Path {
 sealed trait Node
 
 object Node {
-  case class Selection(
-      complement: Boolean,
-      selected: Set[String],
-      prefix: Option[String],
-      renamed: Map[String, String]
-  )
-  case class LetNode(bindings: Map[String, Node], body: Node)             extends Node
-  case class FunNode(params: Seq[String], body: Node)                     extends Node
-  case class AppNode(args: Seq[Node])                                     extends Node
-  case class TextNode(value: String)                                      extends Node
-  case class IntNode(value: BigInt)                                       extends Node
-  case class FloatNode(value: BigDecimal)                                 extends Node
-  case class BoolNode(value: Boolean)                                     extends Node
-  case class ArrNode(items: Seq[Node])                                    extends Node
-  case class DictNode(items: Map[String, Node])                           extends Node
-  case class RefNode(to: String)                                          extends Node
-  case class ImportNode(module: String, selection: Selection, body: Node) extends Node
-  case class QRefNode(book: String, member: String)                       extends Node
-  //case class SpecialNode(body: Node)                                      extends Node
+  sealed trait Selection {}
+  object Selection {
+    final case class Hiding(values: Set[String])       extends Selection
+    final case class Only(values: Map[String, String]) extends Selection
+  }
+
+  case class LetNode(bindings: Map[String, Node], body: Node) extends Node
+  case class FunNode(params: Seq[String], body: Node)         extends Node
+  case class AppNode(args: Seq[Node])                         extends Node
+  case class TextNode(value: String)                          extends Node
+  case class IntNode(value: BigInt)                           extends Node
+  case class FloatNode(value: BigDecimal)                     extends Node
+  case class BoolNode(value: Boolean)                         extends Node
+  case class ArrNode(items: Seq[Node])                        extends Node
+  case class DictNode(items: Map[String, Node])               extends Node
+  case class RefNode(to: String)                              extends Node
+  case class ImportNode(book: String, selection: Selection, prefix: Option[String], body: Node)
+      extends Node
+  case class QRefNode(book: String, member: String) extends Node
 }

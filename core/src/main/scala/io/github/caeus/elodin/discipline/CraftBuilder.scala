@@ -31,7 +31,7 @@ object EffectBuilder {
   private def wrapInput(input: EffectInput): ZIO[ElodinEval, EvalError, Val] = {
     def cont(eval: ElodinEval, name: String): ZIO[Any, EvalError, FunS] = {
       eval
-        .get(ThunkRef("eff", name))
+        .get("eff", name)
         .flatMap(_.memoEval(eval))
         .flatMap {
           case f: FunS => ZIO.succeed(f)
@@ -58,7 +58,7 @@ object EffectBuilder {
     override def performVal(f: T => ZIO[ElodinRT, RTError, Val]): Effect = {
       Effect(
         arity = signature.arity,
-        cast = { args =>
+        create = { args =>
           for {
             eval <- ZIO.environment[ElodinEval]
             args <- ZIO.collectAll(args.map(ref => ref.memoEval(eval)))

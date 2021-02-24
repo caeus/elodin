@@ -1,8 +1,8 @@
 package io.github.caeus.elodin
 
 import com.typesafe.scalalogging.LazyLogging
-import io.github.caeus.elodin.core.{Archive, Book}
-import io.github.caeus.elodin.compile.{Assembler, CompileError, Lexer, Parser}
+import io.github.caeus.elodin.compile._
+import io.github.caeus.elodin.core.Archive
 import zio.{IO, UIO, ZIO}
 
 trait ElodinC {
@@ -26,11 +26,7 @@ final class DefaultElodinC(modules: Archive) extends ElodinC with LazyLogging {
 }
 
 object ElodinC {
-  def make(deps: Seq[Book]): ElodinC =
-    new DefaultElodinC(Archive.make(deps))
 
   def make(archive: Archive): UIO[ElodinC] = ZIO.succeed(new DefaultElodinC(archive))
 
-  def default(extra: Seq[Book]) =
-    make(extra)
 }

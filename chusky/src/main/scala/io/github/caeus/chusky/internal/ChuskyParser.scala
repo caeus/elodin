@@ -54,15 +54,6 @@ trait ChuskyParser {
   def parse(seq: Seq[ChuskyToken]): Either[PrettyPacker.PackerException, ModuleExpr]
 }
 
-final class Default2ChuskyParser extends ChuskyParser {
-  type Pckr[Out] = Packer[Vector[ChuskyToken], ChuskyToken, Out]
-  private val syntax = new VectorPackerSyntax[ChuskyToken]
-
-  //lazy val moduleExpr =
-
-  override def parse(seq: Seq[ChuskyToken]): Either[PrettyPacker.PackerException, ModuleExpr] = ???
-}
-
 final class DefaultChuskyParser extends ChuskyParser {
   type Pckr[Out] = Packer[Vector[ChuskyToken], ChuskyToken, Out]
 

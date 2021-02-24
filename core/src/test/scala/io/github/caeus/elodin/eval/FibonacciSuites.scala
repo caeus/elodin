@@ -1,8 +1,8 @@
 package io.github.caeus.elodin.eval
 
 import io.github.caeus.elodin.archive.HArgs.#:
-import io.github.caeus.elodin.archive.{BookBuilder, TypedArg}
-import io.github.caeus.elodin.core.{Archive, ThunkRef, ToVal, Val, ValRef}
+import io.github.caeus.elodin.archive.{DraftBuilder, TypedArg}
+import io.github.caeus.elodin.core.{Archive, Val, ValRef}
 import io.github.caeus.elodin.generic.auto.to._
 import io.github.caeus.elodin.{ContextElodinEval, ElodinC, ElodinEval}
 import zio.ZIO
@@ -21,7 +21,7 @@ object FibonacciSuites extends DefaultRunnableSpec {
     }
   }
 
-  val book = BookBuilder
+  val book = DraftBuilder
     .withTitle("deps")
     .thunk("alskdj")(_.calculate[User](_ => User("Hola", 4)))
     .thunk("if")(
@@ -65,7 +65,7 @@ object FibonacciSuites extends DefaultRunnableSpec {
           book1 <- compiler.compile(
                     "test",
                     """
-              |import "deps" ^{};
+              |import "deps" hiding {};
               |let
               |fib = (n) =>
               |  if(n==0) 0 {
@@ -80,7 +80,7 @@ object FibonacciSuites extends DefaultRunnableSpec {
           archive = Archive.make(Seq(book, book1))
           eval    = new ContextElodinEval(archive, Nil)
           fibC: Val.FunS <- eval
-                             .get(ThunkRef("test", "fib"))
+                             .get("test", "fib")
                              .flatMap(_.memoEval(eval))
                              .map(_.asInstanceOf[Val.FunS])
           _0  <- fibC(ValRef(0)).flatMap(_.memoEval(eval))

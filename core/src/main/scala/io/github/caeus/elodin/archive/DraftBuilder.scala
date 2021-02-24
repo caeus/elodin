@@ -4,6 +4,7 @@ import io.github.caeus.elodin.ElodinEval
 import io.github.caeus.elodin.archive.HArgs.{#:, Zot}
 import io.github.caeus.elodin.archive.SignatureBuilder.PrependArg
 import io.github.caeus.elodin.archive.ThunkBuilder.ThunkBuilderImpl
+import io.github.caeus.elodin.compile.Draft
 import io.github.caeus.elodin.core.Val._
 import io.github.caeus.elodin.core._
 import zio.{RIO, ZIO}
@@ -201,22 +202,23 @@ object ThunkBuilder {
     new ThunkBuilderImpl[Zot](btitle, title, SignatureBuilder)
 }
 
-sealed trait BookBuilder {
-  def thunk(title: String)(b: ThunkBuilder[Zot] => Thunk): BookBuilder
-  def build: Book
+sealed trait DraftBuilder {
+  def thunk(title: String)(b: ThunkBuilder[Zot] => Thunk): DraftBuilder
+  def build: Draft
 }
-object BookBuilder {
+object DraftBuilder {
   final class BookBuilderImpl(
       btitle: String,
       calculations: Map[String, Thunk]
-  ) extends BookBuilder {
-    override def thunk(ttitle: String)(b: ThunkBuilder[Zot] => Thunk): BookBuilder = {
+  ) extends DraftBuilder {
+    override def thunk(ttitle: String)(b: ThunkBuilder[Zot] => Thunk): DraftBuilder = {
       val thunk = b(ThunkBuilder.fromTitle(btitle, ttitle))
       new BookBuilderImpl(btitle, calculations.updated(ttitle, thunk))
     }
 
-    override def build: Book = {
-      NBook(btitle, calculations.map(s => s._1 -> s._1), calculations)
+    override def build: Draft = {
+      //NBook(btitle, calculations.map(s => s._1 -> s._1), calculations)
+      ???
     }
   }
   def withTitle(title: String) = new BookBuilderImpl(title, Map.empty)
