@@ -54,7 +54,7 @@ final class LiveAst9Parser extends Ast9Parser {
     statement match {
       case BlockStatement.ImportStatement(elem) =>
         parseExpr(elem).map { elem =>
-          Ast9.Expr.SpreadExpr(elem, cont)
+          Ast9.Expr.ExtendExpr(elem, cont)
         }
       case Ast0.BlockStatement.LetStatement(binding, expr) =>
         parseExpr(expr).map { expr =>

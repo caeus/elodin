@@ -1,12 +1,12 @@
 package io.github.caeus.felurian.compile
 
+import io.github.caeus.felurian.value.Value
 import io.github.caeus.felurian.compile.Ast0.BlockStatement.{DoStatement, FunStatement, LetStatement}
 import io.github.caeus.felurian.compile.Ast0.Expr._
 import io.github.caeus.felurian.compile.Ast0.ForStatement.{DoBangStatement, LetBangStatement}
 import io.github.caeus.felurian.compile.Ast0.{Expr, ForStatement}
 import io.github.caeus.felurian.compile.util.Splitting.{Branch, Leaf}
 import io.github.caeus.felurian.compile.util.{SepEl, SepNel, SplitTree}
-import io.github.caeus.felurian.value.Value
 import io.github.caeus.plutus.PackerSyntax.VectorPackerSyntax
 import io.github.caeus.plutus.{Packer, PrettyPacker}
 import zio._

@@ -9,7 +9,7 @@ object Ast9 {
   sealed trait NonApplyExpr extends Expr
   sealed trait NonFunExpr   extends Expr
   object Expr {
-    final case class SpreadExpr(bindings: Expr, body: Expr)                   extends NonApplyExpr with NonFunExpr
+    final case class ExtendExpr(bindings: Expr, body: Expr)                   extends NonApplyExpr with NonFunExpr
     final case class ReqExpr(module: String)                                  extends NonApplyExpr with NonFunExpr
     final case class RefExpr(to: String)                                      extends NonApplyExpr with NonFunExpr
     final case class ListExpr(items: Seq[Expr])                               extends NonApplyExpr with NonFunExpr

@@ -1,8 +1,8 @@
 package io.github.caeus.felurian.compile
 
 import com.jsoniter.Jsoniter
-import io.github.caeus.felurian.compile.Token._
 import io.github.caeus.felurian.value.Value
+import io.github.caeus.felurian.compile.Token._
 import io.github.caeus.plutus.PackerSyntax.StringPackerSyntax
 import io.github.caeus.plutus.{Packer, PrettyPacker}
 import zio.{Task, ZIO}
