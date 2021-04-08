@@ -2,7 +2,7 @@ package io.github.caeus.plutus
 
 import io.github.caeus.plutus.PackerResult.{Done, Failed}
 
-case class Window[Src, El](source: Src, from: Int, until: Int) {
+final case class Window[Src, El](source: Src, from: Int, until: Int) {
 
   def value(implicit slicer: Slicer[Src]): Src = slicer.slice(source)(from, until)
 

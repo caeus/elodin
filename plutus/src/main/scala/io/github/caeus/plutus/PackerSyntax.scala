@@ -9,6 +9,7 @@ import io.github.caeus.plutus.Slicer.{StringSlicer, VectorSlicer}
 import io.github.caeus.plutus.ToCursor.{StringToCursor, VectorToCursor}
 
 import scala.language.implicitConversions
+import scala.reflect.internal.util.Position
 import scala.util.Random
 import scala.util.matching.Regex
 
@@ -50,7 +51,9 @@ trait PackerSyntax[Src, El] {
 object PackerSyntax extends StrictLogging {
 
   class WhitespaceSyntax(sep_ : Packer[String, Char, Unit]) extends PackerSyntax[String, Char] {
-    private val sep                                               = sep_.rep.as(())
+
+    private val sep = sep_.rep.as(())
+
     override def fromSrc(src: String): Packer[String, Char, Unit] = sep ~ Packer.fromIterable(src)
 
     override def fromEls(el: Seq[Char]): Packer[String, Char, Unit] =
@@ -109,6 +112,14 @@ object PackerSyntax extends StrictLogging {
 
   final class RichPacker[Src, El, Out](private val packer: Packer[Src, El, Out]) extends AnyVal {
 
+    def located: Packer[Src, El, Located[Out]] = {
+      make { cursor =>
+        packer.take(cursor).map(out => Located(out, cursor.pos))
+      }
+    }
+    def none: Packer[Src, El, Option[Nothing]] = {
+      as(None)
+    }
     def ~[Out1, R](
         next: => Packer[Src, El, Out1]
     )(implicit concat: TAppend.Aux[Out, Out1, R]): Packer[Src, El, R] =

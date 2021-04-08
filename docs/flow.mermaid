@@ -1,0 +1,25 @@
+
+sequenceDiagram
+    autonumber
+    participant User
+    participant Interpreter
+    User ->> Interpreter: run(module:String, code:String)
+    activate Interpreter
+    Interpreter ->> Compiler: compile(code:String)
+    activate Compiler
+    Compiler ->> Interpreter: CompiledModule
+    deactivate Compiler
+    Interpreter ->> MutLoader: register(module:CompiledModule)
+    activate MutLoader
+    MutLoader ->> Evaluator: eval(implRef:ImplRef)
+    activate Evaluator
+    Evaluator ->> MutLoader: Value
+    deactivate Evaluator
+    MutLoader ->> Interpreter: Unit
+    deactivate MutLoader
+    Interpreter ->> MutLoader: get(module:String)
+    activate MutLoader
+    MutLoader ->> Interpreter: Value
+    deactivate MutLoader
+    Interpreter ->> User: Value
+    deactivate Interpreter

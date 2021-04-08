@@ -1,3 +1,5 @@
+import sbt.internal.inc.classpath.ClasspathUtilities
+
 val CirceVersion   = "0.13.0"
 val LogbackVersion = "1.2.3"
 val ZioVersion     = "1.0.4"
@@ -37,12 +39,12 @@ lazy val root = project
     name := "elodin",
     skip in publish := true
   )
-  .aggregate(felurian, plutus)
+  .aggregate(plutus, core, barebones, predef)
 
 lazy val core = project
   .in(file("core"))
   .settings(
-    name := "felurian-core",
+    name := "core",
     version := "0.0.1-SNAPSHOT",
     homepage := Some(url("https://github.com/caeus/elodin")),
     libraryDependencies ++= Seq(
@@ -57,10 +59,10 @@ lazy val core = project
     )
   )
 
-lazy val felurian = project
-  .in(file("felurian"))
+lazy val barebones = project
+  .in(file("barebones"))
   .settings(
-    name := "felurian",
+    name := "barebones",
     version := "0.0.1-SNAPSHOT",
     libraryDependencies ++= Seq(
       "dev.zio"                    %% "zio-test-sbt"    % ZioVersion % Test,
@@ -68,10 +70,37 @@ lazy val felurian = project
       "io.circe"                   %% "circe-parser"    % "0.13.0",
       "ch.qos.logback"              % "logback-classic" % LogbackVersion,
       "com.typesafe.scala-logging" %% "scala-logging"   % "3.9.2",
-      "com.lihaoyi"                %% "pprint"          % "0.5.6"    % Test
+      "com.lihaoyi"                %% "pprint"          % "0.5.6"    % Test,
+      "io.suzaku"                  %% "boopickle"       % "1.3.3"
     )
   )
-  .dependsOn(plutus,core)
+  .dependsOn(plutus, core)
+
+lazy val predef = project
+  .in(file("predef"))
+  .settings(
+    name := "predef",
+    version := "0.0.1-SNAPSHOT",
+    libraryDependencies ++= Seq(
+      "dev.zio"                    %% "zio-test-sbt"    % ZioVersion % Test,
+      "dev.zio"                    %% "zio"             % ZioVersion,
+      "io.circe"                   %% "circe-parser"    % "0.13.0",
+      "ch.qos.logback"              % "logback-classic" % LogbackVersion,
+      "com.typesafe.scala-logging" %% "scala-logging"   % "3.9.2",
+      "com.lihaoyi"                %% "pprint"          % "0.5.6"    % Test,
+      "io.suzaku"                  %% "boopickle"       % "1.3.3"
+    ),
+    (resourceGenerators in Compile) += Def.task {
+      val barebonesCL    = (barebones / Test / testLoader).value
+      val genPredefClass = barebonesCL.loadClass("io.github.caeus.elodin.GenPredef")
+      val releaseMethod  = genPredefClass.getMethod("release", classOf[String])
+      val file           = (resourceManaged in Compile).value / "predef.elodinp"
+      releaseMethod
+        .invoke(null, file.getAbsolutePath)
+      Seq(file)
+    }.taskValue
+  )
+  .dependsOn(barebones)
 
 lazy val plutus = (project in file("plutus"))
   .settings(
@@ -87,40 +116,6 @@ lazy val plutus = (project in file("plutus"))
   )
 
 def ingored = {
-  lazy val core = (project in file("core"))
-    .dependsOn(plutus, basis)
-    .settings(
-      name := "elodin-core",
-      version := "0.0.1-SNAPSHOT",
-      homepage := Some(url("https://github.com/caeus/elodin")),
-      libraryDependencies ++= Seq(
-        "dev.zio"                    %% "zio-test-sbt"    % "1.0.0" % Test,
-        "dev.zio"                    %% "zio"             % "1.0.0",
-        "io.circe"                   %% "circe-parser"    % "0.13.0",
-        "ch.qos.logback"              % "logback-classic" % LogbackVersion,
-        "com.typesafe.scala-logging" %% "scala-logging"   % "3.9.2",
-        "com.lihaoyi"                %% "pprint"          % "0.5.6" % Test
-      )
-    )
-
-  lazy val basis = project
-    .in(file("basis"))
-    .settings(
-      name := "elodin-basis",
-      version := "0.0.1-SNAPSHOT",
-      homepage := Some(url("https://github.com/caeus/elodin")),
-      libraryDependencies ++= Seq(
-        "com.propensive"    %% "magnolia"  % "0.17.0",
-        "com.typesafe.play" %% "play-json" % "2.9.1",
-        // "org.scala-lang"              % "scala-reflect"   % scalaVersion.value % Provided,
-        "dev.zio"                    %% "zio-test-sbt"    % "1.0.0" % Test,
-        "dev.zio"                    %% "zio"             % "1.0.0",
-        "io.circe"                   %% "circe-parser"    % "0.13.0",
-        "ch.qos.logback"              % "logback-classic" % LogbackVersion,
-        "com.typesafe.scala-logging" %% "scala-logging"   % "3.9.2",
-        "com.lihaoyi"                %% "pprint"          % "0.5.6" % Test
-      )
-    )
 
   lazy val chusky = (project in file("chusky"))
     .settings(
