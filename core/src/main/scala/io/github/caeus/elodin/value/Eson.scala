@@ -13,7 +13,7 @@ object Eson {
   final case class DictVal(value: Map[String, Eson]) extends Eson
   final case class ListVal(value: Seq[Eson])         extends Eson
   //final case class TaggedVal(module: String, tag: Seq[String], value: Eson) extends Eson
-  final case object UnitVal extends Eson
+  case object UnitVal extends Eson
 
   def typeOf(eson: Eson): String =
     eson match {

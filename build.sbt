@@ -1,8 +1,10 @@
-import sbt.internal.inc.classpath.ClasspathUtilities
 
-val CirceVersion   = "0.13.0"
-val LogbackVersion = "1.2.3"
-val ZioVersion     = "1.0.4"
+val CirceVersion   = "0.14.3"
+val LogbackVersion = "1.4.1"
+val ZioVersion     = "2.0.2"
+val ScalaLoggingVersion = "3.9.5"
+val PPrintVersion = "0.7.3"
+val BoopickleVersion = "1.4.0"
 
 inThisBuild(
   List(
@@ -17,9 +19,7 @@ inThisBuild(
     ),
     homepage := Some(url("https://github.com/caeus/elodin")),
     licenses := List("Apache-2.0" -> url("http://www.apache.org/licenses/LICENSE-2.0")),
-    scalaVersion := "2.13.1",
-    addCompilerPlugin("org.typelevel" %% "kind-projector"     % "0.10.3"),
-    addCompilerPlugin("com.olegpy"    %% "better-monadic-for" % "0.3.0"),
+    scalaVersion := "3.2.0",
     testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework")),
     scalacOptions ++= Seq(
       "-deprecation",
@@ -28,7 +28,8 @@ inThisBuild(
       "-language:higherKinds",
       "-language:postfixOps",
       "-feature",
-      "-Xfatal-warnings"
+      "-Xfatal-warnings",
+      //"-explain"
     )
   )
 )
@@ -48,14 +49,14 @@ lazy val core = project
     version := "0.0.1-SNAPSHOT",
     homepage := Some(url("https://github.com/caeus/elodin")),
     libraryDependencies ++= Seq(
-      "com.propensive" %% "magnolia" % "0.17.0",
+      "com.softwaremill.magnolia" %% "magnolia-core" % "2.0.0-M9",
       // "org.scala-lang"              % "scala-reflect"   % scalaVersion.value % Provided,
       "dev.zio"                    %% "zio-test-sbt"    % ZioVersion % Test,
       "dev.zio"                    %% "zio"             % ZioVersion,
-      "io.circe"                   %% "circe-parser"    % "0.13.0",
+      "io.circe"                   %% "circe-parser"    % CirceVersion,
       "ch.qos.logback"              % "logback-classic" % LogbackVersion,
-      "com.typesafe.scala-logging" %% "scala-logging"   % "3.9.2",
-      "com.lihaoyi"                %% "pprint"          % "0.5.6"    % Test
+      "com.typesafe.scala-logging" %% "scala-logging"   % ScalaLoggingVersion,
+      "com.lihaoyi"                %% "pprint"          % PPrintVersion    % Test
     )
   )
 
@@ -67,11 +68,11 @@ lazy val barebones = project
     libraryDependencies ++= Seq(
       "dev.zio"                    %% "zio-test-sbt"    % ZioVersion % Test,
       "dev.zio"                    %% "zio"             % ZioVersion,
-      "io.circe"                   %% "circe-parser"    % "0.13.0",
+      "io.circe"                   %% "circe-parser"    % CirceVersion,
       "ch.qos.logback"              % "logback-classic" % LogbackVersion,
-      "com.typesafe.scala-logging" %% "scala-logging"   % "3.9.2",
-      "com.lihaoyi"                %% "pprint"          % "0.5.6"    % Test,
-      "io.suzaku"                  %% "boopickle"       % "1.3.3"
+      "com.typesafe.scala-logging" %% "scala-logging"   % ScalaLoggingVersion,
+      "com.lihaoyi"                %% "pprint"          % PPrintVersion    % Test,
+      "io.suzaku"                  %% "boopickle"       % BoopickleVersion
     )
   )
   .dependsOn(plutus, core)
@@ -84,11 +85,11 @@ lazy val predef = project
     libraryDependencies ++= Seq(
       "dev.zio"                    %% "zio-test-sbt"    % ZioVersion % Test,
       "dev.zio"                    %% "zio"             % ZioVersion,
-      "io.circe"                   %% "circe-parser"    % "0.13.0",
+      "io.circe"                   %% "circe-parser"    % CirceVersion,
       "ch.qos.logback"              % "logback-classic" % LogbackVersion,
-      "com.typesafe.scala-logging" %% "scala-logging"   % "3.9.2",
-      "com.lihaoyi"                %% "pprint"          % "0.5.6"    % Test,
-      "io.suzaku"                  %% "boopickle"       % "1.3.3"
+      "com.typesafe.scala-logging" %% "scala-logging"   % ScalaLoggingVersion,
+      "com.lihaoyi"                %% "pprint"          % PPrintVersion    % Test,
+      "io.suzaku"                  %% "boopickle"       % BoopickleVersion
     ),
     (resourceGenerators in Compile) += Def.task {
       val barebonesCL    = (barebones / Test / testLoader).value
@@ -109,9 +110,22 @@ lazy val plutus = (project in file("plutus"))
     homepage := Some(url("https://github.com/caeus/elodin")),
     libraryDependencies ++= Seq(
       "dev.zio"                    %% "zio-test-sbt"  % ZioVersion % Test,
-      "io.circe"                   %% "circe-core"    % "0.13.0",
-      "com.jsoniter"                % "jsoniter"      % "0.9.1",
-      "com.typesafe.scala-logging" %% "scala-logging" % "3.9.2"
+      "io.circe"                   %% "circe-core"    % CirceVersion,
+      "com.jsoniter"                % "jsoniter"      % "0.9.23",
+      "com.typesafe.scala-logging" %% "scala-logging" % ScalaLoggingVersion
+    )
+  )
+
+lazy val runescript = (project in file("runescript"))
+  .settings(
+    name := "runescript",
+    version := "0.0.1-SNAPSHOT",
+    homepage := Some(url("https://github.com/caeus/elodin")),
+    libraryDependencies ++= Seq(
+      "dev.zio"                    %% "zio-test-sbt"  % ZioVersion % Test,
+      "io.circe"                   %% "circe-core"    % CirceVersion,
+      "com.jsoniter"                % "jsoniter"      % "0.9.23",
+      "com.typesafe.scala-logging" %% "scala-logging" % ScalaLoggingVersion
     )
   )
 

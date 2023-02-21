@@ -27,7 +27,7 @@ object ToHostFhunk {
   }
 
   implicit def function0[O](implicit toValueIO: ToValueIO[O]): ToHostFhunk[O] = {
-    make(0) { o: O => _ => toValueIO(o) }
+    make(0) { (o: O) => _ => toValueIO(o) }
   }
 
   implicit def function1[I0, O](implicit
@@ -50,11 +50,9 @@ object ToHostFhunk {
       val arg0  = args.head
       val arg1  = args(1)
       val args_ = args.drop(2)
-      ZIO
-        .mapN(typedArg0(arg0), typedArg1(arg1)) { (i0: I0, i1: I1) =>
+      (typedArg0(arg0) <*> typedArg1(arg1)).flatMap { (i0: I0, i1: I1) =>
           o2HostFhunk.reducer(impl(i0, i1)).apply(args_)
         }
-        .flatten
     }
 
 }

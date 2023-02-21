@@ -1,32 +1,35 @@
 package io.github.caeus.elodin.eval
 
 import zio.test._
+import zio.ZEnvironment
 import zio.{ZIO, ZLayer}
 
-object ReducerSpec extends DefaultRunnableSpec {
-  val eni: ENI.Service = ENI.make
-  val interpreterLayer: ZLayer[Any, Nothing, Interpreter.Box] = {
-    Interpreter.barebones.toLayer
-  }
+object ReducerSpec extends ZIOSpecDefault {
+  val eni: ENI = LiveENI.make
+  val interpreterLayer: ZLayer[Any, Nothing, Interpreter] =
+    ZLayer.fromZIO(LiveInterpreter.barebones)
 
   def codeEvalsTo[V](code: String, v: V)(implicit
       toValue: ToValueIO[V]
-  ): ZSpec[Any, Throwable] = {
-    testM(code) {
-      interpreterLayer.build.use { eval =>
-        eval.get.resolve(
-          toValue(v)
-            .flatMap { v =>
-              assertM(run(code))(Assertion.equalTo(v)).provide(eval)
-            }
-        )
-      }
+  ) = {
+    test(code) {
+      ZIO
+        .service[Interpreter]
+        .flatMap { eval =>
+          eval.resolve(
+            toValue(v)
+              .flatMap { v =>
+                assertZIO(run(code))(Assertion.equalTo(v)).provideEnvironment(ZEnvironment(eval))
+              }
+          )
+        }
+        .provide(interpreterLayer)
 
     }
 
   }
   def run(code: String) = {
-    ZIO.service[Interpreter.Service].flatMap { interpreter =>
+    ZIO.service[Interpreter].flatMap { interpreter =>
       interpreter.run("test", code)
     }
   }

@@ -1,0 +1,11 @@
+struct { module=>
+    val Maybe = struct{
+        val isDefined = this |> Struct.respondsTo("value")
+        fun filter(predicate) = if(this.isDefined) if(this.value |> predicate) this else module.None else this
+        fun map(transform) = if(this.isDefined) module.Some(this.value |> transform) else this
+    }
+    fun Some(value) = struct {
+        val value = value
+    } extends module.Maybe tagged #Some
+    val None = module.Maybe tagged #None
+}

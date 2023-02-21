@@ -19,7 +19,7 @@ object Elodin {
 }
 
 object asd{
-  val runtime= Elodin.runtime();
+  //val runtime= Elodin.runtime();
 
-  runtime.compile()
+  //runtime.compile()
 }

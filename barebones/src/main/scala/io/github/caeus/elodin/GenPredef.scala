@@ -10,10 +10,12 @@ object GenPredef {
   private val packager = compile.BundleWriter.make
 
   def release(in: String): Unit = {
-    zio.Runtime.default.unsafeRun(
-      compileNPackage(
-        folder = Paths.get("barebones/src/main/elodin").toAbsolutePath,
-        target = Paths.get(in)
+    zio.Unsafe.unsafe(implicit unsafe =>
+      zio.Runtime.default.unsafe.run(
+        compileNPackage(
+          folder = Paths.get("barebones/src/main/elodin").toAbsolutePath,
+          target = Paths.get(in)
+        )
       )
     )
   }
@@ -21,7 +23,7 @@ object GenPredef {
   private def compileNPackage(folder: Path, target: Path): Task[Unit] = {
     for {
       bundle <- compiler.compilePath(folder)
-      _       <- packager.save(target, bundle)
+      _      <- packager.save(target, bundle)
     } yield ()
   }
 

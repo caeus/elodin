@@ -1,8 +1,8 @@
 package io.github.caeus.elodin.util
 
-import zio.test.{Assertion, DefaultRunnableSpec, assert, suite}
+import zio.test._
 
-object Pos2LocSpec extends DefaultRunnableSpec {
+object Pos2LocSpec extends ZIOSpecDefault {
   def spec = {
     suite("Pos2Loc") {
       test("single") {

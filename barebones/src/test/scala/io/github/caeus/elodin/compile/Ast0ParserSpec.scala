@@ -5,24 +5,23 @@ import io.github.caeus.elodin.compile.Ast0.Expr.{EsonExpr, RefExpr}
 import io.github.caeus.elodin.value.Eson.{BoolVal, TextVal}
 import io.github.caeus.plutus.PrettyPacker
 import zio.test._
-import zio.{IO, URIO}
+import zio._
 
-object Ast0ParserSpec extends DefaultRunnableSpec with StrictLogging {
+object Ast0ParserSpec extends ZIOSpecDefault with StrictLogging {
   val lexer  = new LiveLexer
   val parser = new LiveAst0Parser
-
-  def parse[X](text: String, pr: parser.Parser[X]): URIO[zio.ZEnv, Either[Object, X]] = {
+  def parse[X](text: String, pr: parser.Parser[X]): URIO[Any, Either[Object, X]] = {
     import parser.syntax._
     lexer
       .lex(text)
       .flatMap { r =>
-        IO.fromEither(PrettyPacker.version1(pr ~ End).process(r))
+        ZIO.fromEither(PrettyPacker.version1(pr ~ End).process(r))
       }
       .either
   }
 
   def printing[T](assertion: Assertion[T]) = {
-    Assertion.assertion[T]("println")() { x =>
+    Assertion.assertion[T]("println") { x =>
       println(x)
       true
     } && assertion
@@ -34,8 +33,8 @@ object Ast0ParserSpec extends DefaultRunnableSpec with StrictLogging {
       prser: parser.Parser[X],
       assertion: Assertion[Either[Any, X]]
   ) = {
-    testM(label) {
-      assertM(parse(code, prser))(assertion)
+    test(label) {
+      assertZIO(parse(code, prser))(assertion)
     }
   }
   def spec =

@@ -1,13 +1,13 @@
 package io.github.caeus.elodin.value.generic
 
-import io.github.caeus.elodin.value.{Eson, FromEson}
+import io.github.caeus.elodin.value.{Eson, FromEson, generic}
+
 import scala.language.experimental.macros
-trait FromEsonDerivation {
-  import magnolia._
-  type Typeclass[T] = FromEson[T]
-  def combine[T](caseClass: CaseClass[Typeclass, T]): Typeclass[T] = {
+import magnolia.*
+object FromEsonDerivation extends AutoDerivation[FromEson]{
+  override def join[T](ctx: CaseClass[FromEson, T]): generic.FromEsonDerivation.Typeclass[T] = {
     case Eson.DictVal(items) =>
-      caseClass
+      ctx
         .constructEither { p =>
           items
             .get(p.label)
@@ -18,7 +18,9 @@ trait FromEsonDerivation {
         }
         .left
         .map(_.flatten)
-    case p => Left(List(s"Cannot construct a ${caseClass.typeName} from $p"))
+    case p => Left(List(s"Cannot construct a ${ctx.typeInfo.full} from $p"))
   }
-  implicit def genFrom[T]: Typeclass[T] = macro Magnolia.gen[T]
+
+  override def split[T](ctx: SealedTrait[FromEson, T]) = ???
+
 }

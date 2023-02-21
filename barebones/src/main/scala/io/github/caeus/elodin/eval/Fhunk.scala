@@ -13,7 +13,7 @@ final case class TaggedValue[Module <: String, Tag <: String, Value](
 trait ToValueIO[-V] {
   def apply(
       v: V
-  ): ZIO[ENI.Box with Archive.Box, EvalException, Value]
+  ): ZIO[ENI & Archive, EvalException, Value]
 }
 object ToValueIO {
   @inline
@@ -42,17 +42,17 @@ object ToValueIO {
 
   implicit def eitherToValueIO[T: ToValueIO]: ToValueIO[Either[EvalException, T]] = {
     case Right(value) => ToValueIO[T].apply(value)
-    case Left(err)    => IO.fail(err)
+    case Left(err)    => ZIO.fail(err)
   }
   implicit def ioToValueIO[T: ToValueIO]: ToValueIO[
-    ZIO[ENI.Box with Archive.Box, EvalException, T]
+    ZIO[ENI & Archive, EvalException, T]
   ] = { v =>
     v.flatMap { v =>
       ToValueIO[T].apply(v)
     }
   }
   implicit val noop: ToValueIO[
-    ZIO[ENI.Box with Archive.Box, EvalException, Value]
+    ZIO[ENI & Archive, EvalException, Value]
   ] = v => v
 
   //id to id
@@ -81,7 +81,7 @@ object ToValueIO {
 trait FromValueIO[+T] {
   def apply(
       value: Value
-  ): ZIO[ENI.Box with Archive.Box, EvalException, T]
+  ): ZIO[ENI & Archive, EvalException, T]
 }
 
 object FromValueIO {
@@ -101,7 +101,7 @@ object FromValueIO {
   )(
       f: PartialFunction[
         Value,
-        ZIO[ENI.Box with Archive.Box, EvalException, T]
+        ZIO[ENI & Archive, EvalException, T]
       ]
   ): FromValueIO[T] =
     (value: Value) =>

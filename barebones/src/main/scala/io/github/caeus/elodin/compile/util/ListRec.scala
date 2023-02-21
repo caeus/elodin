@@ -7,7 +7,7 @@ import scala.jdk.CollectionConverters._
 
 object ListRec {
   def apply(path: Path)(filter: Path => Boolean): Task[Seq[Path]] = {
-    Task(
+    ZIO.attempt(
       Files
         .walk(path)
         .filter { p =>

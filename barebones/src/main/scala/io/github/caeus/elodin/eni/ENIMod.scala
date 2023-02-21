@@ -13,7 +13,7 @@ trait ENIMod {
       .collectAll(value.map {
         case (k, _) =>
           ZIO
-            .service[ENI.Service]
+            .service[ENI]
             .flatMap { eni =>
               eni.reduce(k, Nil)
             }

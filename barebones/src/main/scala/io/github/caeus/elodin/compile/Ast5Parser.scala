@@ -53,7 +53,7 @@ final class LiveAst5Parser extends Ast5Parser {
   }
   def parseForExpr(statements: Seq[Ast0.ForStatement], last: Ast0.Expr): Task[Ast5.Expr] = {
     statements.foldRight(parseExpr(last).map(ex => genDone(ex, last.loc))) { (statement, cont) =>
-      cont.flatMap { cont: Ast5.Expr =>
+      cont.flatMap { (cont: Ast5.Expr) =>
         statement match {
           case ForStatement.LetBangStatement(binding, expr, loc) =>
             parseExpr(expr).map { expr =>
@@ -99,7 +99,7 @@ final class LiveAst5Parser extends Ast5Parser {
 
   def parseBlockExpr(statements: Seq[Ast0.BlockStatement], last: Ast0.Expr): Task[Ast5.Expr] = {
     statements.foldRight(parseExpr(last)) { (statement, cont) =>
-      cont.flatMap { cont: Ast5.Expr =>
+      cont.flatMap { (cont: Ast5.Expr) =>
         chainCont(statement, cont)
       }
     }
@@ -124,14 +124,16 @@ final class LiveAst5Parser extends Ast5Parser {
           ast5FunExpr(param0, params, body, loc)
         }
       case Ast0.Expr.ForExpr(statements, last, _) => parseForExpr(statements, last)
-      case Ast0.Expr.EsonExpr(value, loc)           => ZIO.succeed(Ast5.Expr.EsonExpr(value, loc))
-      case Ast0.Expr.RefExpr(value, loc)            => ZIO.succeed(Ast5.Expr.RefExpr(value, loc))
+      case Ast0.Expr.EsonExpr(value, loc)         => ZIO.succeed(Ast5.Expr.EsonExpr(value, loc))
+      case Ast0.Expr.RefExpr(value, loc)          => ZIO.succeed(Ast5.Expr.RefExpr(value, loc))
       case Ast0.Expr.ApplyExpr(fn, arg, args, loc) =>
-        ZIO.mapN(parseExpr(fn), parseExpr(arg), ZIO.collectAll(args.map(parseExpr))) {
-          (fn, arg, args) => ast5ApplyExpr(fn, arg, args, loc)
-        }
+        (parseExpr(fn) <*> parseExpr(arg) <*> ZIO.collectAll(args.map(parseExpr)))
+          .map {
+            case (fn, arg, args) => ast5ApplyExpr(fn, arg, args, loc)
+          }
     }
   }
+
   override def parse(ast0: Ast0): Task[Ast5] =
     ast0 match {
       case expr: Ast0.Expr => parseExpr(expr)

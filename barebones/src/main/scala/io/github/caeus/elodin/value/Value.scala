@@ -28,7 +28,7 @@ object Value {
     }
   }
 
-  final case object UnitVal extends Value
+  case object UnitVal extends Value
 
   def fromEson(eson: Eson): Value =
     eson match {

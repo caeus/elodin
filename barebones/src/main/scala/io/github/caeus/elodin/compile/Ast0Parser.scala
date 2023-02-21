@@ -72,13 +72,13 @@ final class LiveAst0Parser extends Ast0Parser {
     loc(
       P(Token.Bracket.Open) ~ expression
         .rep(0, None, P(Token.Comma))
-        .map { items => loc => ListExpr(items, loc) } ~ P(Token.Bracket.Close)
+        .map { items => (loc: Pos2Loc.Loc) => ListExpr(items, loc) } ~ P(Token.Bracket.Close)
     )
 
   lazy val dictExpr = loc(
     P(Token.Curly.Open) ~ (refExpr ~ P(Token.Equals) ~ expression)
       .rep(0, None, P(Token.Comma))
-      .map { fields: Seq[(RefExpr, Expr)] => loc =>
+      .map { (fields: Seq[(RefExpr, Expr)]) => (loc: Pos2Loc.Loc) =>
         DictExpr(
           fields.map {
             case (ref, expr) => ref.to -> expr
@@ -172,7 +172,8 @@ final class LiveAst0Parser extends Ast0Parser {
       case (arg0, args) => NextForm.Args(arg0, args)
     }
 
-  lazy val nextForm = selectForm | argsForm | curlyEnclosedExpr.map(NextForm.BlockOrMonad.apply)
+  lazy val nextForm: Parser[NextForm] =
+    selectForm | argsForm | curlyEnclosedExpr.map(NextForm.BlockOrMonad.apply)
 
   lazy val composeExprOnly: Parser[Expr] = loc {
     (delimitedExpr ~ nextForm.rep(1)).map {
@@ -197,14 +198,14 @@ final class LiveAst0Parser extends Ast0Parser {
     case MetaToken(Token.Operator(name), _) => loc => RefExpr("(" ++ name ++ ")", loc)
   })
 
-  lazy val unaryExprOnly = loc {
+  lazy val unaryExprOnly: Parser[ApplyExpr] = loc {
     (loc(P(Token.Operator("-")).as(loc => RefExpr("(-)", loc)))
       ~ withComposeExpr).map {
       case (minus, expr) => loc => ApplyExpr(minus, EsonExpr(Eson.IntVal(0), loc), Seq(expr), loc)
     }
   }
 
-  lazy val withUnaryExpr = withComposeExpr | unaryExprOnly
+  lazy val withUnaryExpr: Parser[Expr] = withComposeExpr | unaryExprOnly
 
   lazy val inlineExprOnly: Parser[Expr] =
     (withUnaryExpr ~ (opSep ~ withComposeExpr).rep(1)).map {

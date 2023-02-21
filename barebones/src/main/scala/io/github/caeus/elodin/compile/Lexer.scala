@@ -1,7 +1,7 @@
 package io.github.caeus.elodin.compile
 
-import com.jsoniter.Jsoniter
-import io.github.caeus.elodin.compile.Token._
+import com.jsoniter.JsonIterator
+import io.github.caeus.elodin.compile.Token.*
 import io.github.caeus.elodin.util.Pos2Loc
 import io.github.caeus.elodin.value.Eson
 import io.github.caeus.plutus.PackerSyntax.StringPackerSyntax
@@ -76,7 +76,7 @@ final class LiveLexer extends Lexer {
 
   lazy val textToken: Packer[String, Char, Literal] =
     (P("\"") ~ (strChars | escape).rep ~ P("\"")).!.map { window =>
-      Literal(Eson.TextVal(Jsoniter.parse(window.value).readString()))
+      Literal(Eson.TextVal(JsonIterator.parse(window.value).readString()))
     }
 
   lazy val ignored = comment | P("""\s+""".r).ignore
@@ -119,7 +119,7 @@ final class LiveLexer extends Lexer {
 
   override def lex(source: String): Task[Vector[MetaToken[Pos2Loc.Loc]]] = {
     for {
-      pos2Loc <- ZIO.effect(Pos2Loc.fromCode(source))
+      pos2Loc <- ZIO.attempt(Pos2Loc.fromCode(source))
       r <- ZIO
             .fromEither(prettyPacker.process(source))
             .map(_.map(_.map(pos2Loc.unsafe)))

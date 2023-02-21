@@ -6,7 +6,7 @@ import zio.ZIO
 
 object Eval {
 
-  type Kernel = ENI.Box with Archive.Box
+  type Kernel = ENI & Archive
   def apply(
       fn: Value,
       arg0: Value,
@@ -48,9 +48,9 @@ object Eval {
   ): ZIO[Kernel, EvalException, Value] = {
     implRef match {
       case ImplRef.Host(to) =>
-        ZIO.service[ENI.Service].flatMap(_.reduce(to, args))
+        ZIO.service[ENI].flatMap(_.reduce(to, args))
       case ImplRef.Guest(module, index, scope) =>
-        ZIO.service[Archive.Service].flatMap(_.reduce(module, index, scope, args))
+        ZIO.service[Archive].flatMap(_.reduce(module, index, scope, args))
     }
   }
 }

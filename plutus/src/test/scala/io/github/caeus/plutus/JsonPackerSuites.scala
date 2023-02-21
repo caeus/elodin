@@ -5,7 +5,7 @@ import io.github.caeus.plutus.json.{JSON, JsonPacker}
 import zio.test.Assertion._
 import zio.test._
 
-object JsonPackerSuites extends DefaultRunnableSpec {
+object JsonPackerSuites extends ZIOSpecDefault {
 
   override def spec = {
     suite("JsonPackerSuites")(

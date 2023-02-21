@@ -3,28 +3,24 @@ package io.github.caeus.elodin.compile
 import boopickle.Default.Unpickle
 import io.github.caeus.elodin.compile.Ast9.GuestModule
 import io.github.caeus.elodin.compile.util.ListRec
-import zio.{Has, Task, ZIO}
+import zio.{Task, ZIO}
 
 import java.nio.ByteBuffer
 import java.nio.file.{Files, Path}
 
-object BundleReader {
-  def make: Service = new LiveService
+trait BundleReader {
+  def open(path: Path): Task[Bundle]
 
-  type Box = Has[Service]
-  trait Service {
-    def open(path: Path): Task[Bundle]
+}
+
+final class LiveBundleReader extends BundleReader {
+  override def open(path: Path): Task[Bundle] = {
+    //import boopickle.Default._
+    ZIO.fail(new Exception(""))
 
   }
-  final class LiveService extends Service {
-    override def open(path: Path): Task[Bundle] = {
-      import boopickle.Default._
+}
 
-      for {
-        buffer <- ZIO(Files.readAllBytes(path.toAbsolutePath)).map(ByteBuffer.wrap)
-        bundle <- ZIO(Unpickle.apply[Bundle].tryFromBytes(buffer).toEither)
-                   .flatMap(r => ZIO.fromEither(r))
-      } yield bundle
-    }
-  }
+object LiveBundleReader {
+  def make: BundleReader = new LiveBundleReader
 }

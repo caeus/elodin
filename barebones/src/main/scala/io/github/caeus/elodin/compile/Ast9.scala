@@ -48,17 +48,12 @@ object Ast9 {
       .flatMap { kernel =>
         expr match {
           case Expr.Apply(fn, arg0, args, _) =>
-            ZIO
-              .mapN(
-                zio1 = eval(scope)(fn),
-                zio2 = eval(scope)(arg0),
-                zio3 = ZIO.collectAll(args.map { arg =>
-                  eval(scope)(arg)
-                })
-              ) { (fn, arg0, args) =>
-                Eval(fn, arg0, args)
-              }
-              .flatten
+            (eval(scope)(fn) <*> eval(scope)(arg0) <*> ZIO.collectAll(args.map { arg =>
+              eval(scope)(arg)
+            })).flatMap { (fn, arg0, args) =>
+              Eval(fn, arg0, args)
+            }
+
           case Expr.Extend(upon, body, _) =>
             eval(scope)(upon).flatMap {
               case Value.DictVal(value) =>
@@ -68,7 +63,7 @@ object Ast9 {
           case Expr.Fun(index, _) =>
             ZIO.succeed(Value.FunVal(ImplRef.Guest(scope.module, index, scope), Nil))
           case Expr.Req(module, _) =>
-            kernel.get[Archive.Service].module(module)
+            kernel.get[Archive].module(module)
           case Expr.Ref(to, _) =>
             scope
               .get(to)
@@ -91,7 +86,7 @@ object Ast9 {
           case Expr.Literal(eson, _) =>
             ZIO.succeed(Value.fromEson(eson))
           case Expr.HostRef(named, _) =>
-            kernel.get[ENI.Service].reduce(named, Nil)
+            kernel.get[ENI].reduce(named, Nil)
         }
       }
       .catchAll(

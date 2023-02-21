@@ -115,14 +115,7 @@ final class LiveAst9Parser extends Ast9Parser {
         GuestFhunk(Vector.empty, parseBody(module, index)(ctx))
     }
   }
-  def parseHeader(ctx: FunCtx5): Vector[String] = {
-    ctx match {
-      case ctx: Ctx5.FunCtx5 =>
-        ctx.params.prepended(ctx.param0).toVector
-      case _ =>
-        Vector.empty
-    }
-  }
+  def parseHeader(ctx: FunCtx5): Vector[String] = ctx.params.prepended(ctx.param0).toVector
   def parseBody(module: String, index: Map[Vector[String], Int])(ctx: Ctx5[Expr]): Ast9.Expr = {
     def cont(ctx: Ctx5[Expr]): Ast9.Expr = parseBody(module, index)(ctx)
     ctx match {
@@ -213,7 +206,7 @@ final class LiveAst9Parser extends Ast9Parser {
 
   override def parse(module: String, ast: Ast5): Task[Ast9.GuestModule] = {
     ast match {
-      case expr: Ast5.Expr => ZIO(parse(module, extract(expr)))
+      case expr: Ast5.Expr => ZIO.attempt(parse(module, extract(expr)))
     }
   }
 }

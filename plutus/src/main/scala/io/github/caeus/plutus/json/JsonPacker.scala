@@ -1,10 +1,10 @@
 package io.github.caeus.plutus.json
 
+import com.jsoniter.JsonIterator
 import io.github.caeus.plutus.PackerSyntax.StringPackerSyntax
 import io.github.caeus.plutus.PrettyPacker.PackerException
-import io.github.caeus.plutus.json.JSON._
+import io.github.caeus.plutus.json.JSON.*
 import io.github.caeus.plutus.{Packer, PrettyPacker}
-import com.jsoniter.Jsoniter
 sealed trait JSON
 
 object JSON {
@@ -42,7 +42,7 @@ class JsonPacker {
   lazy val escape        = P("\\") ~ (P("[\"/\\\\bfnrt]".r) | unicodeEscape)
   lazy val strChars      = P("""[^\\\"]*""".r)
   lazy val stringPacker = (P("\"") ~ (strChars | escape).rep ~ P("\"")).!.map { window =>
-    JSText(Jsoniter.parse(window.value).readString())
+    JSText(JsonIterator.parse(window.value).readString())
   }
   lazy val space: Packer[String, Char, Unit] = P(_.isWhitespace).rep.ignore
   lazy val arrayPacker = (P("[") ~ (space ~ jsonPacker).rep(sep = space ~ P(",")) ~ space ~ P("]"))

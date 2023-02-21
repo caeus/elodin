@@ -2,22 +2,18 @@ package io.github.caeus.elodin.eval
 
 import io.github.caeus.elodin.eni.StdENIMod
 import io.github.caeus.elodin.eval.Eval.Kernel
-import zio.{Has, ZIO}
+import zio.ZIO
 
-object RootScope {
+trait RootScope {
+  def forModule(module: String): ZIO[Kernel, EvalException, Scope]
+}
 
-  type Box = Has[Service]
-  trait Service {
-    def forModule(module: String): ZIO[Kernel, EvalException, Scope]
-  }
-  private final class BarebonesService extends Service {
-    override def forModule(module: String) =
-      StdENIMod.bindings.map { scope =>
-        Scope.fromMap(module, scope)
-      }
-  }
-  def barebones: Service = {
-    new BarebonesService
-  }
-
+private final class BarebonesRootScope extends RootScope {
+  override def forModule(module: String): ZIO[Kernel, EvalException, Scope] =
+    StdENIMod.bindings.map { scope =>
+      Scope.fromMap(module, scope)
+    }
+}
+object BarebonesRootScope {
+  def live = new BarebonesRootScope()
 }

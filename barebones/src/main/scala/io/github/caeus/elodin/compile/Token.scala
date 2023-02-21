@@ -15,24 +15,24 @@ object Token {
       override def toString: String = s"$del.Closed"
     }
   }
-  final case object Curly                   extends Delimiter
-  final case object Bracket                 extends Delimiter
-  final case object Parenthesis             extends Delimiter
+  case object Curly                         extends Delimiter
+  case object Bracket                       extends Delimiter
+  case object Parenthesis                   extends Delimiter
   final case class Literal(value: Eson)     extends Token
-  final case object Do                      extends Token
-  final case object Let                     extends Token
-  final case object For                     extends Token
-  final case object Fun                     extends Token
-  final case object Module                  extends Token
-  final case object Import                  extends Token
-  final case object Comma                   extends Token
-  final case object Semicolon               extends Token
-  final case object Colon                   extends Token
-  final case object Arrow                   extends Token
-  final case object Equals                  extends Token
+  case object Do                            extends Token
+  case object Let                           extends Token
+  case object For                           extends Token
+  case object Fun                           extends Token
+  case object Module                        extends Token
+  case object Import                        extends Token
+  case object Comma                         extends Token
+  case object Semicolon                     extends Token
+  case object Colon                         extends Token
+  case object Arrow                         extends Token
+  case object Equals                        extends Token
   final case class Identifier(name: String) extends Token
-  final case object RefSep                  extends Token
+  case object RefSep                        extends Token
   final case class Operator(name: String)   extends Token
-  final case object Dot                     extends Token
+  case object Dot                           extends Token
 
 }

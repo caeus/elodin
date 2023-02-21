@@ -5,7 +5,7 @@ import scala.util.chaining._
 sealed trait Matcher {}
 sealed trait Val
 object Matcher {
-  final case object Pass                                              extends Matcher
+  case object Pass                                              extends Matcher
   final case class Unapply(f: Val => Option[Val], next: Seq[Matcher]) extends Matcher
 
   def extract(matcher: Matcher, value: Val): Option[Seq[Val]] = {

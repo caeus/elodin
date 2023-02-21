@@ -15,7 +15,7 @@ import scala.language.implicitConversions
 
 case class PackerError(path: List[String], msg: String, pos: Int)
 
-sealed trait PackerResult[+Out] extends {
+sealed trait PackerResult[+Out] {
   def value: Option[Out]
 
   final def map[Out1](func: Out => Out1): PackerResult[Out1] =
@@ -54,8 +54,8 @@ object Packer {
   implicit final class PackerOps[Src, El, Out](private val packer: Packer[Src, El, Out])
       extends AnyVal {
 
-    final def flatMap[Out1](func: Out => Packer[Src, El, Out1]): Packer[Src, El, Out1] =
-      make { input: Cursor[Src, El] =>
+    def flatMap[Out1](func: Out => Packer[Src, El, Out1]): Packer[Src, El, Out1] =
+      make { (input: Cursor[Src, El]) =>
         packer.take(input) match {
           case Done(value, pos) =>
             func(value).take(input.at(pos)) match {
@@ -68,10 +68,10 @@ object Packer {
         }
       }
 
-    final def map[Out1](func: Out => Out1): Packer[Src, El, Out1] =
+    def map[Out1](func: Out => Out1): Packer[Src, El, Out1] =
       flatMap(out => Packer.succeed(func(out)))
 
-    final def asSome: Packer[Src, El, Option[Out]] = map(out=> Some(out))
+    def asSome: Packer[Src, El, Option[Out]] = map(out => Some(out))
 
   }
 
@@ -81,19 +81,19 @@ object Packer {
     }
 
   def capture[Src, El, Out](value: Packer[Src, El, Out]): Packer[Src, El, Window[Src, El]] =
-    make { input: Cursor[Src, El] =>
+    make { (input: Cursor[Src, El]) =>
       value.take(input) match {
         case Done(_, pos) =>
-          Done(Window(input.source, input.pos, pos), pos)
+          Done(result = Window(source = input.source, from = input.pos, until = pos), pos = pos)
         case f => f.asInstanceOf[PackerResult[Window[Src, El]]]
       }
     }
 
   def fromPartial[Src, El, Out](predicate: PartialFunction[El, Out]): Packer[Src, El, Out] =
-    make { input: Cursor[Src, El] =>
+    make { (input: Cursor[Src, El]) =>
       UnfinishedCursor.unapply[Src, El](input) match {
-        case Some((head, _)) =>
-          predicate.lift(head) match {
+        case Some(x) =>
+          predicate.lift(x._1) match {
             case Some(x) =>
               input.done(x, input.tail)
             case None =>
@@ -187,7 +187,7 @@ object Packer {
     }
 
   def fromIterable[Src, El](from: Iterable[El]): Packer[Src, El, Unit] =
-    make { input: Cursor[Src, El] =>
+    make { (input: Cursor[Src, El]) =>
       isPrefix(from, input.iterable) match {
         case (taken, true) =>
           input.done((), input.move(taken))

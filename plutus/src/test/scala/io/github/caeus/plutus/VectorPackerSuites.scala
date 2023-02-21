@@ -5,7 +5,7 @@ import io.github.caeus.plutus.PackerSyntax.VectorPackerSyntax
 import zio.test.Assertion._
 import zio.test.{TestResult, _}
 
-object VectorPackerSuites extends DefaultRunnableSpec {
+object VectorPackerSuites extends ZIOSpecDefault {
 
   def isFailed[T](
       each: Assertion[PackerError]*

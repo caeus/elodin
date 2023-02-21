@@ -2,10 +2,10 @@ package io.github.caeus.elodin
 
 import zio.test._
 
-object PredefCompilerSpec extends DefaultRunnableSpec {
+object PredefCompilerSpec extends ZIOSpecDefault {
   def spec =
     suite("PredefCompiler")(
-      testM("alsjkd") {
+      test("alsjkd") {
         ???
       } @@ TestAspect.ignore
     )
