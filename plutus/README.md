@@ -150,7 +150,7 @@ lazy val exponent = P("e|E".r) ~ P("""[+\-]""".r).? ~ digits
 
 lazy val fractional = P(".") ~ digits
 
-lazy val integral = (P("0") | P("""[1-9]""".r)) ~ digits.?
+lazy val integral = P("0") | (P("""[1-9]""".r) ~ digits.?)
 
 lazy val numberPacker =
   (P("""[+\-]""".r).? ~ integral ~ fractional.? ~ exponent.?).!.map { window =>
